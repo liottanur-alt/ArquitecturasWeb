@@ -1,7 +1,10 @@
 package DAO;
-import entity.Producto;
-import DTO.ProductoDTO;
+import java.sql.Array;
 import java.util.ArrayList;
+import java.util.List;
+import DTO.ProductoDTO;
+import Entities.Producto;
+
 
 public interface ProductoDAO {
 
