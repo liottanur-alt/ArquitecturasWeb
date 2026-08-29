@@ -1,4 +1,4 @@
-package dao;
+package DAO;
 
 import entities.FacturaProducto;
 import java.util.ArrayList;
@@ -10,6 +10,6 @@ public interface FacturaProductoDAO {
     
     public void insertarDatosCsv();
 
-    public ArrayList<FacturaProducto> getFacturasProductos();
+    public ArrayList<FacturaProducto> obtenerFacturasProductos();
 
 }
