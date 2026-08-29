@@ -12,11 +12,25 @@ import java.io.FileReader;
 import java.sql.*;
 import java.util.ArrayList;
 
-public class MySQLProducto implements ProductoDAO {
+public class MySQLProductoDAO implements ProductoDAO {
     private Connection conn;
 
     public MySQLProducto(Connection conn) {
         this.conn = conn;
+    }
+
+    private void crearTablaSiNoExiste() {
+        String sql = "CREATE TABLE IF NOT EXISTS producto (" +
+                "idProducto INT PRIMARY KEY AUTO_INCREMENT, " +
+                "nombre VARCHAR(100) NOT NULL, " +
+                "valor FLOAT NOT NULL" +
+                ")";
+
+        try (Statement sentencia = conexion.createStatement()) {
+            sentencia.execute(sql);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error creando tabla facturas", e);
+        }
     }
 
     public ArrayList<Producto> getProductos() {
