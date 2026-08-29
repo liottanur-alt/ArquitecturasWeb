@@ -1,21 +1,16 @@
-import java.sql.Array;
+package DAO;
+import entity.Producto;
+import DTO.ProductoDTO;
 import java.util.ArrayList;
-import java.util.List;
 
 public interface ProductoDAO {
-    ProductoDto buscarPorId(Long id);
 
-    ArrayList<Producto> buscarTodos();
+    public ProductoDTO getRecaudacion();
 
-    void insertar(ArrayList<Productos> productos);
+    public void insertarDatos(ArrayList<Producto> productos);
 
-    void actualizar(Cliente u);
+    public void insertarDatosCsv();
 
-    void insertarDatosCsv();
+    public ArrayList<Producto> getProductos();
 
-    void borrar(Cliente u);
-
-    void borrarTodo(Long id);
-
-    ProductoDTO buscarPorRecaudacion();
 }
