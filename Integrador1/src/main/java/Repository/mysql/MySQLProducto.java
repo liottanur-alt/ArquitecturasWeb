@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public class MySQLProducto implements ProductoDAO {
     private Connection conn;
 
-    public ProductoDAOImpl(Connection conn) {
+    public MySQLProducto(Connection conn) {
         this.conn = conn;
     }
 
