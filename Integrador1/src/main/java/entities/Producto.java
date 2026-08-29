@@ -1,17 +1,16 @@
-package entity;
+package entities;
 
 import lombok.*;
-
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@ToString
 
 public class Producto {
     private int id;
     private String nombre;
     private float valor;
 
-    public Producto(int id, String nombre, float valor){
-        this.id = id;
-        this.nombre = nombre;
-        this.valor = valor;
-    }
     
 }
