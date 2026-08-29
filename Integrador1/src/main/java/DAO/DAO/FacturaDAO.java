@@ -1,4 +1,5 @@
-
+package DAO;
+import entities.Factura;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,4 +12,3 @@ import java.util.List;
         void eliminar(Factura f);
         void insertarDatosCsv();
     }
-}
