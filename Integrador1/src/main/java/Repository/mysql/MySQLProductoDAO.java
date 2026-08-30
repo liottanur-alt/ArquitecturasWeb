@@ -15,8 +15,9 @@ import java.util.ArrayList;
 public class MySQLProductoDAO implements ProductoDAO {
     private Connection conn;
 
-    public MySQLProducto(Connection conn) {
+    public MySQLProductoDAO(Connection conn) {
         this.conn = conn;
+        crearTablaSiNoExiste();
     }
 
     private void crearTablaSiNoExiste() {
@@ -26,7 +27,7 @@ public class MySQLProductoDAO implements ProductoDAO {
                 "valor FLOAT NOT NULL" +
                 ")";
 
-        try (Statement sentencia = conexion.createStatement()) {
+        try (Statement sentencia = conn.createStatement()) {
             sentencia.execute(sql);
         } catch (SQLException e) {
             throw new RuntimeException("Error creando tabla facturas", e);
