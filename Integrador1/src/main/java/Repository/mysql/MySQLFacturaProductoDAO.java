@@ -54,7 +54,17 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
 
     @Override
     public void insertarDatosCsv() {
-        // Lo implementamos cuando trabajemos con el CSV.
+        try {
+            ArrayList<FacturaProducto> fp = new ArrayList<FacturaProducto>();
+            CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/facturas-productos.csv"));
+            for (CSVRecord row : parser) {
+                fp.add(new FacturaProducto(Integer.parseInt(row.get("idFactura")), (row.get("idProducto")), (row.get("cantidad")) );
+            }
+            this.insertarDatos(fp);
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     @Override
