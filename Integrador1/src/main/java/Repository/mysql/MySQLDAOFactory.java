@@ -1,5 +1,6 @@
 package Repository.mysql;
 
+import entities.Cliente;
 import factory.DAOFactory;
 import factory.ConnectionManager;
 import java.sql.Connection;
@@ -7,40 +8,44 @@ import DAO.*;
 
 public class MySQLDAOFactory extends DAOFactory {
 
-    private ConnectionManager connectionManager;
+    /*
+    * geminis recomienda poner esto pero no se que es
+    *
+      private ConnectionManager connectionManager;
 
-    public MySQLDAOFactory() {
-        this.connectionManager = MySQLConnectionManager.getInstance();
-    }
+        public MySQLDAOFactory() {
+            this.connectionManager = MySQLConnectionManager.getInstance();
+        }
+    *
+    * */
+
 
     @Override
     protected Connection getConnection() {
-        return this.connectionManager.getConnection();
+        return MySQLConnectionManager.getInstance().getConnection();
     }
 
     @Override
     protected void doShutdown() {
-        this.connectionManager.shutdown();
+        MySQLConnectionManager.getInstance().shutdown();
     }
 
     @Override
-    public ClienteDAO createClienteDAO(){
-        return new MySQLClienteDAO(this.getConnection())
+    public ClienteDAO createClienteDAO() {
+        return new MySQLClienteDAO(getConnection());
     }
 
     @Override
-    public FacturaDAO createFacturaDAO(){
-        return new MySQLFacturaDAO(this.getConnection())
+    public FacturaDAO createFacturaDAO() {
+        return new MySQLFacturaDAO(getConnection());
     }
 
     @Override
-    public FacturaProductDAO createFacturaProductoDAO(){
-        return new MySQLFacturaProductoDAO(this.getConnection())
+    public ProductoDAO createProductoDAO() {
+        return new MySQLProductoDAO(getConnection());
     }
-
     @Override
-    public ProductoDAO createProductoDAO(){
-        return new MySQLProductoDAO(this.getConnection())
+    public FacturaProductoDAO createFacturaProductoDAO() {
+        return new MySQLFacturaProductoDAO(getConnection());
     }
-
 }
