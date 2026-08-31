@@ -120,7 +120,7 @@ import java.util.ArrayList;
 
         public void insertarDatosCsv() {
                 try {
-                    ArrayList<Producto> facturas = new ArrayList<Producto>();
+                    ArrayList<Factura> facturas = new ArrayList<Factura>();
                     CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/facturas.csv"));
                     for (CSVRecord row : parser) {
                         facturas.add(new Factura(Integer.parseInt(row.get("idFactura")), (row.get("idCliente")), );
