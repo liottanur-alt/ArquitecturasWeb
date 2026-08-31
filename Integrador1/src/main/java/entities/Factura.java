@@ -5,9 +5,10 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-public class Factura {
 
-    private int idFactura;
-    private int idCliente;
+    public class Factura {
+
+        private int idFactura;
+        private int idCliente;
 
 }
