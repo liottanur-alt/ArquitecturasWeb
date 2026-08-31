@@ -7,31 +7,26 @@ import DTO.ProductoDTO;
 import Entities.Producto;
 import org.apache.commons.csv.*;
 
-
 import java.io.FileReader;
 import java.sql.*;
 import java.util.ArrayList;
 
 public class MySQLProductoDAO implements ProductoDAO {
+    // 1. Atributo estático privado de la única instancia
+    private static MySQLProductoDAO instance;
     private Connection conn;
 
-    public MySQLProductoDAO(Connection conn) {
+    // 2. Constructor PRIVADO para bloquear instanciaciones externas
+    private MySQLProductoDAO(Connection conn) {
         this.conn = conn;
-        crearTablaSiNoExiste();
     }
 
-    private void crearTablaSiNoExiste() {
-        String sql = "CREATE TABLE IF NOT EXISTS producto (" +
-                "idProducto INT PRIMARY KEY AUTO_INCREMENT, " +
-                "nombre VARCHAR(100) NOT NULL, " +
-                "valor FLOAT NOT NULL" +
-                ")";
-
-        try (Statement sentencia = conn.createStatement()) {
-            sentencia.execute(sql);
-        } catch (SQLException e) {
-            throw new RuntimeException("Error creando tabla facturas", e);
+    // 3. Metodo estático global para obtener la instancia única
+    public static synchronized MySQLProductoDAO getInstance(Connection conn) {
+        if (instance == null) {
+            instance = new MySQLProductoDAO(conn);
         }
+        return instance;
     }
 
     public ArrayList<Producto> getProductos() {
@@ -117,7 +112,8 @@ public class MySQLProductoDAO implements ProductoDAO {
             e.printStackTrace();
         } finally {
             try {
-                ps.close();
+                if (ps != null)
+                    ps.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }

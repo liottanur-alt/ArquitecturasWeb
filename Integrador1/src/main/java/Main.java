@@ -1,3 +1,12 @@
+import DAO.ClienteDAO;
+import DAO.FacturaDAO;
+import DAO.FacturaProductoDAO;
+import DAO.ProductoDAO;
+import Repository.mysql.MySQLClienteDAO;
+import Repository.mysql.MySQLDAOFactory;
+import factory.DAOFactory;
+import factory.DBType;
+
 public class Main {
     public static void main(String[] args) {
         /* =================================================================================
@@ -21,5 +30,41 @@ public class Main {
          *    - Ej. 4: Consulta SQL (`JOIN` + `GROUP BY` + `LIMIT 5`) para obtener los 5 clientes con mayor facturación.
          * =================================================================================
          */
+        Connection conn = DAOFactory.getInstance(DBType.MYSQL);
+        MySQLDAOFactory df = new MySQLDAOFactory();
+        ClienteDAO cliente = df.createClienteDAO();
+        FacturaDAO factura = df.createFacturaDAO();
+        ProductoDAO producto = df.createProductoDAO();
+        FacturaProductoDAO fpd = df.createFacturaProductoDAO();
+        System.out.println("Insertar Datos desde CSV");
+        cliente.insertarDatosCsv();
+        factura.insertarDatosCsv();
+        producto.insertarDatosCsv();
+        fpd.insertarDesdeCsv();
+        System.out.println("Mostrar datos cargados");
+        System.out.println("Datos Cliente");
+        System.out.println(cliente.SelectClientes());
+        System.out.println("-------------------------------------");
+        System.out.println("Mostrar datos factura");
+        System.out.println(factura.getFacturas());
+        System.out.println("-------------------------------------");
+        System.out.println("Mostrar datos producto");
+        System.out.println(producto.getProductos());
+        System.out.println("-------------------------------------");
+        System.out.println("Mostrar datos factura producto");
+        System.out.println(fpd.getFacturas_productos());
+        System.out.println("-------------------------------------");
+        System.out.println("Datos del ej 3 ( Producto que mas recaudo )");
+        System.out.println(producto.getRecaudacion());
+        System.out.println("-------------------------------------");
+        System.out.println("Datos del ej 4 ( Top 5 de clientes a los que mas se le facturó )");
+        System.out.println(cliente.getClientesMasFacturados());
+
+
+
+
+    }
+}
+
     }
 }

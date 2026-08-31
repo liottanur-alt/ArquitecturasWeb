@@ -9,32 +9,31 @@ import java.util.List;
 
 public class MySQLClienteDAO implements ClienteDAO {
 
-    private final Connection conexion;
+    private static MySQLClienteDAO instance;
+    private Connection conn;
 
-    public MySQLClienteDAO(Connection conexion) {
-        this.conexion = conexion;
-        crearTablaSiNoExiste();
+    // 2. Constructor PRIVADO para bloquear instanciaciones externas
+    private MySQLClienteDAO(Connection conn) {
+        this.conn = conn;
     }
 
-    private void crearTablaSiNoExiste() {
-        String sql = "CREATE TABLE IF NOT EXISTS clientes (" +
-                "idCliente INT PRIMARY KEY AUTO_INCREMENT, " +
-                "nombre VARCHAR(100) NOT NULL, " +
-                "email VARCHAR(150) NOT NULL UNIQUE" +
-                ")";
-
-        try (Statement sentencia = conexion.createStatement()) {
-            sentencia.execute(sql);
-        } catch (SQLException e) {
-            throw new RuntimeException("Error creando tabla clientes", e);
+    // 3. Metodo estático global para obtener la instancia única
+    public static synchronized MySQLClienteDAO getInstance(Connection conn) {
+        if (instance == null) {
+            instance = new MySQLClienteDAO(conn);
         }
+        return instance;
     }
+
+
+
+
 
     @Override
     public Cliente buscarPorId(int id) {
         String sql = "SELECT idCliente, nombre, email FROM clientes WHERE idCliente = ?";
 
-        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+        try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
 
             sentencia.setInt(1, id);
 
@@ -53,7 +52,7 @@ public class MySQLClienteDAO implements ClienteDAO {
 
         ArrayList<Cliente> clientes = new ArrayList<>();
 
-        try (PreparedStatement sentencia = conexion.prepareStatement(sql);
+        try (PreparedStatement sentencia = conn.prepareStatement(sql);
              ResultSet resultado = sentencia.executeQuery()) {
 
             while (resultado.next()) {
@@ -72,7 +71,7 @@ public class MySQLClienteDAO implements ClienteDAO {
         String sql = "INSERT INTO clientes (nombre, email) VALUES (?, ?)";
 
         try (PreparedStatement sentencia =
-                     conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                     conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             sentencia.setString(1, cliente.getNombre());
             sentencia.setString(2, cliente.getEmail());
@@ -94,7 +93,7 @@ public class MySQLClienteDAO implements ClienteDAO {
     public void actualizar(Cliente cliente) {
         String sql = "UPDATE clientes SET nombre = ?, email = ? WHERE idCliente = ?";
 
-        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+        try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
 
             sentencia.setString(1, cliente.getNombre());
             sentencia.setString(2, cliente.getEmail());
@@ -111,7 +110,7 @@ public class MySQLClienteDAO implements ClienteDAO {
     public void borrar(Long id) {
         String sql = "DELETE FROM clientes WHERE idCliente = ?";
 
-        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+        try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
 
             sentencia.setLong(1, id);
             sentencia.executeUpdate();
@@ -123,7 +122,7 @@ public class MySQLClienteDAO implements ClienteDAO {
 
     @Override
     public void borrarTodo() {
-        try (Statement sentencia = conexion.createStatement()) {
+        try (Statement sentencia = conn.createStatement()) {
 
             sentencia.executeUpdate("DELETE FROM clientes");
             sentencia.execute("ALTER TABLE clientes AUTO_INCREMENT = 1");
