@@ -116,9 +116,47 @@ import java.util.ArrayList;
             }
         }
 
-        @Override
+        @Override {
+
         public void insertarDatosCsv() {
-            // Lo implementamos cuando trabajemos con el CSV.
+                try {
+                    ArrayList<Producto> facturas = new ArrayList<Producto>();
+                    CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/facturas.csv"));
+                    for (CSVRecord row : parser) {
+                        facturas.add(new Factura(Integer.parseInt(row.get("idFactura")), (row.get("idCliente")), );
+                    }
+                    this.insertarDatos(facturas);
+
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+
+        public void insertarDatos(ArrayList<Factura> fac) {
+                String sql = "INSERT INTO Factura (idFactura,idCliente) VALUES (?,?)";
+                PreparedStatement ps = null;
+                try {
+                    ps = conexion.prepareStatement(sql);
+                    for (Factura f : fac) {
+                        ps.setInt(1, f.getId());
+                        ps.setString(2, f.getIdCliente());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                    conexion.commit();
+                    System.out.println("Datos de Factura cargados con exito!");
+                } catch (Exception e) {
+                    System.out.println(e);
+                } finally {
+                    try {
+                        if (ps != null)
+                            ps.close();
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
+
+                }
+            }
         }
 
         private Factura mapear(ResultSet resultado) throws SQLException {
