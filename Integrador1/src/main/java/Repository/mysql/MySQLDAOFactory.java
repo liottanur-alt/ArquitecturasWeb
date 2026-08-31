@@ -3,21 +3,18 @@ package Repository.mysql;
 import entities.Cliente;
 import factory.DAOFactory;
 import factory.ConnectionManager;
+
 import java.sql.Connection;
+
 import DAO.*;
 
 public class MySQLDAOFactory extends DAOFactory {
 
-    /*
-    * geminis recomienda poner esto pero no se que es
-    *
-      private ConnectionManager connectionManager;
+    private ConnectionManager connectionManager;
 
-        public MySQLDAOFactory() {
-            this.connectionManager = MySQLConnectionManager.getInstance();
-        }
-    *
-    * */
+    public MySQLDAOFactory() {
+        this.connectionManager = MySQLConnectionManager.getInstance();
+    }
 
 
     @Override
@@ -32,20 +29,22 @@ public class MySQLDAOFactory extends DAOFactory {
 
     @Override
     public ClienteDAO createClienteDAO() {
-        return new MySQLClienteDAO(getConnection());
+        return MySQLClienteDAO.getInstance(this.getConnection());
     }
 
     @Override
     public FacturaDAO createFacturaDAO() {
-        return new MySQLFacturaDAO(getConnection());
+        return MySQLFacturaDAO.getInstance(this.getConnection());
     }
 
     @Override
     public ProductoDAO createProductoDAO() {
-        return new MySQLProductoDAO(getConnection());
+        return MySQLProductoDAO.getInstance(this.getConnection());
     }
+
     @Override
     public FacturaProductoDAO createFacturaProductoDAO() {
-        return new MySQLFacturaProductoDAO(getConnection());
+
+        return MySQLFacturaProductoDAO.getInstance(this.getConnection());
     }
 }

@@ -3,33 +3,30 @@ package Repository.mysql;
 import DAO.FacturaProductoDAO;
 import entities.FacturaProducto;
 
+
 import java.sql.*;
 import java.util.ArrayList;
 
 public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
 
-    private final Connection conexion;
+    private static MySQLFacturaProductoDAO instance;
+    private Connection conn;
 
-    public MySQLFacturaProductoDAO(Connection conexion) {
-        this.conexion = conexion;
-        crearTablaSiNoExiste();
+    // 2. Constructor PRIVADO para bloquear instanciaciones externas
+    private MySQLFacturaProductoDAO(Connection conn) {
+        this.conn = conn;
     }
 
-    private void crearTablaSiNoExiste() {
-        String sql = "CREATE TABLE IF NOT EXISTS factura_producto (" +
-                "idFactura INT NOT NULL, " +
-                "idProducto INT NOT NULL, " +
-                "cantidad INT NOT NULL, " +
-                "PRIMARY KEY (idFactura, idProducto)" +
-                ")";
-
-        try (Statement sentencia = conexion.createStatement()) {
-            sentencia.execute(sql);
-        } catch (SQLException e) {
-            throw new RuntimeException(
-                    "Error creando tabla factura_producto", e);
+    // 3. Metodo estático global para obtener la instancia única
+    public static synchronized MySQLFacturaProductoDAO getInstance(Connection conn) {
+        if (instance == null) {
+            instance = new MySQLFacturaProductoDAO(conn);
         }
+        return instance;
     }
+
+
+
 
     @Override
     public void insertarDatos(ArrayList<FacturaProducto> facturasProductos) {
@@ -37,7 +34,7 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
         String sql = "INSERT INTO factura_producto " +
                 "(idFactura, idProducto, cantidad) VALUES (?, ?, ?)";
 
-        try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+        try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
 
             for (FacturaProducto facturaProducto : facturasProductos) {
 
@@ -61,6 +58,11 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
     }
 
     @Override
+    public ArrayList<FacturaProducto> getFacturasProductos() {
+        return null;
+    }
+
+    @Override
     public ArrayList<FacturaProducto> obtenerFacturasProductos() {
 
         String sql = "SELECT idFactura, idProducto, cantidad " +
@@ -68,7 +70,7 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
 
         ArrayList<FacturaProducto> facturasProductos = new ArrayList<>();
 
-        try (PreparedStatement sentencia = conexion.prepareStatement(sql);
+        try (PreparedStatement sentencia = conn.prepareStatement(sql);
              ResultSet resultado = sentencia.executeQuery()) {
 
             while (resultado.next()) {

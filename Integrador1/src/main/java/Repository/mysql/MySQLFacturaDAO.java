@@ -8,31 +8,29 @@ import java.util.ArrayList;
 
     public class MySQLFacturaDAO implements FacturaDAO {
 
-        private final Connection conexion;
+        private static MySQLFacturaDAO instance;
+        private Connection conn;
 
-        public MySQLFacturaDAO(Connection conexion) {
-            this.conexion = conexion;
-            crearTablaSiNoExiste();
+        // 2. Constructor PRIVADO para bloquear instanciaciones externas
+        private MySQLFacturaDAO(Connection conn) {
+            this.conn = conn;
         }
 
-        private void crearTablaSiNoExiste() {
-            String sql = "CREATE TABLE IF NOT EXISTS facturas (" +
-                    "idFactura INT PRIMARY KEY AUTO_INCREMENT, " +
-                    "idCliente INT NOT NULL" +
-                    ")";
-
-            try (Statement sentencia = conexion.createStatement()) {
-                sentencia.execute(sql);
-            } catch (SQLException e) {
-                throw new RuntimeException("Error creando tabla facturas", e);
+        // 3. Metodo estático global para obtener la instancia única
+        public static synchronized MySQLFacturaDAO getInstance(Connection conn) {
+            if (instance == null) {
+                instance = new MySQLFacturaDAO(conn);
             }
+            return instance;
         }
+
+
 
         @Override
         public Factura buscarPorId(int id) {
             String sql = "SELECT idFactura, idCliente FROM facturas WHERE idFactura = ?";
 
-            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
 
                 sentencia.setInt(1, id);
 
@@ -51,7 +49,7 @@ import java.util.ArrayList;
 
             ArrayList<Factura> facturas = new ArrayList<>();
 
-            try (PreparedStatement sentencia = conexion.prepareStatement(sql);
+            try (PreparedStatement sentencia = conn.prepareStatement(sql);
                  ResultSet resultado = sentencia.executeQuery()) {
 
                 while (resultado.next()) {
@@ -70,7 +68,7 @@ import java.util.ArrayList;
             String sql = "INSERT INTO facturas (idCliente) VALUES (?)";
 
             try (PreparedStatement sentencia =
-                         conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                         conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
                 sentencia.setInt(1, factura.getIdCliente());
 
@@ -91,7 +89,7 @@ import java.util.ArrayList;
         public void actualizar(Factura factura) {
             String sql = "UPDATE facturas SET idCliente = ? WHERE idFactura = ?";
 
-            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
 
                 sentencia.setInt(1, factura.getIdCliente());
                 sentencia.setInt(2, factura.getIdFactura());
@@ -107,7 +105,7 @@ import java.util.ArrayList;
         public void eliminar(Factura factura) {
             String sql = "DELETE FROM facturas WHERE idFactura = ?";
 
-            try (PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+            try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
 
                 sentencia.setInt(1, factura.getIdFactura());
 

@@ -10,4 +10,5 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - "/Users/adiazpace/Documents/eclipse-workspace/mysql:/var/lib/mysql"
+        - "/Users/adiazpace/Documents/eclipse-workspace/mysql:/var/lib/mysql"
+        - "./Integrador1/src/main/java/Repository/mysql/Integrador1.sql:/docker-entrypoint-initdb.d/init.sql"
