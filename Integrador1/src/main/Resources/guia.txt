@@ -1,3 +1,0 @@
-aca van los archivos csv
-para levantar el docker creo que tienen que porner esto en la terminal de la carpeta integrador 1:
-docker compose -f msql.yml up -d

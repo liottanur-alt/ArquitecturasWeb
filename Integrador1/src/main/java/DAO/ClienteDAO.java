@@ -1,9 +1,10 @@
+package DAO;
 import entities.Cliente;
-import java.util.List;
+import java.util.ArrayList;
 
 public interface ClienteDAO {
     Cliente buscarPorId(int id);
-    List<Cliente> buscarTodo();
+    ArrayList<Cliente> buscarTodo();
     void crearCliente(Cliente u);
     void actualizar(Cliente u);
     void borrar(Long id);
