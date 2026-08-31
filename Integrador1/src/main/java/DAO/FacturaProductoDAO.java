@@ -1,4 +1,4 @@
-package dao;
+package DAO;
 
 import entities.FacturaProducto;
 import java.util.ArrayList;

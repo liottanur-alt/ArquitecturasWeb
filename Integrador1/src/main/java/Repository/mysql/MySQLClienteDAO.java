@@ -48,10 +48,10 @@ public class MySQLClienteDAO implements ClienteDAO {
     }
 
     @Override
-    public List<Cliente> buscarTodo() {
+    public ArrayList<Cliente> buscarTodo() {
         String sql = "SELECT idCliente, nombre, email FROM clientes";
 
-        List<Cliente> clientes = new ArrayList<>();
+        ArrayList<Cliente> clientes = new ArrayList<>();
 
         try (PreparedStatement sentencia = conexion.prepareStatement(sql);
              ResultSet resultado = sentencia.executeQuery()) {

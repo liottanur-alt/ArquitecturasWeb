@@ -1,6 +1,7 @@
+package DAO;
 
 import java.util.ArrayList;
-import java.util.List;
+import entities.Factura;
 
     public interface FacturaDAO {
 
@@ -11,4 +12,3 @@ import java.util.List;
         void eliminar(Factura f);
         void insertarDatosCsv();
     }
-}
