@@ -9,4 +9,5 @@ public interface ClienteDAO {
     void actualizar(Cliente u);
     void borrar(Long id);
     void borrarTodo();
+    void insertarDatosCsv();
 }

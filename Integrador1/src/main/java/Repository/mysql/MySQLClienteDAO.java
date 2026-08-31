@@ -132,6 +132,48 @@ public class MySQLClienteDAO implements ClienteDAO {
         }
     }
 
+    @Override
+    public void insertarDatosCsv(){
+            try {
+                ArrayList<Cliente> clientes = new ArrayList<Cliente>();
+                CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/clientes.csv"));
+                for (CSVRecord row : parser) {
+                    clientes.add(new Cliente(Integer.parseInt(row.get("idCliente")), (row.get("nombre")), (row.get("email")) );
+                }
+                this.insertarDatos(clientes);
+
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+
+            public void insertarDatos(ArrayList<Cliente> cliente) {
+            String sql = "INSERT INTO Cliente (idCliente, nombre, email) VALUES (?,?,?)";
+            PreparedStatement ps = null;
+            try {
+                ps = conn.prepareStatement(sql);
+                for (Cliente c : cliente) {
+                    ps.setInt(1, c.getId());
+                    ps.setString(2, c.getNombre());
+                    ps.setString(3, c.getEmail());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                conn.commit();
+                System.out.println("Datos del Cliente cargados con exito!");
+            } catch (Exception e) {
+                System.out.println(e);
+            } finally {
+                try {
+                    if (ps != null)
+                        ps.close();
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+
+            }
+        }
+
     // Convierte un registro de la BD en un objeto Cliente
     private Cliente mapear(ResultSet resultado) throws SQLException {
         Cliente cliente = new Cliente();

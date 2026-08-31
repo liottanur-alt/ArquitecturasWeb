@@ -100,7 +100,7 @@ public class MySQLProductoDAO implements ProductoDAO {
 
         PreparedStatement ps = null;
         ResultSet rs = null;
-        ProductoDTO productoDTO = null;
+        ProductoDTOgit  productoDTO = null;
         try {
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
