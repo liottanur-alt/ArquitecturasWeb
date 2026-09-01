@@ -1,15 +1,16 @@
-package Entities;
+package DTO;
 
 
-public class Cliente {
+public class ClienteDTO {
     private int idCliente;
     private String nombre;
     private String email;
+    private float totalFacturado;
 
-    public Cliente(int idCliente, String nombre, String email) {
-        this.idCliente = idCliente;
+    // Constructor alternativo por si no necesitas el id o email en alguna consulta
+    public ClienteDTO(String nombre, float totalFacturado) {
         this.nombre = nombre;
-        this.email = email;
+        this.totalFacturado = totalFacturado;
     }
 
     public int getIdCliente() {
@@ -36,12 +37,21 @@ public class Cliente {
         this.email = email;
     }
 
+    public float getTotalFacturado() {
+        return totalFacturado;
+    }
+
+    public void setTotalFacturado(float totalFacturado) {
+        this.totalFacturado = totalFacturado;
+    }
+
     @Override
     public String toString() {
-        return "Cliente{" +
+        return "ClienteDTO{" +
                 "idCliente=" + idCliente +
                 ", nombre='" + nombre + '\'' +
                 ", email='" + email + '\'' +
+                ", totalFacturado=" + totalFacturado +
                 '}';
     }
 }

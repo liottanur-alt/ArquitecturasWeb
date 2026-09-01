@@ -1,11 +1,12 @@
 package Repository.mysql;
 
 import factory.ConnectionManager;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class MySQLConnectionManager implements ConnectionManager{
+public class MySQLConnectionManager implements ConnectionManager {
 
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final String URL = "jdbc:mysql://localhost:3306/integrador1";

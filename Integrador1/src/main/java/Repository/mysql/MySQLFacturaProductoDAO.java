@@ -1,9 +1,11 @@
 package Repository.mysql;
 
 import DAO.FacturaProductoDAO;
-import entities.FacturaProducto;
+import Entities.FacturaProducto;
+import org.apache.commons.csv.*;
 
 
+import java.io.FileReader;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -31,7 +33,7 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
     @Override
     public void insertarDatos(ArrayList<FacturaProducto> facturasProductos) {
 
-        String sql = "INSERT INTO factura_producto " +
+        String sql = "INSERT INTO Factura_Producto " +
                 "(idFactura, idProducto, cantidad) VALUES (?, ?, ?)";
 
         try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
@@ -58,7 +60,10 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
             ArrayList<FacturaProducto> fp = new ArrayList<FacturaProducto>();
             CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/facturas-productos.csv"));
             for (CSVRecord row : parser) {
-                fp.add(new FacturaProducto(Integer.parseInt(row.get("idFactura")), (row.get("idProducto")), (row.get("cantidad")) );
+                int idFactura = Integer.parseInt(row.get("idFactura"));
+                int idProducto = Integer.parseInt(row.get("idProducto"));
+                int cantidad = Integer.parseInt(row.get("cantidad"));
+                fp.add(new FacturaProducto(idFactura, idProducto, cantidad));
             }
             this.insertarDatos(fp);
 
@@ -69,14 +74,9 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
 
     @Override
     public ArrayList<FacturaProducto> getFacturasProductos() {
-        return null;
-    }
-
-    @Override
-    public ArrayList<FacturaProducto> obtenerFacturasProductos() {
 
         String sql = "SELECT idFactura, idProducto, cantidad " +
-                "FROM factura_producto";
+                "FROM Factura_Producto";
 
         ArrayList<FacturaProducto> facturasProductos = new ArrayList<>();
 

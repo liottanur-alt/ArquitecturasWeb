@@ -1,5 +1,7 @@
 package DAO;
-import entities.Cliente;
+
+import Entities.Cliente;
+import DTO.ClienteDTO;
 import java.util.ArrayList;
 
 public interface ClienteDAO {
@@ -10,4 +12,5 @@ public interface ClienteDAO {
     void borrar(Long id);
     void borrarTodo();
     void insertarDatosCsv();
+    ArrayList<ClienteDTO> getClientesByMayorFacturacion();
 }

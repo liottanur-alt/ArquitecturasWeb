@@ -1,7 +1,5 @@
 package Entities;
 
-import lombok.*;
-
 
 public class Producto {
     private int id;

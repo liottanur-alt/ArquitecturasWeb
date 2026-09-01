@@ -1,4 +1,5 @@
 -- Seleccionar la base de datos creada en el docker-compose
+CREATE DATABASE IF NOT EXISTS integrador1;
 USE integrador1;
 
 -- 1. Tabla Cliente
