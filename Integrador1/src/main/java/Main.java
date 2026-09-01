@@ -45,7 +45,7 @@ public class Main {
         producto.insertarDatosCsv();
         fpd.insertarDatosCsv();
 
-        // Lectura y Mostrado de Datos
+      // Lectura y Mostrado de Datos
         System.out.println("Mostrar datos cargados");
         System.out.println("Datos Cliente");
         System.out.println(cliente.buscarTodo());

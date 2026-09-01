@@ -52,8 +52,7 @@ public class MySQLFacturaDAO implements FacturaDAO {
 
         ArrayList<Factura> facturas = new ArrayList<>();
 
-        try (PreparedStatement sentencia = conn.prepareStatement(sql);
-             ResultSet resultado = sentencia.executeQuery()) {
+        try (PreparedStatement sentencia = conn.prepareStatement(sql); ResultSet resultado = sentencia.executeQuery()) {
 
             while (resultado.next()) {
                 facturas.add(mapear(resultado));
@@ -70,8 +69,7 @@ public class MySQLFacturaDAO implements FacturaDAO {
     public void insertar(Factura factura) {
         String sql = "INSERT INTO Factura (idCliente) VALUES (?)";
 
-        try (PreparedStatement sentencia =
-                     conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement sentencia = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             sentencia.setInt(1, factura.getIdCliente());
 
@@ -123,7 +121,7 @@ public class MySQLFacturaDAO implements FacturaDAO {
     public void insertarDatosCsv() {
         try {
             ArrayList<Factura> facturas = new ArrayList<Factura>();
-            CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/facturas.csv"));
+            CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("Integrador1/src/main/Resources/facturas.csv"));
             for (CSVRecord row : parser) {
                 int idFactura = Integer.parseInt(row.get("idFactura"));
                 int idCliente = Integer.parseInt(row.get("idCliente"));
@@ -137,10 +135,12 @@ public class MySQLFacturaDAO implements FacturaDAO {
     }
 
     public void insertarDatos(ArrayList<Factura> fac) {
-        String sql = "INSERT INTO Factura (idFactura,idCliente) VALUES (?,?)";
+        String sql = "INSERT INTO Factura (idFactura, idCliente) VALUES (?,?)";
         PreparedStatement ps = null;
         try {
+            conn.setAutoCommit(false); // <--- REQUERIDO PARA JDBC
             ps = conn.prepareStatement(sql);
+
             for (Factura f : fac) {
                 ps.setInt(1, f.getIdFactura());
                 ps.setInt(2, f.getIdCliente());
@@ -150,15 +150,19 @@ public class MySQLFacturaDAO implements FacturaDAO {
             conn.commit();
             System.out.println("Datos de Factura cargados con exito!");
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Error insertando Facturas: " + e.getMessage());
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         } finally {
             try {
-                if (ps != null)
-                    ps.close();
+                if (ps != null) ps.close();
+                conn.setAutoCommit(true); // <--- RESTAURAR AUTOCOMMIT
             } catch (Exception e) {
                 System.out.println(e);
             }
-
         }
     }
 

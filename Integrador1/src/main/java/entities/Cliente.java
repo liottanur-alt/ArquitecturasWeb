@@ -11,6 +11,9 @@ public class Cliente {
         this.nombre = nombre;
         this.email = email;
     }
+    public Cliente (){
+
+    }
 
     public int getIdCliente() {
         return idCliente;

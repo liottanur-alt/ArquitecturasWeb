@@ -11,6 +11,9 @@ public class Producto {
         this.nombre = nombre;
         this.valor = valor;
     }
+    public Producto (){
+        
+    }
 
     public int getId() {
         return id;

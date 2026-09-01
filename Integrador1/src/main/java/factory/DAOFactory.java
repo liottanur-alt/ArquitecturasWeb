@@ -3,7 +3,6 @@ package factory;
 import java.sql.Connection;
 import DAO.*;
 import Repository.mysql.MySQLDAOFactory;
-import Repository.postgreSQL.PostgreSQLDAOFactory;
 
 public abstract class DAOFactory {
 
@@ -20,7 +19,7 @@ public abstract class DAOFactory {
                             break;
 
                         case POSTGRES:
-                            instance = new PostgreSQLDAOFactory();
+                            System.out.println("Conectado con Posgres");
                             break;
 
                         default:

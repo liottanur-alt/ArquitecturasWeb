@@ -13,6 +13,13 @@ public class ClienteDTO {
         this.totalFacturado = totalFacturado;
     }
 
+    public ClienteDTO(int idCliente, String nombre, String email, float totalFacturado) {
+        this.idCliente = idCliente;
+        this.nombre = nombre;
+        this.email = email;
+        this.totalFacturado = totalFacturado;
+    }
+
     public int getIdCliente() {
         return idCliente;
     }
@@ -47,11 +54,9 @@ public class ClienteDTO {
 
     @Override
     public String toString() {
-        return "ClienteDTO{" +
-                "idCliente=" + idCliente +
-                ", nombre='" + nombre + '\'' +
-                ", email='" + email + '\'' +
-                ", totalFacturado=" + totalFacturado +
-                '}';
+        return String.format(
+                "Cliente #%-3d | %-20s | %-30s | Total: $%,.2f",
+                idCliente, nombre, email, totalFacturado
+        );
     }
 }

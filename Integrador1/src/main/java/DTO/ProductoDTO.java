@@ -6,15 +6,16 @@ package DTO;
 public class ProductoDTO {
     private int idProducto;
     private String nombre;
+    private float valor;
+    private float recaudacion;
+
 
     @Override
     public String toString() {
-        return "ProductoDTO{" +
-                "idProducto=" + idProducto +
-                ", nombre='" + nombre + '\'' +
-                ", valor=" + valor +
-                ", recaudacion=" + recaudacion +
-                '}';
+        return String.format(
+                "Producto #%-3d | %-20s | Precio: $%,.2f | Recaudación: $%,.2f",
+                idProducto, nombre, valor, recaudacion
+        );
     }
 
     public int getIdProducto() {
@@ -49,8 +50,6 @@ public class ProductoDTO {
         this.valor = valor;
     }
 
-    private float valor;
-    private float recaudacion;
 
     // Constructor secundario (sin ID) por si tu consulta SQL solo devuelve el nombre
     public ProductoDTO(String nombre, float valor, float recaudacion) {

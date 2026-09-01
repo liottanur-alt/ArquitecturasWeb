@@ -135,7 +135,7 @@ public class MySQLClienteDAO implements ClienteDAO {
     public void insertarDatosCsv(){
             try {
                 ArrayList<Cliente> clientes = new ArrayList<Cliente>();
-                CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/clientes.csv"));
+                CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("Integrador1/src/main/Resources/clientes.csv"));
                 for (CSVRecord row : parser) {
                     clientes.add(new Cliente(Integer.parseInt(row.get("idCliente")), (row.get("nombre")), (row.get("email"))));
                 }
@@ -146,32 +146,35 @@ public class MySQLClienteDAO implements ClienteDAO {
             }
     }
 
-    public void insertarDatos(ArrayList<Cliente> cliente) {
-            String sql = "INSERT INTO Cliente (idCliente, nombre, email) VALUES (?,?,?)";
-            PreparedStatement ps = null;
-            try {
-                ps = conn.prepareStatement(sql);
-                for (Cliente c : cliente) {
+    public void insertarDatos(ArrayList<Cliente> clientes) throws SQLException {
+        String sql = "INSERT INTO Cliente (idCliente, nombre, email) VALUES (?,?,?)";
+
+        // Manejo de recursos con try-with-resources de JDBC
+        try {
+            // Desactivamos el autocommit explícitamente en la conexión JDBC
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (Cliente c : clientes) {
                     ps.setInt(1, c.getIdCliente());
                     ps.setString(2, c.getNombre());
                     ps.setString(3, c.getEmail());
                     ps.addBatch();
                 }
                 ps.executeBatch();
-                conn.commit();
-                System.out.println("Datos del Cliente cargados con exito!");
-            } catch (Exception e) {
-                System.out.println(e);
-            } finally {
-                try {
-                    if (ps != null)
-                        ps.close();
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-
+                conn.commit(); // Confirma la transacción en JDBC
+                System.out.println("Datos del Cliente cargados con éxito!");
+            } catch (SQLException e) {
+                conn.rollback(); // Cancela la transacción en JDBC si hay error
+                throw e;
+            }
+        } finally {
+            // Restauramos el estado estándar de la conexión JDBC
+            if (conn != null && !conn.isClosed()) {
+                conn.setAutoCommit(true);
             }
         }
+    }
 
     // Convierte un registro de la BD en un objeto Cliente
     private Cliente mapear(ResultSet resultado) throws SQLException {
@@ -193,7 +196,7 @@ public class MySQLClienteDAO implements ClienteDAO {
                 "JOIN Factura_Producto fp ON f.idFactura = fp.idFactura " +
                 "JOIN Producto p ON fp.idProducto = p.idProducto " +
                 "GROUP BY c.idCliente, c.nombre, c.email " +
-                "ORDER BY total DESC";
+                "ORDER BY total DESC LIMIT 5;";
 
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

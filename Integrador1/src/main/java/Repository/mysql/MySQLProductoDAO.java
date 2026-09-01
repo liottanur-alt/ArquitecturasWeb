@@ -44,8 +44,7 @@ public class MySQLProductoDAO implements ProductoDAO {
             System.err.println("Error al consultar productos");
         } finally {
             try {
-                if (ps != null)
-                    ps.close();
+                if (ps != null) ps.close();
                 conn.commit();
             } catch (SQLException ex) {
                 System.err.println("Error al cerrar la conexion");
@@ -57,7 +56,7 @@ public class MySQLProductoDAO implements ProductoDAO {
     public void insertarDatosCsv() {
         try {
             ArrayList<Producto> productos = new ArrayList<Producto>();
-            CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/productos.csv"));
+            CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("Integrador1/src/main/Resources/productos.csv"));
             for (CSVRecord row : parser) {
                 productos.add(new Producto(Integer.parseInt(row.get("idProducto")), (row.get("nombre")), Float.parseFloat(row.get("valor"))));
             }
@@ -69,10 +68,12 @@ public class MySQLProductoDAO implements ProductoDAO {
     }
 
     public void insertarDatos(ArrayList<Producto> productos) {
-        String sql = "INSERT INTO Producto (idProducto,nombre,valor) VALUES (?,?,?)";
+        String sql = "INSERT INTO Producto (idProducto, nombre, valor) VALUES (?,?,?)";
         PreparedStatement ps = null;
         try {
+            conn.setAutoCommit(false); // <--- REQUERIDO PARA JDBC
             ps = conn.prepareStatement(sql);
+
             for (Producto p : productos) {
                 ps.setInt(1, p.getId());
                 ps.setString(2, p.getNombre());
@@ -83,15 +84,19 @@ public class MySQLProductoDAO implements ProductoDAO {
             conn.commit();
             System.out.println("Datos Cargados con Exito! Producto");
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println("Error insertando Productos: " + e.getMessage());
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         } finally {
             try {
-                if (ps != null)
-                    ps.close();
+                if (ps != null) ps.close();
+                conn.setAutoCommit(true); // <--- RESTAURAR AUTOCOMMIT
             } catch (Exception e) {
                 System.out.println(e);
             }
-
         }
     }
 
@@ -100,7 +105,7 @@ public class MySQLProductoDAO implements ProductoDAO {
 
         PreparedStatement ps = null;
         ResultSet rs = null;
-        ProductoDTO  productoDTO = null;
+        ProductoDTO productoDTO = null;
         try {
             ps = conn.prepareStatement(sql);
             rs = ps.executeQuery();
@@ -112,8 +117,7 @@ public class MySQLProductoDAO implements ProductoDAO {
             e.printStackTrace();
         } finally {
             try {
-                if (ps != null)
-                    ps.close();
+                if (ps != null) ps.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }

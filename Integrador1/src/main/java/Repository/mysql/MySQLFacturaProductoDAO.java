@@ -27,30 +27,37 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
         return instance;
     }
 
-
-
-
     @Override
-    public void insertarDatos(ArrayList<FacturaProducto> facturasProductos) {
+    public void insertarDatos(ArrayList<FacturaProducto> fps) {
+        String sql = "INSERT INTO Factura_Producto (idFactura, idProducto, cantidad) VALUES (?,?,?)";
+        PreparedStatement ps = null;
+        try {
+            conn.setAutoCommit(false); // <--- REQUERIDO PARA JDBC
+            ps = conn.prepareStatement(sql);
 
-        String sql = "INSERT INTO Factura_Producto " +
-                "(idFactura, idProducto, cantidad) VALUES (?, ?, ?)";
-
-        try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
-
-            for (FacturaProducto facturaProducto : facturasProductos) {
-
-                sentencia.setInt(1, facturaProducto.getIdFactura());
-                sentencia.setInt(2, facturaProducto.getIdProducto());
-                sentencia.setInt(3, facturaProducto.getCantidad());
-
-                sentencia.addBatch();
+            for (FacturaProducto fp : fps) {
+                ps.setInt(1, fp.getIdFactura());
+                ps.setInt(2, fp.getIdProducto());
+                ps.setInt(3, fp.getCantidad());
+                ps.addBatch();
             }
-
-            sentencia.executeBatch();
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error en insertarDatos", e);
+            ps.executeBatch();
+            conn.commit();
+            System.out.println("Datos de FacturaProducto cargados con exito!");
+        } catch (Exception e) {
+            System.out.println("Error insertando FacturaProducto: " + e.getMessage());
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } finally {
+            try {
+                if (ps != null) ps.close();
+                conn.setAutoCommit(true); // <--- RESTAURAR AUTOCOMMIT
+            } catch (Exception e) {
+                System.out.println(e);
+            }
         }
     }
 
@@ -58,7 +65,7 @@ public class MySQLFacturaProductoDAO implements FacturaProductoDAO {
     public void insertarDatosCsv() {
         try {
             ArrayList<FacturaProducto> fp = new ArrayList<FacturaProducto>();
-            CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("src/main/resources/facturas-productos.csv"));
+            CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new  FileReader("Integrador1/src/main/Resources/facturas-productos.csv"));
             for (CSVRecord row : parser) {
                 int idFactura = Integer.parseInt(row.get("idFactura"));
                 int idProducto = Integer.parseInt(row.get("idProducto"));

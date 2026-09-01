@@ -27,6 +27,8 @@ package Entities;
             this.idCliente = idCliente;
         }
 
+        public Factura() {}
+
         @Override
         public String toString() {
             return "Factura{" +
