@@ -1,0 +1,179 @@
+package Repository.postgres;
+
+import DAO.ClienteDAO;
+import Entities.Cliente;
+import DTO.ClienteDTO;
+
+import java.io.FileReader;
+import java.sql.*;
+import java.util.ArrayList;
+import org.apache.commons.csv.*;
+
+public class PostgresClienteDAO implements ClienteDAO {
+
+    private static PostgresClienteDAO instance;
+    private Connection conn;
+
+    private PostgresClienteDAO(Connection conn) {
+        this.conn = conn;
+    }
+
+    public static synchronized PostgresClienteDAO getInstance(Connection conn) {
+        if (instance == null) {
+            instance = new PostgresClienteDAO(conn);
+        }
+        return instance;
+    }
+
+    @Override
+    public Cliente buscarPorId(int id) {
+        String sql = "SELECT idCliente, nombre, email FROM Cliente WHERE idCliente = ?";
+        try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
+            sentencia.setInt(1, id);
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                return resultado.next() ? mapear(resultado) : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en buscarPorId", e);
+        }
+    }
+
+    @Override
+    public ArrayList<Cliente> buscarTodo() {
+        String sql = "SELECT idCliente, nombre, email FROM Cliente";
+        ArrayList<Cliente> clientes = new ArrayList<>();
+        try (PreparedStatement sentencia = conn.prepareStatement(sql);
+             ResultSet resultado = sentencia.executeQuery()) {
+            while (resultado.next()) {
+                clientes.add(mapear(resultado));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en buscarTodo", e);
+        }
+        return clientes;
+    }
+
+    @Override
+    public void crearCliente(Cliente cliente) {
+        String sql = "INSERT INTO Cliente (nombre, email) VALUES (?, ?)";
+        try (PreparedStatement sentencia = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            sentencia.setString(1, cliente.getNombre());
+            sentencia.setString(2, cliente.getEmail());
+            sentencia.executeUpdate();
+            try (ResultSet claves = sentencia.getGeneratedKeys()) {
+                if (claves.next()) {
+                    cliente.setIdCliente(claves.getInt(1)); // Funciona igual si la PK es de tipo SERIAL
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en crearCliente", e);
+        }
+    }
+
+    @Override
+    public void actualizar(Cliente cliente) {
+        String sql = "UPDATE Cliente SET nombre = ?, email = ? WHERE idCliente = ?";
+        try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
+            sentencia.setString(1, cliente.getNombre());
+            sentencia.setString(2, cliente.getEmail());
+            sentencia.setInt(3, cliente.getIdCliente());
+            sentencia.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en actualizar", e);
+        }
+    }
+
+    @Override
+    public void borrar(Long id) {
+        String sql = "DELETE FROM Cliente WHERE idCliente = ?";
+        try (PreparedStatement sentencia = conn.prepareStatement(sql)) {
+            sentencia.setLong(1, id);
+            sentencia.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error en borrar", e);
+        }
+    }
+
+    @Override
+    public void borrarTodo() {
+        try (Statement sentencia = conn.createStatement()) {
+            sentencia.executeUpdate("TRUNCATE TABLE Cliente RESTART IDENTITY CASCADE");
+        } catch (SQLException e) {
+            throw new RuntimeException("Error borrando clientes en Postgres", e);
+        }
+    }
+
+    @Override
+    public void insertarDatosCsv(){
+        try {
+            ArrayList<Cliente> clientes = new ArrayList<>();
+            CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(new FileReader("Integrador1/src/main/Resources/clientes.csv"));
+            for (CSVRecord row : parser) {
+                clientes.add(new Cliente(Integer.parseInt(row.get("idCliente")), (row.get("nombre")), (row.get("email"))));
+            }
+            this.insertarDatos(clientes);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void insertarDatos(ArrayList<Cliente> clientes) throws SQLException {
+        String sql = "INSERT INTO Cliente (idCliente, nombre, email) VALUES (?,?,?)";
+        try {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (Cliente c : clientes) {
+                    ps.setInt(1, c.getIdCliente());
+                    ps.setString(2, c.getNombre());
+                    ps.setString(3, c.getEmail());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                conn.commit();
+                System.out.println("Datos del Cliente cargados con éxito en Postgres!");
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } finally {
+            if (conn != null && !conn.isClosed()) {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    private Cliente mapear(ResultSet resultado) throws SQLException {
+        Cliente cliente = new Cliente();
+        cliente.setIdCliente(resultado.getInt("idCliente"));
+        cliente.setNombre(resultado.getString("nombre"));
+        cliente.setEmail(resultado.getString("email"));
+        return cliente;
+    }
+
+    @Override
+    public ArrayList<ClienteDTO> getClientesByMayorFacturacion() {
+        ArrayList<ClienteDTO> lista = new ArrayList<>();
+        String sql = "SELECT c.idCliente, c.nombre, c.email, SUM(p.valor * fp.cantidad) AS total " +
+                "FROM Cliente c " +
+                "JOIN Factura f ON c.idCliente = f.idCliente " +
+                "JOIN Factura_Producto fp ON f.idFactura = fp.idFactura " +
+                "JOIN Producto p ON fp.idProducto = p.idProducto " +
+                "GROUP BY c.idCliente, c.nombre, c.email " +
+                "ORDER BY total DESC LIMIT 5;";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                lista.add(new ClienteDTO(
+                        rs.getInt("idCliente"),
+                        rs.getString("nombre"),
+                        rs.getString("email"),
+                        rs.getFloat("total")
+                ));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error obteniendo reporte en Postgres", e);
+        }
+        return lista;
+    }
+}

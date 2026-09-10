@@ -4,6 +4,8 @@ import DAO.FacturaProductoDAO;
 import DAO.ProductoDAO;
 import Repository.mysql.MySQLClienteDAO;
 import Repository.mysql.MySQLDAOFactory;
+import Repository.postgres.PostgresDAOFactory;
+import Repository.postgres.PostgresClienteDAO;
 import factory.DAOFactory;
 import factory.DBType;
 
@@ -30,7 +32,11 @@ public class Main {
          *    - Ej. 4: Consulta SQL (`JOIN` + `GROUP BY` + `LIMIT 5`) para obtener los 5 clientes con mayor facturación.
          * =================================================================================
          */
+
+        // MQSQL:
         DAOFactory factory = DAOFactory.getInstance(DBType.MYSQL);
+        // POSTGRES:
+        //DAOFactory factory = DAOFactory.getInstance(DBType.POSTGRES);
 
         // 2. Creas los DAOs a través de la interfaz abstracta (no usas la clase concreta directamente)
         ClienteDAO cliente = factory.createClienteDAO();
@@ -45,7 +51,7 @@ public class Main {
         producto.insertarDatosCsv();
         fpd.insertarDatosCsv();
 
-      // Lectura y Mostrado de Datos
+        // Lectura y Mostrado de Datos
         System.out.println("Mostrar datos cargados");
         System.out.println("Datos Cliente");
         System.out.println(cliente.buscarTodo());
