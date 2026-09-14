@@ -1,18 +1,28 @@
 package entities;
 
-public class Carreras {
+import jakarta.persistence.*;
+
+
+@Entity
+@Table(name = "carrera")
+public class Carrera {
     //id_carrera, carrera, duracion
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idCarrera")
     private int idCarrera;
+    @Column(name = "nombreCarrera", nullable = false, length = 100)
     private String nombreCarrera;
+    @Column(name = "duracion")
     private int duracion;
 
-    public Carreras(int idCarrera, String nombreCarrera, int duracion) {
+    public Carrera(int idCarrera, String nombreCarrera, int duracion) {
         this.idCarrera = idCarrera;
         this.nombreCarrera = nombreCarrera;
         this.duracion = duracion;
     }
 
-    public Carreras() {}
+    public Carrera() {}
 
     public int getIdCarrera() {
         return idCarrera;
