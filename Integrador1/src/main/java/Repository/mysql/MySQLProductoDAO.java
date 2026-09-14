@@ -4,7 +4,7 @@ import java.sql.Connection;
 
 import DAO.ProductoDAO;
 import DTO.ProductoDTO;
-import Entities.Producto;
+import entities.Producto;
 import org.apache.commons.csv.*;
 
 import java.io.FileReader;

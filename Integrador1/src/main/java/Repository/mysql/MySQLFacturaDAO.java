@@ -1,7 +1,7 @@
 package Repository.mysql;
 
 import DAO.FacturaDAO;
-import Entities.Factura;
+import entities.Factura;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;

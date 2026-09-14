@@ -1,6 +1,6 @@
 package DAO;
 
-import Entities.FacturaProducto;
+import entities.FacturaProducto;
 import java.util.ArrayList;
 
 public interface FacturaProductoDAO {

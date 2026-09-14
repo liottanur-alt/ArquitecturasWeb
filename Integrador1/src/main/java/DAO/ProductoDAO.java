@@ -2,7 +2,7 @@ package DAO;
 
 import java.util.ArrayList;
 import DTO.ProductoDTO;
-import Entities.Producto;
+import entities.Producto;
 
 
 public interface ProductoDAO {

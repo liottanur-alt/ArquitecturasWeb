@@ -1,7 +1,7 @@
 package Repository.mysql;
 
 import factory.DAOFactory;
-import Entities.Cliente;
+import entities.Cliente;
 import factory.ConnectionManager;
 
 import java.sql.Connection;
