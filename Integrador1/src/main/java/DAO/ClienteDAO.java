@@ -1,6 +1,6 @@
 package DAO;
 
-import Entities.Cliente;
+import entities.Cliente;
 import DTO.ClienteDTO;
 import java.util.ArrayList;
 
