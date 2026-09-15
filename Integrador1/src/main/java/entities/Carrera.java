@@ -11,8 +11,10 @@ public class Carrera {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idCarrera")
     private int idCarrera;
+
     @Column(name = "nombreCarrera", nullable = false, length = 100)
     private String nombreCarrera;
+
     @Column(name = "duracion")
     private int duracion;
 
