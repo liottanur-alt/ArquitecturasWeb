@@ -21,7 +21,6 @@ public class CarreraMySql implements RepoInterfaz<Carrera> {
     @Override
     public Carrera buscarPorId(int id) {
         EntityManager em = JPAUtil.getEntityManager();
-        // em.find reemplaza al método manual carreraByID que tenías antes
         Carrera carrera = em.find(Carrera.class, id);
         em.close();
         return carrera;
