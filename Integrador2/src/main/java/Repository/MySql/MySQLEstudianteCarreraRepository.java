@@ -2,9 +2,13 @@ package Repository.MySql;
 import Factory.JPAUtil;
 import Repository.RepoInterfaz;
 import Entities.EstudianteCarrera;
-import entities.Estudiante;
+import Entities.Estudiante;
+import Entities.Carrera;
 import jakarta.persistence.EntityManager;
 import java.util.List;
+
+import com.opencsv.CSVReader;
+import java.io.FileReader;
 
 public class MySQLEstudianteCarreraRepository implements RepoInterfaz<EstudianteCarrera> {
     @Override
@@ -44,34 +48,84 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
         em.getTransaction().commit();
         em.close();
     }
-    //f) recuperar las carreras con estudiantes inscriptos, y ordenar por cantidad de inscriptos
-    public List<Object[]> carrerasConCantidadDeInscriptos() {
-        EntityManager em = JPAUtil.getEntityManager();
-        List<Object[]> resultado = em.createQuery(
-                "SELECT ec.carrera, COUNT(ec.estudiante) " +
-                        "FROM EstudianteCarrera ec " +
-                        "GROUP BY ec.carrera " +
-                        "ORDER BY COUNT(ec.estudiante) DESC",
-                Object[].class // uso objeto porque la consulta devuelve dos cosas, la carrera y la cantidad de inscriptos
-        ).getResultList();
-        em.close();
-        return resultado;
+    //b) matricular un estudiante en una carrera
+    public void matricular(Estudiante estudiante, Carrera carrera,
+                           int inscripcion, int antiguedad) {
+        EstudianteCarrera estudianteCarrera = new EstudianteCarrera(
+                0,
+                estudiante,
+                carrera,
+                inscripcion,
+                0,
+                antiguedad
+        );
+        guardar(estudianteCarrera);
     }
-    //g) recuperar los estudiantes de una determinada carrera, filtrado por ciudad de residencia
-    public List<Estudiante> estudiantesPorCarreraYCiudad(int idCarrera, String ciudad) {
-        EntityManager em = JPAUtil.getEntityManager();
-        List<Estudiante> resultado = em.createQuery(
-                        "SELECT ec.estudiante " +
-                                "FROM EstudianteCarrera ec " +
-                                "WHERE ec.carrera.idCarrera = :idCarrera " +
-                                "AND ec.estudiante.ciudad = :ciudad",
-                        Estudiante.class
-                )
-                .setParameter("idCarrera", idCarrera)
-                .setParameter("ciudad", ciudad)
-                .getResultList();
-        em.close();
-        return resultado;
-    }
+    public void insertarDatosCsv() {
+        try {
+            ArrayList<EstudianteCarrera> relaciones = new ArrayList<>();
 
+            CSVParser parser = CSVFormat.DEFAULT
+                    .withHeader()
+                    .parse(new FileReader("src/main/resources/estudianteCarrera.csv"));
+
+            EntityManager em = JPAUtil.getEntityManager();
+
+            for (CSVRecord row : parser) {
+
+                int id = Integer.parseInt(row.get("id"));
+                int dniEstudiante = Integer.parseInt(row.get("id_estudiante"));
+                int idCarrera = Integer.parseInt(row.get("id_carrera"));
+                int inscripcion = Integer.parseInt(row.get("inscripcion"));
+                int graduacion = Integer.parseInt(row.get("graduacion"));
+                int antiguedad = Integer.parseInt(row.get("antiguedad"));
+
+                Estudiante estudiante =
+                        em.find(Estudiante.class, dniEstudiante);
+
+                Carrera carrera =
+                        em.find(Carrera.class, idCarrera);
+
+                relaciones.add(new EstudianteCarrera(
+                        id,
+                        estudiante,
+                        carrera,
+                        inscripcion,
+                        graduacion,
+                        antiguedad
+                ));
+            }
+
+            em.close();
+
+            this.insertarDatos(relaciones);
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+    public void insertarDatos(ArrayList<EstudianteCarrera> relaciones) {
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            for (EstudianteCarrera ec : relaciones) {
+                em.persist(ec);
+            }
+
+            em.getTransaction().commit();
+
+            System.out.println("Datos de EstudianteCarrera cargados con éxito!");
+
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
+
+        } finally {
+            em.close();
+        }
+    }
 }
