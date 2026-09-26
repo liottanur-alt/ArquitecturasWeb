@@ -80,4 +80,26 @@ public class CarreraMySql implements RepoInterfaz<Carrera> {
         em.close();
         return resultado;
     }
+
+
+    public void insertarDesdeCSV() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try (CSVReader reader = new CSVReader(new FileReader("src/main/resources/carreras.csv"))) {
+            String[] linea;
+            reader.readNext(); // salta cabecera
+
+            em.getTransaction().begin();
+
+            while ((linea = reader.readNext()) != null) {
+                Carrera carr = new Carrera(Integer.parseInt(linea[0]), linea[1], Integer.parseInt(linea[2]), new ArrayList<>());
+                em.persist(carr);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            System.err.println("Error al insertar las carreras");
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+    }
 }
