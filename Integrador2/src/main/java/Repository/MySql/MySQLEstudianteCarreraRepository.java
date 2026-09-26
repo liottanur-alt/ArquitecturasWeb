@@ -1,4 +1,5 @@
 package Repository.MySql;
+import DTO.EstudianteCarreraDTO;
 import Factory.JPAUtil;
 import Repository.RepoInterfaz;
 import Entities.EstudianteCarrera;
@@ -53,8 +54,8 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
         em.close();
     }
     //b) matricular un estudiante en una carrera
-    public void matricular(Estudiante estudiante, Carrera carrera,
-                           int inscripcion, int antiguedad) {
+    public EstudianteCarreraDTO matricular(Estudiante estudiante, Carrera carrera,
+                                           int inscripcion, int antiguedad) {
         EstudianteCarrera estudianteCarrera = new EstudianteCarrera(
                 0,
                 estudiante,
@@ -64,6 +65,17 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
                 antiguedad
         );
         guardar(estudianteCarrera);
+        return mapear(estudianteCarrera);
+    }
+    private EstudianteCarreraDTO mapear(EstudianteCarrera ec) {
+        return new EstudianteCarreraDTO(
+                ec.getId(),
+                ec.getEstudiante().getDNI(),
+                ec.getCarrera().getIdCarrera(),
+                ec.getInscripcion(),
+                ec.getGraduacion(),
+                ec.getAntiguedad()
+        );
     }
     public void insertarDatosCsv() {
         try {
@@ -101,7 +113,6 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
             }
 
             em.close();
-
             this.insertarDatos(relaciones);
 
         } catch (Exception e) {
