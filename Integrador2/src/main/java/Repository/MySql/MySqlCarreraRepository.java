@@ -7,7 +7,14 @@ import Repository.RepoInterfaz;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-public class CarreraMySql implements RepoInterfaz<Carrera> {
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+
+import java.io.FileReader;
+import java.util.ArrayList;
+
+public class MySqlCarreraRepository implements RepoInterfaz<Carrera> {
 
     @Override
     public void guardar(Carrera objeto) {
@@ -78,5 +85,50 @@ public class CarreraMySql implements RepoInterfaz<Carrera> {
         List<CarreraDTO> resultado = em.createQuery(jpql, CarreraDTO.class).getResultList();
         em.close();
         return resultado;
+    }
+    public void insertarDatosCsv() {
+        try {
+            ArrayList<Carrera> carreras = new ArrayList<>();
+            CSVParser parser = CSVFormat.DEFAULT
+                    .withHeader()
+                    .parse(new FileReader("src/main/resources/carreras.csv"));
+
+            for (CSVRecord row : parser) {
+                int idCarrera = Integer.parseInt(row.get("id_carrera"));
+                String nombreCarrera = row.get("carrera");
+                int duracion = Integer.parseInt(row.get("duracion"));
+
+                carreras.add(new Carrera(idCarrera, nombreCarrera, duracion));
+            }
+            this.insertarDatos(carreras);
+
+        } catch (Exception e) {
+            System.out.println("Error leyendo CSV de Carreras: " + e);
+        }
+    }
+
+    public void insertarDatos(ArrayList<Carrera> carreras) {
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            for (Carrera c : carreras) {
+                em.persist(c);
+            }
+
+            em.getTransaction().commit();
+
+            System.out.println("Datos de Carrera cargados con éxito!");
+
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
+
+        } finally {
+            em.close();
+        }
     }
 }
