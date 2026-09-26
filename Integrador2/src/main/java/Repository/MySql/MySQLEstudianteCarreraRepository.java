@@ -7,8 +7,12 @@ import Entities.Carrera;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
-import com.opencsv.CSVReader;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+
 import java.io.FileReader;
+import java.util.ArrayList;
 
 public class MySQLEstudianteCarreraRepository implements RepoInterfaz<EstudianteCarrera> {
     @Override
