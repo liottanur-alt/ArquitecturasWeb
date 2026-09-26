@@ -1,11 +1,12 @@
-package entities;
+package Entities;
 
 import jakarta.persistence.*;
-
+import entities.Estudiante;
+import entities.Carrera;
 @Entity
 @Table(name = "estudianteCarrera")
 public class EstudianteCarrera {
-//id,id_estudiante,id_carrera,inscripcion,graduacion,antiguedad
+//id,estudiante,carrera,inscripcion,graduacion,antiguedad
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -22,17 +23,17 @@ public class EstudianteCarrera {
     private int inscripcion;
 
     @Column(name = "graduacion")
-    private int gradaucion;
+    private int graduacion;
 
     @Column(name = "antiguedad", nullable = false)
     private int antiguedad;
 
-    public EstudianteCarrera(int id, int id_estudiante, int id_carrera, int inscripcion, int graducion, int antiguedad) {
+    public EstudianteCarrera(int id, Estudiante estudiante, Carrera carrera, int inscripcion, int graduacion, int antiguedad) {
         this.id = id;
-        this.id_estudiante = id_estudiante;
-        this.id_carrera = id_carrera;
+        this.estudiante = estudiante;
+        this.carrera = carrera;
         this.inscripcion = inscripcion;
-        this.gradaucion = graducion;
+        this.graduacion = graduacion;
         this.antiguedad = antiguedad;
     }
 
@@ -41,47 +42,41 @@ public class EstudianteCarrera {
     public int getId() {
         return id;
     }
-
     public void setId(int id) {
         this.id = id;
     }
 
-    public int getId_estudiante() {
-        return id_estudiante;
+    public Estudiante getEstudiante() {
+        return estudiante;
+    }
+    public void setEstudiante(Estudiante estudiante) {
+        this.estudiante = estudiante;
     }
 
-    public void setId_estudiante(int id_estudiante) {
-        this.id_estudiante = id_estudiante;
+    public Carrera getCarrera() {
+        return carrera;
     }
-
-    public int getId_carrera() {
-        return id_carrera;
-    }
-
-    public void setId_carrera(int id_carrera) {
-        this.id_carrera = id_carrera;
+    public void setCarrera(Carrera carrera) {
+        this.carrera = carrera;
     }
 
     public int getInscripcion() {
         return inscripcion;
     }
-
     public void setInscripcion(int inscripcion) {
         this.inscripcion = inscripcion;
     }
 
-    public int getGraducion() {
-        return graducion;
+    public int getGraduacion() {
+        return graduacion;
     }
-
-    public void setGraducion(int graducion) {
-        this.graducion = graducion;
+    public void setGraduacion(int graduacion) {
+        this.graduacion = graduacion;
     }
 
     public int getAntiguedad() {
         return antiguedad;
     }
-
     public void setAntiguedad(int antiguedad) {
         this.antiguedad = antiguedad;
     }
@@ -89,7 +84,7 @@ public class EstudianteCarrera {
     @Override
     public String toString() {
         return "EstudianteCarrera{" + "id" + id + ", id Estudiante='" +
-                id_estudiante + '\'' + ", id carrera=" + id_carrera + ", inscripcion=" + inscripcion +
-                ", graduacion=" + graducion + ", antiguedad=" + antiguedad + '}';
+                estudiante + '\'' + ", id carrera=" + carrera + ", inscripcion=" + inscripcion +
+                ", graduacion=" + graduacion + ", antiguedad=" + antiguedad + '}';
     }
 }
