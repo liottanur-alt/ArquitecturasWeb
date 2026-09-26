@@ -1,8 +1,8 @@
 package Entities;
 
 import jakarta.persistence.*;
-import entities.Estudiante;
-import entities.Carrera;
+import Entities.Carrera;
+import Entities.Estudiante;
 @Entity
 @Table(name = "estudianteCarrera")
 public class EstudianteCarrera {
