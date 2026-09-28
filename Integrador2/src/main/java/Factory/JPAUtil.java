@@ -1,4 +1,4 @@
-package Factory;
+package main.java.Factory;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;

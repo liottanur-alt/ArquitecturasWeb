@@ -1,9 +1,9 @@
-package Repository.MySql;
+package main.java.Repository.MySql;
 
-import DTO.EstudianteDTO;
-import Entities.Estudiante;
-import Factory.JPAUtil;
-import Repository.RepoInterfaz;
+import main.java.DTO.EstudianteDTO;
+import main.java.Entities.Estudiante;
+import main.java.Factory.JPAUtil;
+import main.java.Repository.RepoInterfaz;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.apache.commons.csv.CSVFormat;

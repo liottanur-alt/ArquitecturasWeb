@@ -1,9 +1,9 @@
-package Repository.MySql;
+package main.java.Repository.MySql;
 
-import DTO.CarreraDTO;
-import Entities.Carrera;
-import Factory.JPAUtil;
-import Repository.RepoInterfaz;
+import main.java.DTO.CarreraDTO;
+import main.java.Entities.Carrera;
+import main.java.Factory.JPAUtil;
+import main.java.Repository.RepoInterfaz;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 

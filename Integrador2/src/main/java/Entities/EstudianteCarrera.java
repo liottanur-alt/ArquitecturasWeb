@@ -1,4 +1,4 @@
-package Entities;
+package main.java.Entities;
 
 import jakarta.persistence.*;
 
@@ -14,7 +14,7 @@ public class EstudianteCarrera {
     @ManyToOne
     @MapsId("idEstudiante")
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Entities.Estudiante estudiante;
+    private main.java.Entities.Estudiante estudiante;
 
     @ManyToOne
     @MapsId("idCarrera")

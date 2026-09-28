@@ -1,7 +1,7 @@
 package Repository.postgres;
 
 import DAO.FacturaProductoDAO;
-import Entities.FacturaProducto;
+import Entities.*;
 import org.apache.commons.csv.*;
 
 import java.io.FileReader;

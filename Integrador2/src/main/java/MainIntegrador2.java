@@ -1,12 +1,14 @@
-import DTO.CarreraDTO;
-import DTO.EstudianteDTO;
-import Entities.Carrera;
-import Entities.Estudiante;
-import Entities.EstudianteCarrera;
-import Entities.EstudianteCarreraPK;
-import Repository.MySql.MySQLEstudianteCarreraRepository;
-import Repository.MySql.MySqlCarreraRepository;
-import Repository.MySql.MySqlEstudianteRepository;
+package main.java;
+
+import main.java.DTO.CarreraDTO;
+import main.java.DTO.EstudianteDTO;
+import main.java.Entities.Carrera;
+import main.java.Entities.Estudiante;
+import main.java.Entities.EstudianteCarrera;
+import main.java.Entities.EstudianteCarreraPK;
+import main.java.Repository.MySql.MySQLEstudianteCarreraRepository;
+import main.java.Repository.MySql.MySqlCarreraRepository;
+import main.java.Repository.MySql.MySqlEstudianteRepository;
 
 import java.time.LocalDate;
 import java.io.IOException;
