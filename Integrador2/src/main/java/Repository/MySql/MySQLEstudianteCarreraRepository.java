@@ -13,6 +13,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import java.io.FileReader;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class MySQLEstudianteCarreraRepository implements RepoInterfaz<EstudianteCarrera> {
@@ -55,26 +56,23 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
     }
     //b) matricular un estudiante en una carrera
     public EstudianteCarreraDTO matricular(Estudiante estudiante, Carrera carrera,
-                                           int inscripcion, int antiguedad) {
+                                           LocalDate fechaInscripcion) {
         EstudianteCarrera estudianteCarrera = new EstudianteCarrera(
-                0,
+                new Entities.EstudianteCarreraPK(estudiante.getDni(), carrera.getIdCarrera()),
                 estudiante,
                 carrera,
-                inscripcion,
-                0,
-                antiguedad
+                fechaInscripcion,
+                null
         );
         guardar(estudianteCarrera);
         return mapear(estudianteCarrera);
     }
     private EstudianteCarreraDTO mapear(EstudianteCarrera ec) {
         return new EstudianteCarreraDTO(
-                ec.getId(),
-                ec.getEstudiante().getDNI(),
+                ec.getEstudiante().getDni(),
                 ec.getCarrera().getIdCarrera(),
                 ec.getInscripcion(),
-                ec.getGraduacion(),
-                ec.getAntiguedad()
+                ec.getGraduacion()
         );
     }
     public void insertarDatosCsv() {
@@ -89,12 +87,10 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
 
             for (CSVRecord row : parser) {
 
-                int id = Integer.parseInt(row.get("id"));
-                int dniEstudiante = Integer.parseInt(row.get("id_estudiante"));
+                long dniEstudiante = Long.parseLong(row.get("id_estudiante"));
                 int idCarrera = Integer.parseInt(row.get("id_carrera"));
                 int inscripcion = Integer.parseInt(row.get("inscripcion"));
                 int graduacion = Integer.parseInt(row.get("graduacion"));
-                int antiguedad = Integer.parseInt(row.get("antiguedad"));
 
                 Estudiante estudiante =
                         em.find(Estudiante.class, dniEstudiante);
@@ -103,12 +99,11 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
                         em.find(Carrera.class, idCarrera);
 
                 relaciones.add(new EstudianteCarrera(
-                        id,
+                        new Entities.EstudianteCarreraPK(dniEstudiante, idCarrera),
                         estudiante,
                         carrera,
-                        inscripcion,
-                        graduacion,
-                        antiguedad
+                        LocalDate.of(inscripcion, 1, 1),
+                        graduacion == 0 ? null : LocalDate.of(graduacion, 1, 1)
                 ));
             }
 
