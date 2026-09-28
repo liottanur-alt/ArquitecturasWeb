@@ -1,54 +1,58 @@
 package Entities;
 
 import jakarta.persistence.*;
-import Entities.Carrera;
-import Entities.Estudiante;
+
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "estudianteCarrera")
 public class EstudianteCarrera {
-//id,estudiante,carrera,inscripcion,graduacion,antiguedad
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+
+    @EmbeddedId
+    private EstudianteCarreraPK id;
 
     @ManyToOne
+    @MapsId("idEstudiante")
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Estudiante estudiante;
+    private Entities.Estudiante estudiante;
 
     @ManyToOne
+    @MapsId("idCarrera")
     @JoinColumn(name = "id_carrera", nullable = false)
     private Carrera carrera;
 
     @Column(name = "inscripcion", nullable = false)
-    private int inscripcion;
+    private LocalDate inscripcion;
 
     @Column(name = "graduacion")
-    private int graduacion;
+    private LocalDate graduacion;
 
-    @Column(name = "antiguedad", nullable = false)
-    private int antiguedad;
 
-    public EstudianteCarrera(int id, Estudiante estudiante, Carrera carrera, int inscripcion, int graduacion, int antiguedad) {
+
+    public EstudianteCarrera(EstudianteCarreraPK id, Estudiante estudiante,
+                             Carrera carrera, LocalDate inscripcion,
+                             LocalDate graduacion) {
         this.id = id;
         this.estudiante = estudiante;
         this.carrera = carrera;
         this.inscripcion = inscripcion;
         this.graduacion = graduacion;
-        this.antiguedad = antiguedad;
     }
 
     public EstudianteCarrera() {}
 
-    public int getId() {
+    public EstudianteCarreraPK getId() {
         return id;
     }
-    public void setId(int id) {
+
+    public void setId(EstudianteCarreraPK id) {
         this.id = id;
     }
 
     public Estudiante getEstudiante() {
         return estudiante;
     }
+
     public void setEstudiante(Estudiante estudiante) {
         this.estudiante = estudiante;
     }
@@ -56,35 +60,36 @@ public class EstudianteCarrera {
     public Carrera getCarrera() {
         return carrera;
     }
+
     public void setCarrera(Carrera carrera) {
         this.carrera = carrera;
     }
 
-    public int getInscripcion() {
+    public LocalDate getInscripcion() {
         return inscripcion;
     }
-    public void setInscripcion(int inscripcion) {
+
+    public void setInscripcion(LocalDate inscripcion) {
         this.inscripcion = inscripcion;
     }
 
-    public int getGraduacion() {
+    public LocalDate getGraduacion() {
         return graduacion;
     }
-    public void setGraduacion(int graduacion) {
+
+    public void setGraduacion(LocalDate graduacion) {
         this.graduacion = graduacion;
     }
 
-    public int getAntiguedad() {
-        return antiguedad;
-    }
-    public void setAntiguedad(int antiguedad) {
-        this.antiguedad = antiguedad;
-    }
 
     @Override
     public String toString() {
-        return "EstudianteCarrera{" + "id" + id + ", id Estudiante='" +
-                estudiante + '\'' + ", id carrera=" + carrera + ", inscripcion=" + inscripcion +
-                ", graduacion=" + graduacion + ", antiguedad=" + antiguedad + '}';
+        return "EstudianteCarrera{" +
+                "id=" + id +
+                ", estudiante=" + estudiante +
+                ", carrera=" + carrera +
+                ", inscripcion=" + inscripcion +
+                ", graduacion=" + graduacion +
+                '}';
     }
 }
