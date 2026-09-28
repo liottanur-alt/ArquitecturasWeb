@@ -1,30 +1,25 @@
 package DTO;
 
+import java.time.LocalDate;
+
 public class EstudianteCarreraDTO {
 
-    private int id;
-    private int dniEstudiante;
+    private long dniEstudiante;
     private int idCarrera;
-    private int inscripcion;
-    private int graduacion;
-    private int antiguedad;
+    private LocalDate inscripcion;
+    private LocalDate graduacion;
 
-    public EstudianteCarreraDTO(int id, int dniEstudiante, int idCarrera,
-                                int inscripcion, int graduacion, int antiguedad) {
-        this.id = id;
+    public EstudianteCarreraDTO(long dniEstudiante, int idCarrera,
+                                LocalDate inscripcion, LocalDate graduacion) {
         this.dniEstudiante = dniEstudiante;
         this.idCarrera = idCarrera;
         this.inscripcion = inscripcion;
         this.graduacion = graduacion;
-        this.antiguedad = antiguedad;
     }
 
     // Getters
-    public int getId() {
-        return id;
-    }
 
-    public int getDniEstudiante() {
+    public long getDniEstudiante() {
         return dniEstudiante;
     }
 
@@ -32,24 +27,17 @@ public class EstudianteCarreraDTO {
         return idCarrera;
     }
 
-    public int getInscripcion() {
+    public LocalDate getInscripcion() {
         return inscripcion;
     }
 
-    public int getGraduacion() {
+    public LocalDate getGraduacion() {
         return graduacion;
     }
 
-    public int getAntiguedad() {
-        return antiguedad;
-    }
-
     // Setters
-    public void setId(int id) {
-        this.id = id;
-    }
 
-    public void setDniEstudiante(int dniEstudiante) {
+    public void setDniEstudiante(long dniEstudiante) {
         this.dniEstudiante = dniEstudiante;
     }
 
@@ -57,15 +45,11 @@ public class EstudianteCarreraDTO {
         this.idCarrera = idCarrera;
     }
 
-    public void setInscripcion(int inscripcion) {
+    public void setInscripcion(LocalDate inscripcion) {
         this.inscripcion = inscripcion;
     }
 
-    public void setGraduacion(int graduacion) {
+    public void setGraduacion(LocalDate graduacion) {
         this.graduacion = graduacion;
-    }
-
-    public void setAntiguedad(int antiguedad) {
-        this.antiguedad = antiguedad;
     }
 }
