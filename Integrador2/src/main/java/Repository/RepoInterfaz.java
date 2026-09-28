@@ -3,11 +3,11 @@ package Repository;
 
 import java.util.List;
 
-public interface RepoInterfaz<T> {
+public interface RepoInterfaz<T, ID> {
 
     void guardar(T objeto);
 
-    T buscarPorId(int id);
+    T buscarPorId(ID id);
 
     List<T> buscarTodos();
 

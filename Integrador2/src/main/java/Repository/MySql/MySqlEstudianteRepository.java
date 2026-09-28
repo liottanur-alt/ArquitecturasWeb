@@ -14,7 +14,7 @@ import java.io.FileReader;
 import java.time.LocalDate;
 import java.util.List;
 
-public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante> {
+public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long> {
 
     // =========================================================================
     // CARGA MASIVA DESDE CSV
@@ -28,13 +28,13 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante> {
             em.getTransaction().begin();
 
             for (CSVRecord row : parser) {
-                Long dni = Long.parseLong(row.get("dni"));
+                Long dni = Long.parseLong(row.get("DNI"));
                 String nombre = row.get("nombre");
                 String apellido = row.get("apellido");
                 int edadCsv = Integer.parseInt(row.get("edad"));
                 String genero = row.get("genero");
-                String ciudad = row.get("ciudadResidencia");
-                int lu = Integer.parseInt(row.get("lu"));
+                String ciudad = row.get("ciudad");
+                int lu = Integer.parseInt(row.get("LU"));
 
                 // Instancia la entidad calculando la fechaNacimiento aproximada en el constructor
                 Estudiante estudiante = new Estudiante(dni, nombre, apellido, edadCsv, genero, ciudad, lu);
@@ -75,10 +75,10 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante> {
     }
 
     @Override
-    public Estudiante buscarPorId(int dni) {
+    public Estudiante buscarPorId(Long dni) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.find(Estudiante.class, (long) dni);
+            return em.find(Estudiante.class, dni);
         } finally {
             em.close();
         }
@@ -163,7 +163,7 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante> {
             String jpql = "SELECT new DTO.EstudianteDTO(ec.estudiante.dni, ec.estudiante.nombre, ec.estudiante.apellido, " +
                     "ec.estudiante.genero, ec.estudiante.ciudad, ec.estudiante.lu, ec.estudiante.fechaNacimiento) " +
                     "FROM EstudianteCarrera ec " +
-                    "WHERE ec.carrera.id = :idCarrera " +
+                    "WHERE ec.carrera.idCarrera = :idCarrera " +
                     "AND ec.estudiante.ciudad = :ciudad";
             TypedQuery<EstudianteDTO> query = em.createQuery(jpql, EstudianteDTO.class);
             query.setParameter("idCarrera", idCarrera);

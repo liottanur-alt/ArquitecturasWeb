@@ -14,7 +14,7 @@ import org.apache.commons.csv.CSVRecord;
 import java.io.FileReader;
 import java.util.ArrayList;
 
-public class MySqlCarreraRepository implements RepoInterfaz<Carrera> {
+public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
 
     @Override
     public void guardar(Carrera objeto) {
@@ -26,7 +26,7 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera> {
     }
 
     @Override
-    public Carrera buscarPorId(int id) {
+    public Carrera buscarPorId(Integer id) {
         EntityManager em = JPAUtil.getEntityManager();
         Carrera carrera = em.find(Carrera.class, id);
         em.close();

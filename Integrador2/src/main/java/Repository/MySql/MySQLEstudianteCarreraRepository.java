@@ -16,7 +16,7 @@ import java.io.FileReader;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class MySQLEstudianteCarreraRepository implements RepoInterfaz<EstudianteCarrera> {
+public class MySQLEstudianteCarreraRepository implements RepoInterfaz<EstudianteCarrera, Entities.EstudianteCarreraPK> {
     @Override
     public void guardar(EstudianteCarrera objeto) { //guarda una nueva inscripcion
         EntityManager em = JPAUtil.getEntityManager();
@@ -27,9 +27,9 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
     }
 
     @Override
-    public EstudianteCarrera buscarPorId(int id) { // busca una inscripcion por su id
+    public EstudianteCarrera buscarPorId(Entities.EstudianteCarreraPK id) {
         EntityManager em = JPAUtil.getEntityManager();
-        EstudianteCarrera estudianteCarrera =em.find(EstudianteCarrera.class, id);
+        EstudianteCarrera estudianteCarrera = em.find(EstudianteCarrera.class, id);
         em.close();
         return estudianteCarrera;
     }
