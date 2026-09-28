@@ -13,34 +13,32 @@ public class CarreraDTO {
         this.egresados = egresados;
     }
 
-    // Getters
     public String getNombreCarrera() {
         return nombreCarrera;
+    }
+
+    public void setNombreCarrera(String nombreCarrera) {
+        this.nombreCarrera = nombreCarrera;
     }
 
     public int getAnio() {
         return anio;
     }
 
-    public Long getInscriptos() {
-        return inscriptos;
-    }
-
-    public Long getEgresados() {
-        return egresados;
-    }
-
-    // Setters
-    public void setNombreCarrera(String nombreCarrera) {
-        this.nombreCarrera = nombreCarrera;
-    }
-
     public void setAnio(int anio) {
         this.anio = anio;
     }
 
+    public Long getInscriptos() {
+        return inscriptos;
+    }
+
     public void setInscriptos(Long inscriptos) {
         this.inscriptos = inscriptos;
+    }
+
+    public Long getEgresados() {
+        return egresados;
     }
 
     public void setEgresados(Long egresados) {
