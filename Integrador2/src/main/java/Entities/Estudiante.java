@@ -1,4 +1,4 @@
-package main.java.Entities;
+package Entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;

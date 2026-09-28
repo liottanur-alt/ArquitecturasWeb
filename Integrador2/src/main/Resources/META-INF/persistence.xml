@@ -6,9 +6,10 @@
 	<persistence-unit name="Integrador_2">
 		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
-        <class>Modelo.Carrera</class>
-        <class>Modelo.Estudiante</class>
-        <class>Modelo.EstudianteCarrera</class>
+        <class>Entities.Carrera</class>
+        <class>Entities.Estudiante</class>
+        <class>Entities.EstudianteCarrera</class>
+		<class>Entities.EstudianteCarreraPK</class>
 
 
         <properties>
