@@ -81,7 +81,7 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera> {
                 "JOIN ec.carrera c " +
                 "GROUP BY c.nombreCarrera, ec.inscripcion " +
                 "ORDER BY c.nombreCarrera ASC, ec.inscripcion ASC";
-
+        // lo agrupas por año,  "" en 2019, carrera tuadi, 0 inscriptos y  0 egrsados, 2022 6 egrasados y 0 inscptos,
         List<CarreraDTO> resultado = em.createQuery(jpql, CarreraDTO.class).getResultList();
         em.close();
         return resultado;
