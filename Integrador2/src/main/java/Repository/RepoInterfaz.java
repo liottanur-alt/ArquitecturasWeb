@@ -1,4 +1,4 @@
-package Repository;
+package main.java.Repository;
 
 import java.util.List;
 

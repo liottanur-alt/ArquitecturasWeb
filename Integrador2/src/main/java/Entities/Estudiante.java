@@ -1,23 +1,21 @@
-package Entities;
+package main.java.Entities;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "estudiante")
 public class Estudiante {
-    //DNI,nombre,apellido,edad,genero,ciudad,LU
+
     @Id
     @Column(name = "dni")
-    private int DNI;
+    private int dni;
 
     @Column(name = "nombre", nullable = false)
     private String nombre;
 
     @Column(name = "apellido", nullable = false)
     private String apellido;
-
-    @Column(name = "edad", nullable = false)
-    private int edad;
 
     @Column(name = "genero", nullable = false)
     private String genero;
@@ -26,79 +24,88 @@ public class Estudiante {
     private String ciudad;
 
     @Column(name = "lu", nullable = false)
-    private int LU;
+    private int lu;
 
-    public Estudiante(int DNI, String nombre, String apellido, int edad,  String genero, String ciudad, int LU) {
-        this.DNI = DNI;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.edad = edad;
-        this.genero = genero;
-        this.ciudad = ciudad;
-        this.LU = LU;
-    }
+    @Column(name = "anio_nacimiento", nullable = false)
+    private int anioNacimiento;
 
     public Estudiante() {}
 
-    public int getDNI() {
-        return DNI;
+    // Constructor que recibe la edad desde el CSV y calcula el año de nacimiento
+    public Estudiante(int dni, String nombre, String apellido, int edadCsv, String genero, String ciudad, int lu) {
+        this.dni = dni;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.genero = genero;
+        this.ciudad = ciudad;
+        this.lu = lu;
+        // Se calcula el año de nacimiento restando la edad al año actual
+        this.anioNacimiento = LocalDate.now().getYear() - edadCsv;
     }
 
-    public void setDNI(int DNI) {
-        this.DNI = DNI;
+    // Getters y Setters
+    public int getDni() {
+        return dni;
     }
 
-    public String getEstudianteNombre() {
+    public void setDni(int dni) {
+        this.dni = dni;
+    }
+
+    public String getNombre() {
         return nombre;
     }
 
-    public void setEstudianteNombre(String nombre) {
+    public void setNombre(String nombre) {
         this.nombre = nombre;
     }
 
-    public String getEstudianteApellido() {
+    public String getApellido() {
         return apellido;
     }
 
-    public void setEstudianteApellido(String apellido) {
+    public void setApellido(String apellido) {
         this.apellido = apellido;
     }
 
-    public int getEdad() {
-        return edad;
-    }
-
-    public void setEdad(int edad) {
-        this.edad = edad;
-    }
-
-    public String getEstudianteGenero() {
+    public String getGenero() {
         return genero;
     }
 
-    public void setEstudianteGenero(String genero) {
+    public void setGenero(String genero) {
         this.genero = genero;
     }
 
-    public String getEstudianteCiudad() {
+    public String getCiudad() {
         return ciudad;
     }
 
-    public void setEstudianteCiudad(String ciudad) {
+    public void setCiudad(String ciudad) {
         this.ciudad = ciudad;
     }
 
-    public int getLU() {
-        return LU;
+    public int getLu() {
+        return lu;
     }
 
-    public void setLU(int LU) {
-        this.LU = LU;
+    public void setLu(int lu) {
+        this.lu = lu;
     }
 
-    @Override
-    public String toString() {
-        return "Estudiante{" + "DNI" + DNI + ", nombre='" + nombre + '\'' + ", apellido='" + apellido + '\'' +
-                ", edad='" + edad + '\'' + ", genero='" + genero + '\'' + ", ciudad='" + ciudad + '\'' + ", LU=" + LU + '}';
+    public int getAnioNacimiento() {
+        return anioNacimiento;
+    }
+
+    public void setAnioNacimiento(int anioNacimiento) {
+        this.anioNacimiento = anioNacimiento;
+    }
+
+    /**
+     * @Transient indica a JPA que no persista este atributo como columna en la BD.
+     * Retorna la edad calculada dinámicamente en base al año actual.
+     */
+    @Transient
+    public int getEdad() {
+        return LocalDate.now().getYear() - this.anioNacimiento;
     }
 }
