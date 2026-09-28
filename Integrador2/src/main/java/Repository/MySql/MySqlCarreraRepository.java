@@ -89,11 +89,15 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
         }
     }
     public void insertarDatosCsv() {
+        insertarDatosCsv("src/main/resources/carreras.csv");
+    }
+
+    public void insertarDatosCsv(String rutaArchivo) {
         try {
             ArrayList<Carrera> carreras = new ArrayList<>();
             CSVParser parser = CSVFormat.DEFAULT
                     .withHeader()
-                    .parse(new FileReader("src/main/resources/carreras.csv"));
+                    .parse(new FileReader(rutaArchivo));
 
             for (CSVRecord row : parser) {
                 int idCarrera = Integer.parseInt(row.get("id_carrera"));

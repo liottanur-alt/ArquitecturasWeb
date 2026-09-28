@@ -76,12 +76,16 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
         );
     }
     public void insertarDatosCsv() {
+        insertarDatosCsv("src/main/resources/estudianteCarrera.csv");
+    }
+
+    public void insertarDatosCsv(String rutaArchivo) {
         try {
             ArrayList<EstudianteCarrera> relaciones = new ArrayList<>();
 
             CSVParser parser = CSVFormat.DEFAULT
                     .withHeader()
-                    .parse(new FileReader("src/main/resources/estudianteCarrera.csv"));
+                    .parse(new FileReader(rutaArchivo));
 
             EntityManager em = JPAUtil.getEntityManager();
 

@@ -9,6 +9,9 @@ import Repository.MySql.MySqlCarreraRepository;
 import Repository.MySql.MySqlEstudianteRepository;
 
 import java.time.LocalDate;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
 
@@ -19,6 +22,12 @@ public class MainIntegrador2 {
         MySqlEstudianteRepository estudiantes = new MySqlEstudianteRepository();
         MySqlCarreraRepository carreras = new MySqlCarreraRepository();
         MySQLEstudianteCarreraRepository matriculas = new MySQLEstudianteCarreraRepository();
+
+        try {
+            cargarCsvSiTablasVacias(estudiantes, carreras, matriculas);
+        } catch (Exception e) {
+            System.out.println("No se pudieron cargar los CSV: " + e.getMessage());
+        }
 
         int opcion;
         do {
@@ -55,6 +64,35 @@ public class MainIntegrador2 {
         } while (opcion != 0);
 
         entrada.close();
+    }
+
+    private static void cargarCsvSiTablasVacias(MySqlEstudianteRepository estudiantes,
+                                                 MySqlCarreraRepository carreras,
+                                                 MySQLEstudianteCarreraRepository matriculas) throws IOException {
+        if (estudiantes.buscarTodos().isEmpty()) {
+            estudiantes.cargarDesdeCsv(rutaCsv("estudiantes.csv"));
+        }
+        if (carreras.buscarTodos().isEmpty()) {
+            carreras.insertarDatosCsv(rutaCsv("carreras.csv"));
+        }
+        if (matriculas.buscarTodos().isEmpty()) {
+            matriculas.insertarDatosCsv(rutaCsv("estudianteCarrera.csv"));
+        }
+    }
+
+    private static String rutaCsv(String nombre) throws IOException {
+        Path[] rutas = {
+                Path.of("Integrador2", "src", "main", "Resources", nombre),
+                Path.of("src", "main", "Resources", nombre),
+                Path.of("Integrador2", "src", "main", "resources", nombre),
+                Path.of("src", "main", "resources", nombre)
+        };
+        for (Path ruta : rutas) {
+            if (Files.isRegularFile(ruta)) {
+                return ruta.toString();
+            }
+        }
+        throw new IOException("No se encontró " + nombre + " en Resources.");
     }
 
     private static void altaEstudiante(Scanner entrada, MySqlEstudianteRepository repo) {
