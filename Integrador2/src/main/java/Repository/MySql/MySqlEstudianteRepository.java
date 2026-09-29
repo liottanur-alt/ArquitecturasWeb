@@ -104,6 +104,19 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
             em.close();
         }
     }
+
+    // c) Recuperar todos los estudiantes ordenados[cite: 1]
+    @Override
+    public List<Estudiante> buscarTodos() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            String jpql = "SELECT e FROM Estudiante e ORDER BY e.apellido ASC";
+            return em.createQuery(jpql, Estudiante.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     @Override
     public void eliminar(Estudiante estudiante) {
         EntityManager em = JPAUtil.getEntityManager();
