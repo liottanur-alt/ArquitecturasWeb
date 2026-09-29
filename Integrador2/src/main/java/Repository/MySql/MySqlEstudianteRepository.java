@@ -10,7 +10,13 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
-import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,10 +26,25 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
     // CARGA MASIVA DESDE CSV
     // =========================================================================
     public void cargarDesdeCsv() {
+        InputStream stream = getClass().getResourceAsStream("/estudiantes.csv");
+        if (stream == null) {
+            throw new IllegalStateException("No se encontró el recurso estudiantes.csv");
+        }
+        cargarDesdeCsv(new InputStreamReader(stream, StandardCharsets.UTF_8));
+    }
+
+    public void cargarDesdeCsv(String rutaArchivo) {
+        try {
+            cargarDesdeCsv(Files.newBufferedReader(Paths.get(rutaArchivo), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new IllegalStateException("Error al cargar estudiantes desde CSV: " + rutaArchivo, e);
+        }
+    }
+
+    private void cargarDesdeCsv(Reader reader) {
         EntityManager em = JPAUtil.getEntityManager();
 
-        try (FileReader reader = new FileReader("Integrador2/src/main/resources/Estudiante.csv");
-             CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(reader)) {
+        try (CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader)) {
 
             em.getTransaction().begin();
 
@@ -38,7 +59,7 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
 
                 // Instancia la entidad calculando la fechaNacimiento aproximada en el constructor
                 Estudiante estudiante = new Estudiante(dni, nombre, apellido, edadCsv, genero, ciudad, lu);
-                em.persist(estudiante);
+                em.merge(estudiante);
             }
 
             em.getTransaction().commit();
@@ -48,7 +69,7 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            System.err.println("Error al cargar estudiantes desde CSV: " + e.getMessage());
+            throw new IllegalStateException("Error al cargar estudiantes desde CSV", e);
         } finally {
             em.close();
         }
@@ -83,19 +104,6 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
             em.close();
         }
     }
-
-    // c) Recuperar todos los estudiantes ordenados[cite: 1]
-    @Override
-    public List<Estudiante> buscarTodos() {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            String jpql = "SELECT e FROM Estudiante e ORDER BY e.apellido ASC";
-            return em.createQuery(jpql, Estudiante.class).getResultList();
-        } finally {
-            em.close();
-        }
-    }
-
     @Override
     public void eliminar(Estudiante estudiante) {
         EntityManager em = JPAUtil.getEntityManager();

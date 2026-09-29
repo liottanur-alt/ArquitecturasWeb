@@ -11,7 +11,13 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
-import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
@@ -32,6 +38,7 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
         em.close();
         return carrera;
     }
+
 
     @Override
     public List<Carrera> buscarTodos() {
@@ -89,16 +96,24 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
         }
     }
     public void insertarDatosCsv() {
-        insertarDatosCsv("Integrador2/src/main/resources/carreras.csv");
+        InputStream stream = getClass().getResourceAsStream("/carreras.csv");
+        if (stream == null) {
+            throw new IllegalStateException("No se encontró el recurso carreras.csv");
+        }
+        insertarDatosCsv(new InputStreamReader(stream, StandardCharsets.UTF_8));
     }
 
     public void insertarDatosCsv(String rutaArchivo) {
         try {
-            ArrayList<Carrera> carreras = new ArrayList<>();
-            CSVParser parser = CSVFormat.DEFAULT
-                    .withHeader()
-                    .parse(new FileReader(rutaArchivo));
+            insertarDatosCsv(Files.newBufferedReader(Paths.get(rutaArchivo), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new IllegalStateException("Error leyendo CSV de Carreras: " + rutaArchivo, e);
+        }
+    }
 
+    private void insertarDatosCsv(Reader reader) {
+        try (CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader)) {
+            ArrayList<Carrera> carreras = new ArrayList<>();
             for (CSVRecord row : parser) {
                 int idCarrera = Integer.parseInt(row.get("id_carrera"));
                 String nombreCarrera = row.get("carrera");
@@ -107,9 +122,8 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
                 carreras.add(new Carrera(idCarrera, nombreCarrera, duracion));
             }
             this.insertarDatos(carreras);
-
-        } catch (Exception e) {
-            System.out.println("Error leyendo CSV de Carreras: " + e);
+        } catch (IOException e) {
+            throw new IllegalStateException("Error leyendo CSV de Carreras", e);
         }
     }
 
@@ -120,7 +134,7 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
             em.getTransaction().begin();
 
             for (Carrera c : carreras) {
-                em.persist(c);
+                em.merge(c);
             }
 
             em.getTransaction().commit();

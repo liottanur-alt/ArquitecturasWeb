@@ -12,7 +12,13 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
-import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -76,31 +82,44 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
         );
     }
     public void insertarDatosCsv() {
-        insertarDatosCsv("src/main/resources/estudianteCarrera.csv");
+        InputStream stream = getClass().getResourceAsStream("/estudianteCarrera.csv");
+        if (stream == null) {
+            throw new IllegalStateException("No se encontró el recurso estudianteCarrera.csv");
+        }
+        insertarDatosCsv(new InputStreamReader(stream, StandardCharsets.UTF_8));
     }
 
     public void insertarDatosCsv(String rutaArchivo) {
         try {
-            ArrayList<EstudianteCarrera> relaciones = new ArrayList<>();
+            insertarDatosCsv(Files.newBufferedReader(Paths.get(rutaArchivo), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new IllegalStateException("Error leyendo CSV de EstudianteCarrera: " + rutaArchivo, e);
+        }
+    }
 
-            CSVParser parser = CSVFormat.DEFAULT
-                    .withHeader()
-                    .parse(new FileReader(rutaArchivo));
+    private void insertarDatosCsv(Reader reader) {
+        ArrayList<EstudianteCarrera> relaciones = new ArrayList<>();
+        EntityManager em = JPAUtil.getEntityManager();
 
-            EntityManager em = JPAUtil.getEntityManager();
-
+        try (CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader)) {
             for (CSVRecord row : parser) {
-
                 long dniEstudiante = Long.parseLong(row.get("id_estudiante"));
                 int idCarrera = Integer.parseInt(row.get("id_carrera"));
                 int inscripcion = Integer.parseInt(row.get("inscripcion"));
                 int graduacion = Integer.parseInt(row.get("graduacion"));
 
-                Estudiante estudiante =
-                        em.find(Estudiante.class, dniEstudiante);
+                // IMPORTANTE: Recuperar del contexto las entidades persistidas
+                Estudiante estudiante = em.find(Estudiante.class, dniEstudiante);
+                Carrera carrera = em.find(Carrera.class, idCarrera);
 
-                Carrera carrera =
-                        em.find(Carrera.class, idCarrera);
+                if (estudiante == null) {
+                    System.err.println("ADVERTENCIA: El estudiante DNI " + dniEstudiante + " no existe en la BD.");
+                    continue; // Saltear esta fila si el estudiante no existe
+                }
+                if (carrera == null) {
+                    System.err.println("ADVERTENCIA: La carrera ID " + idCarrera + " no existe en la BD.");
+                    continue; // Saltear esta fila si la carrera no existe
+                }
 
                 relaciones.add(new EstudianteCarrera(
                         new Entities.EstudianteCarreraPK(dniEstudiante, idCarrera),
@@ -110,13 +129,13 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
                         graduacion == 0 ? null : LocalDate.of(graduacion, 1, 1)
                 ));
             }
-
+        } catch (IOException e) {
+            throw new IllegalStateException("Error leyendo CSV de EstudianteCarrera", e);
+        } finally {
             em.close();
-            this.insertarDatos(relaciones);
-
-        } catch (Exception e) {
-            System.out.println(e);
         }
+
+        this.insertarDatos(relaciones);
     }
     public void insertarDatos(ArrayList<EstudianteCarrera> relaciones) {
         EntityManager em = JPAUtil.getEntityManager();
@@ -125,7 +144,7 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
             em.getTransaction().begin();
 
             for (EstudianteCarrera ec : relaciones) {
-                em.persist(ec);
+                em.merge(ec);
             }
 
             em.getTransaction().commit();
