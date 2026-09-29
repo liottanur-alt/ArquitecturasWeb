@@ -1,4 +1,4 @@
-package main.java.Entities;
+package Entities;
 import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;

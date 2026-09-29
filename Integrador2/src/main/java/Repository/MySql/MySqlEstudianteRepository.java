@@ -1,9 +1,9 @@
-package main.java.Repository.MySql;
+package Repository.MySql;
 
-import main.java.DTO.EstudianteDTO;
-import main.java.Entities.Estudiante;
-import main.java.Factory.JPAUtil;
-import main.java.Repository.RepoInterfaz;
+import DTO.*;
+import Entities.Estudiante;
+import Factory.JPAUtil;
+import Repository.RepoInterfaz;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.apache.commons.csv.CSVFormat;
@@ -157,15 +157,22 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
     }
 
     // g) Recuperar los estudiantes de una determinada carrera, filtrado por ciudad de residencia[cite: 1]
-    public List<EstudianteDTO> buscarPorCarreraYCiudadDTO(int idCarrera, String ciudad) {
+    public List<EstudianteDTOCarreraYCiudad> buscarPorCarreraYCiudadDTO(int idCarrera, String ciudad) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            String jpql = "SELECT new DTO.EstudianteDTO(ec.estudiante.dni, ec.estudiante.nombre, ec.estudiante.apellido, " +
-                    "ec.estudiante.genero, ec.estudiante.ciudad, ec.estudiante.lu, ec.estudiante.fechaNacimiento) " +
+            String jpql = "SELECT new DTO.EstudianteDTOCarreraYCiudad(" +
+                    "ec.estudiante.dni, " +
+                    "ec.estudiante.nombre, " +
+                    "ec.estudiante.apellido, " +
+                    "ec.estudiante.genero, " +
+                    "ec.estudiante.ciudad, " +
+                    "ec.estudiante.lu, " +
+                    "ec.estudiante.fechaNacimiento) " +
                     "FROM EstudianteCarrera ec " +
                     "WHERE ec.carrera.idCarrera = :idCarrera " +
                     "AND ec.estudiante.ciudad = :ciudad";
-            TypedQuery<EstudianteDTO> query = em.createQuery(jpql, EstudianteDTO.class);
+
+            TypedQuery<EstudianteDTOCarreraYCiudad> query = em.createQuery(jpql, EstudianteDTOCarreraYCiudad.class);
             query.setParameter("idCarrera", idCarrera);
             query.setParameter("ciudad", ciudad);
             return query.getResultList();

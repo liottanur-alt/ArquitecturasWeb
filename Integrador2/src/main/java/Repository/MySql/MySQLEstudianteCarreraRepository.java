@@ -1,10 +1,10 @@
-package main.java.Repository.MySql;
-import main.java.DTO.EstudianteCarreraDTO;
-import main.java.Factory.JPAUtil;
-import main.java.Repository.RepoInterfaz;
-import main.java.Entities.EstudianteCarrera;
-import main.java.Entities.Estudiante;
-import main.java.Entities.Carrera;
+package Repository.MySql;
+import DTO.EstudianteCarreraDTO;
+import Factory.JPAUtil;
+import Repository.RepoInterfaz;
+import Entities.EstudianteCarrera;
+import Entities.Estudiante;
+import Entities.Carrera;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 
@@ -16,7 +16,7 @@ import java.io.FileReader;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class MySQLEstudianteCarreraRepository implements RepoInterfaz<EstudianteCarrera, main.java.Entities.EstudianteCarreraPK> {
+public class MySQLEstudianteCarreraRepository implements RepoInterfaz<EstudianteCarrera, Entities.EstudianteCarreraPK> {
     @Override
     public void guardar(EstudianteCarrera objeto) { //guarda una nueva inscripcion
         EntityManager em = JPAUtil.getEntityManager();
@@ -27,7 +27,7 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
     }
 
     @Override
-    public EstudianteCarrera buscarPorId(main.java.Entities.EstudianteCarreraPK id) {
+    public EstudianteCarrera buscarPorId(Entities.EstudianteCarreraPK id) {
         EntityManager em = JPAUtil.getEntityManager();
         EstudianteCarrera estudianteCarrera = em.find(EstudianteCarrera.class, id);
         em.close();
@@ -58,7 +58,7 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
     public EstudianteCarreraDTO matricular(Estudiante estudiante, Carrera carrera,
                                            LocalDate fechaInscripcion) {
         EstudianteCarrera estudianteCarrera = new EstudianteCarrera(
-                new main.java.Entities.EstudianteCarreraPK(estudiante.getDni(), carrera.getIdCarrera()),
+                new Entities.EstudianteCarreraPK(estudiante.getDni(), carrera.getIdCarrera()),
                 estudiante,
                 carrera,
                 fechaInscripcion,
@@ -103,7 +103,7 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
                         em.find(Carrera.class, idCarrera);
 
                 relaciones.add(new EstudianteCarrera(
-                        new main.java.Entities.EstudianteCarreraPK(dniEstudiante, idCarrera),
+                        new Entities.EstudianteCarreraPK(dniEstudiante, idCarrera),
                         estudiante,
                         carrera,
                         LocalDate.of(inscripcion, 1, 1),

@@ -1,4 +1,4 @@
-package main.java.DTO;
+package DTO;
 
 public class CarreraDTO {
     private String nombreCarrera;

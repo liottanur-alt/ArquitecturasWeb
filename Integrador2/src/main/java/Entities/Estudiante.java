@@ -1,11 +1,11 @@
-package main.java.Entities;
+package Entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.Period;
 
 @Entity
-@Table(name = "estudiante")
+@Table(name = "estudiante") // Nombre explicito de la tabla
 public class Estudiante {
 
     @Id
@@ -33,7 +33,6 @@ public class Estudiante {
     public Estudiante() {
     }
 
-    // Constructor que recibe la edad desde el CSV y calcula la fecha aproximada de nacimiento
     public Estudiante(Long dni, String nombre, String apellido, int edadCsv, String genero, String ciudad, int lu) {
         this.dni = dni;
         this.nombre = nombre;
@@ -41,12 +40,10 @@ public class Estudiante {
         this.genero = genero;
         this.ciudad = ciudad;
         this.lu = lu;
-        // Calcula la fecha de nacimiento restando la edad a la fecha actual (1 de enero del año de nacimiento)
         int anioNacimiento = LocalDate.now().getYear() - edadCsv;
         this.fechaNacimiento = LocalDate.of(anioNacimiento, 1, 1);
     }
 
-    // Constructor completo si ya se posee la fecha de nacimiento
     public Estudiante(Long dni, String nombre, String apellido, String genero, String ciudad, int lu, LocalDate fechaNacimiento) {
         this.dni = dni;
         this.nombre = nombre;
@@ -79,10 +76,6 @@ public class Estudiante {
     public LocalDate getFechaNacimiento() { return fechaNacimiento; }
     public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
 
-    /**
-     * @Transient le indica a JPA que no persista este atributo en la BD.
-     * Retorna la edad calculada dinámicamente en días, meses y años a partir de la fecha actual.
-     */
     @Transient
     public int getEdad() {
         if (this.fechaNacimiento == null) return 0;

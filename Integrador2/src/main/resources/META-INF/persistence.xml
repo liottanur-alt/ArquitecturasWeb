@@ -8,9 +8,10 @@
 		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
 		<!-- Clases Entidades Mapeadas -->
-		<class>main.java.Entities.Estudiante</class>
-		<class>main.java.Entities.Carrera</class>
-		<class>main.java.Entities.EstudianteCarrera</class>
+		<class>Entities.Estudiante</class>
+		<class>Entities.Carrera</class>
+		<class>Entities.EstudianteCarrera</class>
+		<class>Entities.EstudianteCarreraPK</class>
 
 		<properties>
 			<!-- Conexión a la Base de Datos MySQL (Docker Compose) -->
