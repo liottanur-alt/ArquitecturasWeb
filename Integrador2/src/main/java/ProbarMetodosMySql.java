@@ -38,8 +38,9 @@ public class ProbarMetodosMySql {
                     + carreraRepository.getCarrerasConInscriptos());
 
             List<CarreraDTO> reporte = carreraRepository.generarReporte();
-            System.out.println("generarReporte(): " + reporte.size() + " filas");
-            for (CarreraDTO fila : reporte.stream().limit(5).toList()) {
+            System.out.println("generarReporte() - datos consultados de MySQL: "
+                    + reporte.size() + " filas");
+            for (CarreraDTO fila : reporte) {
                 System.out.printf("  %s | %d | inscriptos: %d | egresados: %d%n",
                         fila.getNombreCarrera(), fila.getAnio(),
                         fila.getInscriptos(), fila.getEgresados());

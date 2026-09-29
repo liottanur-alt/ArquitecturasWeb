@@ -5,7 +5,8 @@ import Entities.Carrera;
 import Factory.JPAUtil;
 import Repository.RepoInterfaz;
 import jakarta.persistence.EntityManager;
-import java.util.List;
+
+import java.util.*;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -18,7 +19,6 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
 
@@ -77,24 +77,66 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
 
     // 3) Generar un reporte de las carreras (inscriptos y egresados por año).
     // Se ordenan alfabéticamente por carrera y cronológicamente por año.
+    /**
+     * Genera un reporte de carreras ordenado alfabéticamente por carrera
+     * y cronológicamente por año, discriminando inscriptos y egresados.
+     */
     public List<CarreraDTO> generarReporte() {
         EntityManager em = JPAUtil.getEntityManager();
+
         try {
-            String jpql = "SELECT new DTO.CarreraDTO(" +
-                    "c.nombreCarrera, " +
-                    "YEAR(ec.inscripcion), " +
-                    "COUNT(ec.estudiante), " +
-                    "SUM(CASE WHEN ec.graduacion IS NOT NULL THEN 1L ELSE 0L END)) " +
+            // Mapa para consolidar datos por clave única: "NombreCarrera_Año"
+            Map<String, CarreraDTO> reporteMap = new HashMap<>();
+
+            // 1. Obtener Inscriptos agrupados por Carrera y Año de Inscripción
+            String jpqlInscriptos = "SELECT c.nombreCarrera, YEAR(ec.inscripcion), COUNT(ec) " +
                     "FROM EstudianteCarrera ec " +
                     "JOIN ec.carrera c " +
-                    "GROUP BY c.nombreCarrera, YEAR(ec.inscripcion) " +
-                    "ORDER BY c.nombreCarrera ASC, YEAR(ec.inscripcion) ASC";
+                    "GROUP BY c.nombreCarrera, YEAR(ec.inscripcion)";
 
-            return em.createQuery(jpql, CarreraDTO.class).getResultList();
+            List<Object[]> resultadosInscriptos = em.createQuery(jpqlInscriptos, Object[].class).getResultList();
+
+            for (Object[] fila : resultadosInscriptos) {
+                String carrera = (String) fila[0];
+                int anio = ((Number) fila[1]).intValue();
+                long cantidadInscriptos = ((Number) fila[2]).longValue();
+
+                String key = carrera + "_" + anio;
+                CarreraDTO dto = reporteMap.computeIfAbsent(key, k -> new CarreraDTO(carrera, anio));
+                dto.setInscriptos(cantidadInscriptos);
+            }
+
+            // 2. Obtener Egresados agrupados por Carrera y Año de Graduación
+            String jpqlEgresados = "SELECT c.nombreCarrera, YEAR(ec.graduacion), COUNT(ec) " +
+                    "FROM EstudianteCarrera ec " +
+                    "JOIN ec.carrera c " +
+                    "WHERE ec.graduacion IS NOT NULL " +
+                    "GROUP BY c.nombreCarrera, YEAR(ec.graduacion)";
+
+            List<Object[]> resultadosEgresados = em.createQuery(jpqlEgresados, Object[].class).getResultList();
+
+            for (Object[] fila : resultadosEgresados) {
+                String carrera = (String) fila[0];
+                int anio = ((Number) fila[1]).intValue();
+                long cantidadEgresados = ((Number) fila[2]).longValue();
+
+                String key = carrera + "_" + anio;
+                CarreraDTO dto = reporteMap.computeIfAbsent(key, k -> new CarreraDTO(carrera, anio));
+                dto.setEgresados(cantidadEgresados);
+            }
+
+            // 3. Convertir el mapa a lista y ordenar (Carrera ASC, Año ASC)
+            List<CarreraDTO> listaReporte = new ArrayList<>(reporteMap.values());
+            listaReporte.sort(Comparator.comparing(CarreraDTO::getNombreCarrera)
+                    .thenComparing(CarreraDTO::getAnio));
+
+            return listaReporte;
+
         } finally {
             em.close();
         }
     }
+
     public void insertarDatosCsv() {
         InputStream stream = getClass().getResourceAsStream("/carreras.csv");
         if (stream == null) {
