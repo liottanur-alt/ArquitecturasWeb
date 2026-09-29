@@ -27,7 +27,7 @@ public class MySQLEstudianteCarreraRepository implements RepoInterfaz<Estudiante
     public void guardar(EstudianteCarrera objeto) { //guarda una nueva inscripcion
         EntityManager em = JPAUtil.getEntityManager();
         em.getTransaction().begin();
-        em.persist(objeto);
+        em.merge(objeto);
         em.getTransaction().commit();
         em.close();
     }
