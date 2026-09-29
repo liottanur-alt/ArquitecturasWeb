@@ -19,10 +19,10 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
     // =========================================================================
     // CARGA MASIVA DESDE CSV
     // =========================================================================
-    public void cargarDesdeCsv(String rutaArchivo) {
+    public void cargarDesdeCsv() {
         EntityManager em = JPAUtil.getEntityManager();
 
-        try (FileReader reader = new FileReader(rutaArchivo);
+        try (FileReader reader = new FileReader("Integrador2/src/main/resources/Estudiante.csv");
              CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(reader)) {
 
             em.getTransaction().begin();

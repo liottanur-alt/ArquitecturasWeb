@@ -89,7 +89,7 @@ public class MySqlCarreraRepository implements RepoInterfaz<Carrera, Integer> {
         }
     }
     public void insertarDatosCsv() {
-        insertarDatosCsv("src/main/resources/carreras.csv");
+        insertarDatosCsv("Integrador2/src/main/resources/carreras.csv");
     }
 
     public void insertarDatosCsv(String rutaArchivo) {
