@@ -2,7 +2,7 @@ package Repository.mysql;
 
 import DAO.ClienteDAO;
 import entities.Cliente;
-import DTO.ClienteDTO;
+import Servicios.DTO.ClienteDTO;
 
 import java.io.FileReader;
 import java.sql.*;

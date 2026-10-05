@@ -1,7 +1,7 @@
-import DTO.CarreraDTO;
-import DTO.EstudianteCarreraDTO;
-import DTO.EstudianteDTO;
-import DTO.EstudianteDTOCarreraYCiudad;
+import Servicios.DTO.CarreraDTO;
+import Servicios.DTO.EstudianteCarreraDTO;
+import Servicios.DTO.EstudianteDTO;
+import Servicios.DTO.EstudianteDTOCarreraYCiudad;
 import Entities.Carrera;
 import Entities.Estudiante;
 import Entities.EstudianteCarrera;

@@ -1,7 +1,7 @@
 package DAO;
 
 import entities.Cliente;
-import DTO.ClienteDTO;
+import Servicios.DTO.ClienteDTO;
 import java.util.ArrayList;
 
 public interface ClienteDAO {

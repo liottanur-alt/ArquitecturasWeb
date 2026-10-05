@@ -1,6 +1,6 @@
 package Repository.MySql;
 
-import DTO.*;
+import Servicios.DTO.*;
 import Entities.Estudiante;
 import Factory.JPAUtil;
 import Repository.RepoInterfaz;
@@ -22,9 +22,8 @@ import java.util.List;
 
 public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long> {
 
-    // =========================================================================
     // CARGA MASIVA DESDE CSV
-    // =========================================================================
+
     public void cargarDesdeCsv() {
         InputStream stream = getClass().getResourceAsStream("/estudiantes.csv");
         if (stream == null) {
@@ -75,9 +74,8 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
         }
     }
 
-    // =========================================================================
+
     // MÉTODOS BASE DE RepoInterfaz<Estudiante>
-    // =========================================================================
 
     // a) Dar de alta un estudiante[cite: 1]
     @Override
@@ -133,15 +131,14 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
         }
     }
 
-    // =========================================================================
-    // CONSULTAS JPQL QUE RETORNAN DIRECTAMENTE EstudianteDTO
-    // =========================================================================
 
-    // c) Recuperar todos los estudiantes ordenados alfabéticamente por apellido (versión DTO)[cite: 1]
+    // CONSULTAS JPQL QUE RETORNAN DIRECTAMENTE EstudianteDTO
+
+    // c) Recuperar todos los estudiantes ordenados alfabéticamente por apellido (versión Servicios.DTO)[cite: 1]
     public List<EstudianteDTO> buscarTodosDTO() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            String jpql = "SELECT new DTO.EstudianteDTO(e.dni, e.nombre, e.apellido, e.genero, e.ciudad, e.lu, e.fechaNacimiento) " +
+            String jpql = "SELECT new Servicios.DTO.EstudianteDTO(e.dni, e.nombre, e.apellido, e.genero, e.ciudad, e.lu, e.fechaNacimiento) " +
                     "FROM Estudiante e ORDER BY e.apellido ASC";
             return em.createQuery(jpql, EstudianteDTO.class).getResultList();
         } finally {
@@ -153,7 +150,7 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
     public EstudianteDTO buscarPorLUDTO(int lu) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            String jpql = "SELECT new DTO.EstudianteDTO(e.dni, e.nombre, e.apellido, e.genero, e.ciudad, e.lu, e.fechaNacimiento) " +
+            String jpql = "SELECT new Servicios.DTO.EstudianteDTO(e.dni, e.nombre, e.apellido, e.genero, e.ciudad, e.lu, e.fechaNacimiento) " +
                     "FROM Estudiante e WHERE e.lu = :lu";
             TypedQuery<EstudianteDTO> query = em.createQuery(jpql, EstudianteDTO.class);
             query.setParameter("lu", lu);
@@ -167,7 +164,7 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
     public List<EstudianteDTO> buscarPorGeneroDTO(String genero) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            String jpql = "SELECT new DTO.EstudianteDTO(e.dni, e.nombre, e.apellido, e.genero, e.ciudad, e.lu, e.fechaNacimiento) " +
+            String jpql = "SELECT new Servicios.DTO.EstudianteDTO(e.dni, e.nombre, e.apellido, e.genero, e.ciudad, e.lu, e.fechaNacimiento) " +
                     "FROM Estudiante e WHERE e.genero = :genero";
             TypedQuery<EstudianteDTO> query = em.createQuery(jpql, EstudianteDTO.class);
             query.setParameter("genero", genero);
@@ -181,7 +178,7 @@ public class MySqlEstudianteRepository implements RepoInterfaz<Estudiante, Long>
     public List<EstudianteDTOCarreraYCiudad> buscarPorCarreraYCiudadDTO(int idCarrera, String ciudad) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            String jpql = "SELECT new DTO.EstudianteDTOCarreraYCiudad(" +
+            String jpql = "SELECT new Servicios.DTO.EstudianteDTOCarreraYCiudad(" +
                     "ec.estudiante.dni, " +
                     "ec.estudiante.nombre, " +
                     "ec.estudiante.apellido, " +

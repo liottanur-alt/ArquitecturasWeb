@@ -3,7 +3,7 @@ package Repository.mysql;
 import java.sql.Connection;
 
 import DAO.ProductoDAO;
-import DTO.ProductoDTO;
+import Servicios.DTO.ProductoDTO;
 import entities.Producto;
 import org.apache.commons.csv.*;
 

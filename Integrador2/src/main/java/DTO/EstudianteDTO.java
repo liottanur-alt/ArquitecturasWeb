@@ -1,4 +1,4 @@
-package DTO;
+package Servicios.DTO;
 
 import java.time.LocalDate;
 
@@ -12,7 +12,7 @@ public class EstudianteDTO {
     private int lu;
     private LocalDate fechaNacimiento;
 
-    // Constructor para consultas de proyección JPQL "SELECT new DTO.EstudianteDTO(...)"
+    // Constructor para consultas de proyección JPQL "SELECT new Servicios.DTO.EstudianteDTO(...)"
     public EstudianteDTO(Long dni, String nombre, String apellido, String genero, String ciudadResidencia, int lu, LocalDate fechaNacimiento) {
         this.dni = dni;
         this.nombre = nombre;

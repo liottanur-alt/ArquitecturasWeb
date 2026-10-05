@@ -2,7 +2,7 @@ package Repository.postgres;
 
 import java.sql.Connection;
 import DAO.ProductoDAO;
-import DTO.ProductoDTO;
+import Servicios.DTO.ProductoDTO;
 import Entities.Producto;
 import org.apache.commons.csv.*;
 
