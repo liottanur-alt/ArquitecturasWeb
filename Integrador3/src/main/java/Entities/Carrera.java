@@ -9,10 +9,10 @@ public class Carrera {
     //id_carrera, carrera, duracion
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idCarrera")
+    @Column(name = "id_carrera")
     private int idCarrera;
 
-    @Column(name = "nombreCarrera", nullable = false, length = 100)
+    @Column(name = "carrera", nullable = false, length = 100)
     private String nombreCarrera;
 
     @Column(name = "duracion")
