@@ -2,6 +2,9 @@ package Web.Carrera;
 
 import Entities.Carrera;
 import Servicios.CarreraServicios;
+import Servicios.DTO.Carrera.Req.CarrerasDTOReq;
+import Servicios.DTO.Carrera.Res.CarrerasDTORes;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,14 +16,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CarraraRecursos {
 
-    private final CarreraServicios carreraServicios
+    private final CarreraServicios carreraServicios;
 
     @GetMapping
-    public ResponseEntity<List<Carrera>> findAll() {
-        List<Carrera> carreras = this.carreraServicios.findAll();
-        return ResponseEntity.ok(carreras);
+    public List<CarrerasDTORes> findAll() {
+        return this.carreraServicios.findAll();
     }
 
-    @GetMapping
-    public ResponseEntity<List<Carrera>>
+    @GetMapping("/{id}")
+    public CarrerasDTORes findById(@PathVariable Integer id) {
+        return this.carreraServicios.findById(id);
+    }
+
+    @PostMapping
+    public ResponseEntity<CarrerasDTORes> save(@RequestBody @Valid CarrerasDTOReq request) {
+        final var result = this.carreraServicios.save(request);
+        return ResponseEntity.ok().body(result);
+    }
+
+    @GetMapping("/con-inscriptos")
+    public List<CarrerasDTORes> findCarrerasConInscriptos() {
+        return this.carreraServicios.findCarrerasOrdenadasInscriptos();
+    }
 }
