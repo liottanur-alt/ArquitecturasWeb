@@ -21,6 +21,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ExceptionDTO> handleNotFound(
+            NotFoundException ex,
+            HttpServletRequest request) {
+
+        ExceptionDTO error = new ExceptionDTO(
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+
     // Captura cualquier otro error no controlado (Error 500)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionDTO> handleGenericException(Exception ex, HttpServletRequest request) {

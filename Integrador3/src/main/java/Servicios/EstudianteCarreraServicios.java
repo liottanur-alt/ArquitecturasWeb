@@ -1,35 +1,83 @@
-package Servicios;
+ package Servicios;
+
+import Entities.Carrera;
+import Entities.Estudiante;
 import Entities.EstudianteCarrera;
 import Entities.EstudianteCarreraPK;
-import Repository.EstudianteCarreraRepository;
-import Servicios.DTO.EstudianteCarrera.Res.EstudianteCarreraResponseDTO;
+import Repository.MySql.MySQLEstudianteCarreraRepository;
+import Repository.MySql.MySqlCarreraRepository;
+import Repository.MySql.MySqlEstudianteRepository;
+import Servicios.DTO.EstudianteCarrera.Req.EstudianteCarreraDTOReq;
+import Servicios.DTO.EstudianteCarrera.Res.EstudianteCarreraDTORes;
+import Servicios.exception.NotFoundException;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import Servicios.exception.ExceptionDTO;
+
 import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class EstudianteCarreraServicios {
 
-        private final EstudianteCarreraRepository estudianteCarreraRepository;
-        @Transactional(readOnly = true) // indica que la operación es de lectura.
-        // devuelve todas las inscripciones en formato DTO.
-        public List<EstudianteCarreraResponseDTO> findAll() {
-            return estudianteCarreraRepository.findAll()
-                    .stream()
-                    .map(EstudianteCarreraResponseDTO::new)
-                    .toList();
+    private final MySQLEstudianteCarreraRepository estudianteCarreraRepository;
+    private final MySqlEstudianteRepository estudianteRepository;
+    private final MySqlCarreraRepository carreraRepository;
+
+    @Transactional
+    public EstudianteCarreraDTORes matricular(
+            EstudianteCarreraDTOReq request) {
+
+        Estudiante estudiante = estudianteRepository
+                .findById(request.getIdEstudiante())
+                .orElseThrow(() ->
+                        new NotFoundException(
+                                "Estudiante",
+                                request.getIdEstudiante()));
+
+        Carrera carrera = carreraRepository
+                .findById(request.getIdCarrera())
+                .orElseThrow(() ->
+                        new NotFoundException(
+                                "Carrera",
+                                request.getIdCarrera()));
+
+        EstudianteCarreraPK id = new EstudianteCarreraPK(
+                estudiante.getDni(),
+                carrera.getIdCarrera());
+
+        EstudianteCarrera inscripcion = new EstudianteCarrera(
+                id,
+                estudiante,
+                carrera,
+                request.getInscripcion(),
+                request.getGraduacion());
+
+        estudianteCarreraRepository.guardar(inscripcion);
+
+        return new EstudianteCarreraDTORes(inscripcion);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EstudianteCarreraDTORes> findAll() {
+        return estudianteCarreraRepository.buscarTodos()
+                .stream()
+                .map(EstudianteCarreraDTORes::new)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public EstudianteCarreraDTORes findById(
+            EstudianteCarreraPK id) {
+
+        EstudianteCarrera inscripcion =
+                estudianteCarreraRepository.buscarPorId(id);
+
+        if (inscripcion == null) {
+            throw new NotFoundException("EstudianteCarrera", id);
         }
 
-        @Transactional(readOnly = true) // indica que la operación es de lectura.
-        //busca una inscripción usando EstudianteCarreraPK, que contiene el ID del estudiante y el ID de la carrera.
-        public EstudianteCarreraResponseDTO findById(EstudianteCarreraPK id) {
-            return this.estudianteCarreraRepository.findById(id)
-                    .map(EstudianteCarreraResponseDTO::new)
-                    .orElseThrow(() ->
-                            new ExceptionDTO("EstudianteCarrera", id));
-        }
-
-
+        return new EstudianteCarreraDTORes(inscripcion);
+    }
 }

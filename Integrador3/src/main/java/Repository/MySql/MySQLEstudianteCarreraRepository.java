@@ -21,8 +21,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
-
-public class MySQLEstudianteCarreraRepository implements RepoInterfaz<EstudianteCarrera, Entities.EstudianteCarreraPK> {
+import org.springframework.stereotype.Repository;
+@Repository
+public class MySQLEstudianteCarreraRepository
+        implements RepoInterfaz<EstudianteCarrera, Entities.EstudianteCarreraPK> {
     @Override
     public void guardar(EstudianteCarrera objeto) { //guarda una nueva inscripcion
         EntityManager em = JPAUtil.getEntityManager();

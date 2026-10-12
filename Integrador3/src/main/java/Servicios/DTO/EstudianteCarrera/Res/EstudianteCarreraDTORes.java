@@ -9,14 +9,14 @@ import java.time.LocalDate;
 
 @Data
 @RequiredArgsConstructor
-public class EstudianteCarreraResponseDTO {
+public class EstudianteCarreraDTORes {
 
     private final Long idEstudiante;
     private final Integer idCarrera;
     private final LocalDate inscripcion;
     private final LocalDate graduacion;
 
-    public EstudianteCarreraResponseDTO(EstudianteCarrera ec) {
+    public EstudianteCarreraDTORes(EstudianteCarrera ec) {
         this.idEstudiante = ec.getId().getIdEstudiante();
         this.idCarrera = ec.getId().getIdCarrera();
         this.inscripcion = ec.getInscripcion();
