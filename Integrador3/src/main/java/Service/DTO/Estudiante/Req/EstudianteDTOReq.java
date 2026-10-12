@@ -1,32 +1,28 @@
-package Servicios.DTO.Estudiante.Res;
+package Service.DTO.Estudiante.Req;
 
-
-import java.time.LocalDate;
-import java.util.Objects;
-
-public class EstudianteDTORes {
+public class EstudianteDTOReq {
 
     private Long dni;
     private String nombre;
     private String apellido;
+    private int edad;
     private String genero;
     private String ciudad;
     private int lu;
-    private LocalDate fechaNacimiento;
 
-
-    public EstudianteDTORes() {
+    // Constructor vacío (requerido por frameworks como Jackson/Spring)
+    public EstudianteDTOReq() {
     }
 
-    // Constructor coincidente con la consulta JPQL SELECT new ...
-    public EstudianteDTORes(Long dni, String nombre, String apellido, String genero, String ciudad, int lu, LocalDate fechaNacimiento) {
+    // Constructor con todos los campos
+    public EstudianteDTOReq(Long dni, String nombre, String apellido, int edad, String genero, String ciudad, int lu) {
         this.dni = dni;
         this.nombre = nombre;
         this.apellido = apellido;
+        this.edad = edad;
         this.genero = genero;
         this.ciudad = ciudad;
         this.lu = lu;
-        this.fechaNacimiento = fechaNacimiento;
     }
 
     // Getters y Setters
@@ -54,6 +50,14 @@ public class EstudianteDTORes {
         this.apellido = apellido;
     }
 
+    public int getEdad() {
+        return edad;
+    }
+
+    public void setEdad(int edad) {
+        this.edad = edad;
+    }
+
     public String getGenero() {
         return genero;
     }
@@ -78,25 +82,17 @@ public class EstudianteDTORes {
         this.lu = lu;
     }
 
-    public LocalDate getFechaNacimiento() {
-        return fechaNacimiento;
-    }
-
-    public void setFechaNacimiento(LocalDate fechaNacimiento) {
-        this.fechaNacimiento = fechaNacimiento;
-    }
-
 
     @Override
     public String toString() {
-        return "EstudianteDTORes{" +
+        return "EstudianteDTOReq{" +
                 "dni=" + dni +
                 ", nombre='" + nombre + '\'' +
                 ", apellido='" + apellido + '\'' +
+                ", edad=" + edad +
                 ", genero='" + genero + '\'' +
                 ", ciudad='" + ciudad + '\'' +
                 ", lu=" + lu +
-                ", fechaNacimiento=" + fechaNacimiento +
                 '}';
     }
 }

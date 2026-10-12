@@ -1,6 +1,6 @@
 package Repository.MySql;
 
-import Servicios.DTO.CarreraDTO;
+import Service.DTO.CarreraDTO;
 import Entities.Carrera;
 import Factory.JPAUtil;
 import Repository.RepoInterfaz;

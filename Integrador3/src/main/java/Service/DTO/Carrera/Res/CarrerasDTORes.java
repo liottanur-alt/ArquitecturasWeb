@@ -1,4 +1,4 @@
-package Servicios.DTO.Carrera.Res;
+package Service.DTO.Carrera.Res;
 
 import Entities.Carrera;
 import lombok.Data;

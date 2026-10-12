@@ -1,19 +1,18 @@
-package Servicios;
+package Service;
 
 import Entities.Carrera;
 import Repository.MySql.MySqlCarreraRepository;
-import Servicios.DTO.Carrera.Req.CarrerasDTOReq;
-import Servicios.DTO.Carrera.Res.CarrerasDTORes;
+import Service.DTO.Carrera.Req.CarrerasDTOReq;
+import Service.DTO.Carrera.Res.CarrerasDTORes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CarreraServicios {
+public class CarreraService {
 
 
     private final MySqlCarreraRepository carreraRepository ;

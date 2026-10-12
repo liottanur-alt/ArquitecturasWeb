@@ -1,6 +1,6 @@
 package Repository.MySql;
 
-import Servicios.DTO.*;
+import Service.DTO.*;
 import Entities.Estudiante;
 import Factory.JPAUtil;
 import Repository.RepoInterfaz;

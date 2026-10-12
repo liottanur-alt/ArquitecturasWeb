@@ -1,7 +1,7 @@
 package DAO;
 
 import java.util.ArrayList;
-import Servicios.DTO.ProductoDTO;
+import Service.DTO.ProductoDTO;
 import entities.Producto;
 
 

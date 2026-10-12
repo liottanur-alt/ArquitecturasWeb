@@ -1,8 +1,8 @@
 package Web.Carrera;
 
-import Servicios.CarreraServicios;
-import Servicios.DTO.Carrera.Req.CarrerasDTOReq;
-import Servicios.DTO.Carrera.Res.CarrerasDTORes;
+import Service.CarreraService;
+import Service.DTO.Carrera.Req.CarrerasDTOReq;
+import Service.DTO.Carrera.Res.CarrerasDTORes;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,26 +15,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CarreraRecursos {
 
-    private final CarreraServicios carreraServicios;
+    private final CarreraService carreraService;
 
     @GetMapping
     public List<CarrerasDTORes> findAll() {
-        return this.carreraServicios.findAll();
+        return this.carreraService.findAll();
     }
 
     @GetMapping("/{id}")
     public CarrerasDTORes findById(@PathVariable Integer id) {
-        return this.carreraServicios.findById(id);
+        return this.carreraService.findById(id);
     }
 
     @PostMapping
     public ResponseEntity<CarrerasDTORes> save(@RequestBody @Valid CarrerasDTOReq request) {
-        final var result = this.carreraServicios.save(request);
+        final var result = this.carreraService.save(request);
         return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/con-inscriptos")
     public List<CarrerasDTORes> findCarrerasConInscriptos() {
-        return this.carreraServicios.findCarrerasOrdenadasInscriptos();
+        return this.carreraService.findCarrerasOrdenadasInscriptos();
     }
 }

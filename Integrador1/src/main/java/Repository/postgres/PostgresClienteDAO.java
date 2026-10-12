@@ -2,7 +2,7 @@ package Repository.postgres;
 
 import DAO.ClienteDAO;
 import Entities.Cliente;
-import Servicios.DTO.ClienteDTO;
+import Service.DTO.ClienteDTO;
 
 import java.io.FileReader;
 import java.sql.*;

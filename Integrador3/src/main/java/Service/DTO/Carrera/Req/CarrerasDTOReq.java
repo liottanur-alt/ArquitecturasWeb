@@ -1,4 +1,4 @@
-package Servicios.DTO.Carrera.Req;
+package Service.DTO.Carrera.Req;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotEmpty;

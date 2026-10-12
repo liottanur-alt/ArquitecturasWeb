@@ -1,9 +1,9 @@
 package Web.EstudianteCarrera;
 
 import Entities.EstudianteCarreraPK;
-import Servicios.EstudianteCarreraServicios;
-import Servicios.DTO.EstudianteCarrera.Req.EstudianteCarreraDTOReq;
-import Servicios.DTO.EstudianteCarrera.Res.EstudianteCarreraDTORes;
+import Service.EstudianteCarreraService;
+import Service.DTO.EstudianteCarrera.Req.EstudianteCarreraDTOReq;
+import Service.DTO.EstudianteCarrera.Res.EstudianteCarreraDTORes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,12 +15,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EstudianteCarreraRecursos {
 
-    private final EstudianteCarreraServicios estudianteCarreraServicios;
+    private final EstudianteCarreraService estudianteCarreraService;
 
     @GetMapping
     public ResponseEntity<List<EstudianteCarreraDTORes>> findAll() {
         return ResponseEntity.ok(
-                estudianteCarreraServicios.findAll()
+                estudianteCarreraService.findAll()
         );
     }
 
@@ -33,7 +33,7 @@ public class EstudianteCarreraRecursos {
                 new EstudianteCarreraPK(idEstudiante, idCarrera);
 
         return ResponseEntity.ok(
-                estudianteCarreraServicios.findById(id)
+                estudianteCarreraService.findById(id)
         );
     }
 
@@ -42,7 +42,7 @@ public class EstudianteCarreraRecursos {
             @RequestBody EstudianteCarreraDTOReq request) {
 
         return ResponseEntity.ok(
-                estudianteCarreraServicios.matricular(request)
+                estudianteCarreraService.matricular(request)
         );
     }
 }

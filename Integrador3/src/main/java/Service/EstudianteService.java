@@ -1,10 +1,10 @@
-package Servicios;
+package Service;
 
 import Entities.Estudiante;
 import Repository.MySql.MySqlEstudianteRepository;
-import Servicios.DTO.Estudiante.Req.EstudianteDTOReq;
-import Servicios.DTO.Estudiante.Res.EstudianteDTORes;
-import Servicios.DTO.EstudianteDTOCarreraYCiudad;
+import Service.DTO.Estudiante.Req.EstudianteDTOReq;
+import Service.DTO.Estudiante.Res.EstudianteDTORes;
+import Service.DTO.EstudianteDTOCarreraYCiudad;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class EstudianteServicios {
+public class EstudianteService {
 
     private final MySqlEstudianteRepository estudianteRepository;
 
     // Inyección de dependencias por constructor
-    public EstudianteServicios (MySqlEstudianteRepository estudianteRepository) {
+    public EstudianteService(MySqlEstudianteRepository estudianteRepository) {
         this.estudianteRepository = estudianteRepository;
     }
 

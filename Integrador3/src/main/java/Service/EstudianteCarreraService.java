@@ -1,4 +1,4 @@
- package Servicios;
+ package Service;
 
 import Entities.Carrera;
 import Entities.Estudiante;
@@ -7,9 +7,9 @@ import Entities.EstudianteCarreraPK;
 import Repository.MySql.MySQLEstudianteCarreraRepository;
 import Repository.MySql.MySqlCarreraRepository;
 import Repository.MySql.MySqlEstudianteRepository;
-import Servicios.DTO.EstudianteCarrera.Req.EstudianteCarreraDTOReq;
-import Servicios.DTO.EstudianteCarrera.Res.EstudianteCarreraDTORes;
-import Servicios.exception.NotFoundException;
+import Service.DTO.EstudianteCarrera.Req.EstudianteCarreraDTOReq;
+import Service.DTO.EstudianteCarrera.Res.EstudianteCarreraDTORes;
+import Service.exception.NotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,15 +19,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class EstudianteCarreraServicios {
+public class EstudianteCarreraService {
 
     private final MySQLEstudianteCarreraRepository estudianteCarreraRepository;
     private final MySqlEstudianteRepository estudianteRepository;
     private final MySqlCarreraRepository carreraRepository;
 
     @Transactional
-    public EstudianteCarreraDTORes matricular(
-            EstudianteCarreraDTOReq request) {
+    public EstudianteCarreraDTORes matricular(EstudianteCarreraDTOReq request) {
 
         Estudiante estudiante = estudianteRepository
                 .findById(request.getIdEstudiante())
@@ -54,30 +53,25 @@ public class EstudianteCarreraServicios {
                 request.getInscripcion(),
                 request.getGraduacion());
 
-        estudianteCarreraRepository.guardar(inscripcion);
 
-        return new EstudianteCarreraDTORes(inscripcion);
+        EstudianteCarrera inscripcionGuardada = estudianteCarreraRepository.save(inscripcion);
+
+        return new EstudianteCarreraDTORes(inscripcionGuardada);
     }
+
 
     @Transactional(readOnly = true)
     public List<EstudianteCarreraDTORes> findAll() {
-        return estudianteCarreraRepository.buscarTodos()
+        return estudianteCarreraRepository.buscarTodosDTO()
                 .stream()
                 .map(EstudianteCarreraDTORes::new)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public EstudianteCarreraDTORes findById(
-            EstudianteCarreraPK id) {
-
-        EstudianteCarrera inscripcion =
-                estudianteCarreraRepository.buscarPorId(id);
-
-        if (inscripcion == null) {
-            throw new NotFoundException("EstudianteCarrera", id);
-        }
-
-        return new EstudianteCarreraDTORes(inscripcion);
+    public EstudianteCarreraDTORes findById(EstudianteCarreraPK id) {
+        return estudianteCarreraRepository.findById(id)
+                .map(EstudianteCarreraDTORes::new)
+                .orElseThrow(() -> new NotFoundException("EstudianteCarrera", id));
     }
 }
