@@ -1,6 +1,5 @@
 package Web.Carrera;
 
-import Entities.Carrera;
 import Servicios.CarreraServicios;
 import Servicios.DTO.Carrera.Req.CarrerasDTOReq;
 import Servicios.DTO.Carrera.Res.CarrerasDTORes;
@@ -14,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/carreras")
 @RequiredArgsConstructor
-public class CarraraRecursos {
+public class CarreraRecursos {
 
     private final CarreraServicios carreraServicios;
 
