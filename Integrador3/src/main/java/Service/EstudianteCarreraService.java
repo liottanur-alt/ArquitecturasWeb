@@ -84,10 +84,10 @@ public class EstudianteCarreraService {
                 .orElseThrow(() -> new NotFoundException("EstudianteCarrera", id));
     }
     public void cargarEstudianteCarreraDesdeCsv() {
-        InputStream stream =getClass().getResourceAsStream("/estudiante_carrera.csv");
+        InputStream stream =getClass().getResourceAsStream("/estudianteCarrera.csv");
 
         if (stream == null) {
-            throw new IllegalStateException("No se encontró el recurso estudiante_carrera.csv en src/main/resources");
+            throw new IllegalStateException("No se encontró el recurso estudiantecarrera.csv en src/main/resources");
         }
         cargarEstudianteCarreraDesdeCsv(new InputStreamReader(stream, StandardCharsets.UTF_8));
     }
@@ -102,33 +102,56 @@ public class EstudianteCarreraService {
             List<EstudianteCarrera> relaciones = new ArrayList<>();
 
             for (CSVRecord row : parser) {
-                Long idEstudiante = Long.parseLong(row.get("id_estudiante"));
+                long dniEstudiante = Long.parseLong(row.get("id_estudiante"));
                 int idCarrera = Integer.parseInt(row.get("id_carrera"));
-                LocalDate inscripcion = LocalDate.parse(row.get("inscripcion"));
+                int anioInscripcion = Integer.parseInt(row.get("inscripcion"));
+                int anioGraduacion = Integer.parseInt(row.get("graduacion"));
 
-                String graduacionTexto = row.get("graduacion");
+                Estudiante estudiante = estudianteRepository
+                        .findById(dniEstudiante).orElse(null);
 
-                LocalDate graduacion = graduacionTexto == null || graduacionTexto.isBlank() ? null : LocalDate.parse(graduacionTexto);
+                Carrera carrera = carreraRepository
+                        .findById(idCarrera).orElse(null);
 
-                Entities.Estudiante estudiante = estudianteRepository.findById(idEstudiante).orElseThrow(() -> new IllegalArgumentException("No existe el estudiante con ID " + idEstudiante));
-                Carrera carrera = carreraRepository.findById(idCarrera)
-                        .orElseThrow(() -> new IllegalArgumentException("No existe la carrera con ID " + idCarrera));
+                if (estudiante == null) {
+                    System.err.println(
+                            "ADVERTENCIA: El estudiante DNI "
+                                    + dniEstudiante + " no existe en la BD."
+                    );
+                    continue;
+                }
 
-                EstudianteCarrera relacion = new EstudianteCarrera();
-                relacion.setEstudiante(estudiante);
-                relacion.setCarrera(carrera);
-                relacion.setInscripcion(inscripcion);
-                relacion.setGraduacion(graduacion);
+                if (carrera == null) {
+                    System.err.println(
+                            "ADVERTENCIA: La carrera ID "
+                                    + idCarrera + " no existe en la BD."
+                    );
+                    continue;
+                }
+
+                EstudianteCarrera relacion = new EstudianteCarrera(
+                        new EstudianteCarreraPK(dniEstudiante, idCarrera),
+                        estudiante,
+                        carrera,
+                        LocalDate.of(anioInscripcion, 1, 1),
+                        anioGraduacion == 0
+                                ? null
+                                : LocalDate.of(anioGraduacion, 1, 1)
+                );
+
                 relaciones.add(relacion);
             }
 
             estudianteCarreraRepository.saveAll(relaciones);
 
-            System.out.println("Relaciones estudiante-carrera cargadas correctamente.");
+            System.out.println(
+                    "Datos de EstudianteCarrera cargados con éxito!"
+            );
 
         } catch (Exception e) {
             throw new IllegalStateException(
-                    "Error al procesar el archivo CSV de estudiante-carrera", e
+                    "Error al procesar el archivo CSV de estudiante-carrera",
+                    e
             );
         }
     }

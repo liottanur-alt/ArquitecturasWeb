@@ -77,8 +77,8 @@ public class CarreraService {
                 .parse(reader)) {
             List<Carrera> carreras = new ArrayList<>();
             for (CSVRecord row : parser) {
-                int idCarrera = Integer.parseInt(row.get("idCarrera"));
-                String nombreCarrera = row.get("nombreCarrera");
+                int idCarrera = Integer.parseInt(row.get("id_carrera"));
+                String nombreCarrera = row.get("carrera");
                 int duracion = Integer.parseInt(row.get("duracion"));
                 Carrera carrera = new Carrera(idCarrera, nombreCarrera,duracion);
                 carreras.add(carrera);
