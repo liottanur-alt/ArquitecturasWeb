@@ -45,4 +45,9 @@ public class EstudianteCarreraRecursos {
                 estudianteCarreraService.matricular(request)
         );
     }
+    @PostMapping("/cargar-csv")
+    public ResponseEntity<String> cargarDesdeCsv() {
+        estudianteCarreraService.cargarEstudianteCarreraDesdeCsv();
+        return ResponseEntity.ok("Archivo CSV procesado e insertado en la base de datos correctamente.");
+    }
 }

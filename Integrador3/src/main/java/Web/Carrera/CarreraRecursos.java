@@ -37,4 +37,9 @@ public class CarreraRecursos {
     public List<CarrerasDTORes> findCarrerasConInscriptos() {
         return this.carreraService.findCarrerasOrdenadasInscriptos();
     }
+    @PostMapping("/cargar-csv")
+    public ResponseEntity<String> cargarDesdeCsv() {
+        carreraService.cargarCarrerasDesdeCsv();
+        return ResponseEntity.ok("Archivo CSV procesado e insertado en la base de datos correctamente.");
+    }
 }

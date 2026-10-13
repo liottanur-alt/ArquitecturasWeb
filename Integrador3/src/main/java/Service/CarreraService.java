@@ -5,9 +5,17 @@ import Repository.MySql.MySqlCarreraRepository;
 import Service.DTO.Carrera.Req.CarrerasDTOReq;
 import Service.DTO.Carrera.Res.CarrerasDTORes;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -46,5 +54,40 @@ public class CarreraService {
         return this.carreraRepository.findCarrerasOrdenadasInscriptos().stream()
                 .map(CarrerasDTORes::new)
                 .toList();
+    }
+
+    public void cargarCarrerasDesdeCsv() {
+        InputStream stream = getClass().getResourceAsStream("/carreras.csv");
+
+        if (stream == null) {
+            throw new IllegalStateException(
+                    "No se encontró el recurso carreras.csv en src/main/resources"
+            );
+        }
+
+        cargarCarrerasDesdeCsv(new InputStreamReader(stream, StandardCharsets.UTF_8)
+        );
+    }
+    @Transactional
+    public void cargarCarrerasDesdeCsv(Reader reader) {
+        try (CSVParser parser = CSVFormat.DEFAULT.builder()
+                .setHeader()
+                .setSkipHeaderRecord(true)
+                .build()
+                .parse(reader)) {
+            List<Carrera> carreras = new ArrayList<>();
+            for (CSVRecord row : parser) {
+                int idCarrera = Integer.parseInt(row.get("idCarrera"));
+                String nombreCarrera = row.get("nombreCarrera");
+                int duracion = Integer.parseInt(row.get("duracion"));
+                Carrera carrera = new Carrera(idCarrera, nombreCarrera,duracion);
+                carreras.add(carrera);
+            }
+            carreraRepository.saveAll(carreras);
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Error al procesar el archivo CSV de carreras", e
+            );
+        }
     }
 }

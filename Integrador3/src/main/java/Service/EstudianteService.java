@@ -38,7 +38,7 @@ public class EstudianteService {
 
     @Transactional
     public void cargarDesdeCsv() {
-        InputStream stream = getClass().getResourceAsStream("classpath:estudiantes.csv");
+        InputStream stream = getClass().getResourceAsStream("/estudiantes.csv");
         if (stream == null) {
             throw new IllegalStateException("No se encontró el recurso estudiantes.csv en src/main/resources");
         }
