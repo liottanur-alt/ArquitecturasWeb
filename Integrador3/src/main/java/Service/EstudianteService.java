@@ -4,7 +4,8 @@ import Entities.Estudiante;
 import Repository.MySql.MySqlEstudianteRepository;
 import Service.DTO.Estudiante.Req.EstudianteDTOReq;
 import Service.DTO.Estudiante.Res.EstudianteDTORes;
-import Service.DTO.EstudianteDTOCarreraYCiudad;
+import Service.DTO.Estudiante.Res.EstudianteDTOCarreraYCiudad;
+import Service.exception.NotFoundException;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -20,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class EstudianteService {
@@ -107,9 +107,12 @@ public class EstudianteService {
 
     // b) Buscar por DNI (Devuelve DTO de respuesta)
     @Transactional(readOnly = true)
-    public Optional<EstudianteDTORes> buscarPorDni(Long dni) {
+    public EstudianteDTORes buscarPorDni(Long dni) {
         return estudianteRepository.findById(dni)
-                .map(this::mapToDTORes);
+                .map(this::mapToDTORes)
+                .orElseThrow(() ->
+                        new NotFoundException("Estudiante", dni)
+                );
     }
 
     // c) Recuperar todos los estudiantes ordenados alfabéticamente (DTO)
@@ -120,8 +123,8 @@ public class EstudianteService {
 
     // d) Recuperar por Libreta Universitaria (LU)
     @Transactional(readOnly = true)
-    public Optional<EstudianteDTORes> buscarPorLUDTO(int lu) {
-        return estudianteRepository.buscarPorLUDTO(lu);
+    public EstudianteDTORes buscarPorLUDTO(int lu) {
+        return estudianteRepository.buscarPorLUDTO(lu).orElseThrow(() -> new NotFoundException("Estudiante con LU", lu));
     }
 
     // e) Filtrar por género
@@ -139,6 +142,9 @@ public class EstudianteService {
     // f) Eliminar un estudiante por su DNI
     @Transactional
     public void eliminarPorDni(Long dni) {
+        if (!estudianteRepository.existsById(dni)) {
+            throw new NotFoundException("Estudiante", dni);
+        }
         estudianteRepository.deleteById(dni);
     }
 

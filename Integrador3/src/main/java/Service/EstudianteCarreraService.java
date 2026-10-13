@@ -83,6 +83,7 @@ public class EstudianteCarreraService {
                 .map(EstudianteCarreraDTORes::new)
                 .orElseThrow(() -> new NotFoundException("EstudianteCarrera", id));
     }
+    @Transactional
     public void cargarEstudianteCarreraDesdeCsv() {
         InputStream stream =getClass().getResourceAsStream("/estudianteCarrera.csv");
 

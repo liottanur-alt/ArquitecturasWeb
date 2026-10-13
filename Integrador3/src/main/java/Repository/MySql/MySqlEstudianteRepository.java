@@ -2,7 +2,7 @@ package Repository.MySql;
 
 import Entities.Estudiante;
 import Service.DTO.Estudiante.Res.EstudianteDTORes;
-import Service.DTO.EstudianteDTOCarreraYCiudad;
+import Service.DTO.Estudiante.Res.EstudianteDTOCarreraYCiudad;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,8 +32,8 @@ public interface MySqlEstudianteRepository extends JpaRepository<Estudiante, Lon
             "FROM Estudiante e WHERE e.genero = :genero")
     List<EstudianteDTORes> buscarPorGeneroDTO(@Param("genero") String genero);
 
-    // g) Recuperar los estudiantes de una determinada carrera, filtrado por ciudad de residencia
-    @Query("SELECT new Service.DTO.EstudianteDTOCarreraYCiudad(" +
+    // g) Recuperar los estudiantes de una determinada carrera,filtrado por ciudad de residencia
+    @Query("SELECT new Service.DTO.Estudiante.Res.EstudianteDTOCarreraYCiudad(" +
             "ec.estudiante.dni, " +
             "ec.estudiante.nombre, " +
             "ec.estudiante.apellido, " +

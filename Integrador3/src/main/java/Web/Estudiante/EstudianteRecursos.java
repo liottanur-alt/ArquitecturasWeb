@@ -3,7 +3,7 @@ package Web.Estudiante;
 import Service.EstudianteService;
 import Service.DTO.Estudiante.Req.EstudianteDTOReq;
 import Service.DTO.Estudiante.Res.EstudianteDTORes;
-import Service.DTO.EstudianteDTOCarreraYCiudad;
+import Service.DTO.Estudiante.Res.EstudianteDTOCarreraYCiudad;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,9 +53,7 @@ public class EstudianteRecursos {
     // d) Recuperar un estudiante por su Número de Libreta Universitaria (LU)
     @GetMapping("/lu/{lu}")
     public ResponseEntity<EstudianteDTORes> buscarPorLU(@PathVariable int lu) {
-        return estudianteService.buscarPorLUDTO(lu)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(estudianteService.buscarPorLUDTO(lu));
     }
 
     // e) Recuperar todos los estudiantes en base a su género
@@ -67,9 +65,7 @@ public class EstudianteRecursos {
 
     // g) Recuperar los estudiantes de una determinada carrera, filtrados por ciudad de residencia
     @GetMapping("/carrera/{idCarrera}/ciudad/{ciudad}")
-    public ResponseEntity<List<EstudianteDTOCarreraYCiudad>> buscarPorCarreraYCiudad(
-            @PathVariable int idCarrera,
-            @PathVariable String ciudad) {
+    public ResponseEntity<List<EstudianteDTOCarreraYCiudad>> buscarPorCarreraYCiudad(@PathVariable int idCarrera, @PathVariable String ciudad) {
         List<EstudianteDTOCarreraYCiudad> estudiantes = estudianteService.buscarPorCarreraYCiudadDTO(idCarrera, ciudad);
         return ResponseEntity.ok(estudiantes);
     }

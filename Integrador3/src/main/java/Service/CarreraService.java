@@ -1,9 +1,12 @@
 package Service;
 
 import Entities.Carrera;
+import Repository.MySql.MySQLEstudianteCarreraRepository;
 import Repository.MySql.MySqlCarreraRepository;
 import Service.DTO.Carrera.Req.CarrerasDTOReq;
+import Service.DTO.Carrera.Res.CarreraDTO;
 import Service.DTO.Carrera.Res.CarrerasDTORes;
+import Service.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -15,8 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class CarreraService {
 
 
     private final MySqlCarreraRepository carreraRepository ;
+    private final MySQLEstudianteCarreraRepository estudianteCarreraRepository;
 
     @Transactional
     public CarrerasDTORes save(CarrerasDTOReq request) {
@@ -42,20 +45,19 @@ public class CarreraService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+   @Transactional(readOnly = true)
     public CarrerasDTORes findById(Integer id) {
-        return this.carreraRepository.findById(id)
-                .map(CarrerasDTORes::new)
-                .orElseThrow(() -> new RuntimeException("Carrera no encontrada con id: " + id));
+        return this.carreraRepository.findById(id).map(CarrerasDTORes::new).orElseThrow(() ->new NotFoundException("Carrera", id));
     }
 
     @Transactional(readOnly = true)
-    public List<CarrerasDTORes> findCarrerasOrdenadasInscriptos(){
+    public List<CarreraDTO> findCarrerasOrdenadasInscriptos(){
         return this.carreraRepository.findCarrerasOrdenadasInscriptos().stream()
-                .map(CarrerasDTORes::new)
+                .map(CarreraDTO::new)
                 .toList();
     }
 
+    @Transactional
     public void cargarCarrerasDesdeCsv() {
         InputStream stream = getClass().getResourceAsStream("/carreras.csv");
 
@@ -89,5 +91,41 @@ public class CarreraService {
                     "Error al procesar el archivo CSV de carreras", e
             );
         }
+    }
+
+    // 3) Generar un reporte de las carreras (inscriptos y egresados por año).
+    // Se ordenan alfabéticamente por carrera y cronológicamente por año.
+    @Transactional(readOnly = true)
+    public List<CarreraDTO> generarReporte() {
+
+        Map<String, CarreraDTO> reporteMap = new HashMap<>();
+
+        // 1. Obtener inscriptos por carrera y año
+        List<Object[]> resultadosInscriptos = estudianteCarreraRepository.contarInscriptosPorCarreraYAnio();
+
+        for (Object[] fila : resultadosInscriptos) {
+            String carrera = (String) fila[0];
+            int anio = ((Number) fila[1]).intValue();
+            long cantidad = ((Number) fila[2]).longValue();
+            String clave = carrera + "_" + anio;
+            CarreraDTO dto = reporteMap.computeIfAbsent(clave, k -> new CarreraDTO(carrera, anio));
+            dto.setInscriptos(cantidad);
+        }
+        // 2. Obtener egresados por carrera y año
+        List<Object[]> resultadosEgresados = estudianteCarreraRepository.contarEgresadosPorCarreraYAnio();
+
+        for (Object[] fila : resultadosEgresados) {
+            String carrera = (String) fila[0];
+            int anio = ((Number) fila[1]).intValue();
+            long cantidad = ((Number) fila[2]).longValue();
+            String clave = carrera + "_" + anio;
+            CarreraDTO dto = reporteMap.computeIfAbsent(clave, k -> new CarreraDTO(carrera, anio));
+            dto.setEgresados(cantidad);
+        }
+        // 3. Convertir a lista y ordenar
+        List<CarreraDTO> listaReporte =new ArrayList<>(reporteMap.values());
+        listaReporte.sort(Comparator.comparing(CarreraDTO::getNombreCarrera).thenComparing(CarreraDTO::getAnio));
+
+        return listaReporte;
     }
 }

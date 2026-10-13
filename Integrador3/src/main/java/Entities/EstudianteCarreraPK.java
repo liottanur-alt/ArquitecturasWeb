@@ -48,4 +48,12 @@ public class EstudianteCarreraPK implements Serializable {
     public int hashCode() {
         return Objects.hash(idEstudiante, idCarrera);
     }
+
+    @Override
+    public String toString() {
+        return "EstudianteCarreraPK{" +
+                "idEstudiante=" + idEstudiante +
+                ", idCarrera=" + idCarrera +
+                '}';
+    }
 }

@@ -20,11 +20,8 @@ public class EstudianteCarreraDTORes {
     private LocalDate inscripcion;
     private LocalDate graduacion;
 
-    // 1. Constructor vacío (requerido por Jackson / Spring para deserializar JSON)
-    public EstudianteCarreraDTORes() {
-    }
 
-    // 2. Constructor con todos los campos (requerido por consultas JPQL "SELECT new ...")
+    // Constructor con todos los campos (requerido por consultas JPQL "SELECT new ...")
     public EstudianteCarreraDTORes(Long idEstudiante, Integer idCarrera, LocalDate inscripcion, LocalDate graduacion) {
         this.idEstudiante = idEstudiante;
         this.idCarrera = idCarrera;
@@ -32,7 +29,7 @@ public class EstudianteCarreraDTORes {
         this.graduacion = graduacion;
     }
 
-    // 3. Constructor de conveniencia (para mapear directamente desde la Entidad en tus servicios)
+    // Constructor de conveniencia (para mapear directamente desde la Entidad en tus servicios)
     public EstudianteCarreraDTORes(EstudianteCarrera ec) {
         if (ec != null) {
             this.idEstudiante = (ec.getId() != null) ? ec.getId().getIdEstudiante() : null;
@@ -42,14 +39,6 @@ public class EstudianteCarreraDTORes {
         }
     }
 
-    public EstudianteCarreraDTORes(Estudiante estudiante) {
-        if (estudiante != null) {
-            this.idEstudiante = estudiante.getDni();
-            this.idCarrera = null;
-            this.inscripcion = null;
-            this.graduacion = null;
-        }
-    }
 
     public EstudianteCarreraDTORes(EstudianteCarreraDTORes dto) {
         if (dto != null) {

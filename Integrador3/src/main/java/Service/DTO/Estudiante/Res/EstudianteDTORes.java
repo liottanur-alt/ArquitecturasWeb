@@ -14,9 +14,6 @@ public class EstudianteDTORes {
     private LocalDate fechaNacimiento;
 
 
-    public EstudianteDTORes() {
-    }
-
     // Constructor coincidente con la consulta JPQL SELECT new ...
     public EstudianteDTORes(Long dni, String nombre, String apellido, String genero, String ciudad, int lu, LocalDate fechaNacimiento) {
         this.dni = dni;

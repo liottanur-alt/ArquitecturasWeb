@@ -1,4 +1,4 @@
-package Service.DTO;
+package Service.DTO.Carrera.Res;
 
 public class CarreraDTO {
 
@@ -19,6 +19,13 @@ public class CarreraDTO {
         this.anio = anio;
         this.inscriptos = inscriptos;
         this.egresados = egresados;
+    }
+
+    public CarreraDTO(CarreraDTO carreraDTO) {
+        this.nombreCarrera = carreraDTO.nombreCarrera;
+        this.anio = carreraDTO.anio;
+        this.inscriptos = carreraDTO.inscriptos;
+        this.egresados = carreraDTO.egresados;
     }
 
     // Getters y Setters

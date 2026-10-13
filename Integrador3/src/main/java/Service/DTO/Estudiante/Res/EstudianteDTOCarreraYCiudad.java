@@ -1,4 +1,4 @@
-package Service.DTO;
+package Service.DTO.Estudiante.Res;
 
 import java.time.LocalDate;
 

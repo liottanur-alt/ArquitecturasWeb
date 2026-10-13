@@ -1,7 +1,9 @@
 package Web.Carrera;
 
 import Service.CarreraService;
+import Service.DTO.Carrera.Res.CarreraDTO;
 import Service.DTO.Carrera.Req.CarrerasDTOReq;
+import Service.DTO.Carrera.Res.CarreraDTO;
 import Service.DTO.Carrera.Res.CarrerasDTORes;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +36,16 @@ public class CarreraRecursos {
     }
 
     @GetMapping("/con-inscriptos")
-    public List<CarrerasDTORes> findCarrerasConInscriptos() {
+    public List<CarreraDTO> findCarrerasConInscriptos() {
         return this.carreraService.findCarrerasOrdenadasInscriptos();
     }
     @PostMapping("/cargar-csv")
     public ResponseEntity<String> cargarDesdeCsv() {
         carreraService.cargarCarrerasDesdeCsv();
         return ResponseEntity.ok("Archivo CSV procesado e insertado en la base de datos correctamente.");
+    }
+    @GetMapping("/reporte")
+    public ResponseEntity<List<CarreraDTO>> generarReporte() {
+        return ResponseEntity.ok(carreraService.generarReporte());
     }
 }

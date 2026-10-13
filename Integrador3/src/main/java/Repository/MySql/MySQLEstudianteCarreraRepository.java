@@ -20,4 +20,20 @@ public interface MySQLEstudianteCarreraRepository extends JpaRepository<Estudian
             "ec.id.idEstudiante, ec.id.idCarrera, ec.inscripcion, ec.graduacion) " +
             "FROM EstudianteCarrera ec")
     List<EstudianteCarreraDTORes> buscarTodosDTO();
+    @Query("""
+    SELECT c.nombreCarrera, YEAR(ec.inscripcion), COUNT(ec)
+    FROM EstudianteCarrera ec
+    JOIN ec.carrera c
+    GROUP BY c.nombreCarrera, YEAR(ec.inscripcion)
+""")
+    List<Object[]> contarInscriptosPorCarreraYAnio();
+
+    @Query("""
+    SELECT c.nombreCarrera, YEAR(ec.graduacion), COUNT(ec)
+    FROM EstudianteCarrera ec
+    JOIN ec.carrera c
+    WHERE ec.graduacion IS NOT NULL
+    GROUP BY c.nombreCarrera, YEAR(ec.graduacion)
+""")
+    List<Object[]> contarEgresadosPorCarreraYAnio();
 }
