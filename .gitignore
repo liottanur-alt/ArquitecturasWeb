@@ -1,0 +1,6 @@
+# Carpetas generadas por Maven en todos los proyectos
+target/
+
+# Configuración y metadatos de IntelliJ IDEA en todos los proyectos
+.idea/
+*.iml

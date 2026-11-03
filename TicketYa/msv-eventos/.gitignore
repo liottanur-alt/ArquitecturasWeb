@@ -1,0 +1,10 @@
+# Archivos compilados por Maven
+target/
+
+# Archivos de IntelliJ IDEA
+.idea/
+*.iml
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
