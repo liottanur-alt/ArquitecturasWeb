@@ -23,26 +23,26 @@ microservicios/
 
 ## Responsabilidades
 
-### 1. msv-eventos
+### 1. msv-eventos Pureto:8001
 Gestionar los eventos, lugares y artistas.
 
 **Entidades:** `Evento`, `Lugar`, `Artista`
 
-### 2. msv-sectores-asientos
+### 2. msv-sectores-asientos Pureto:8002
 Gestionar los sectores, asientos y su disponibilidad.
 
 **Entidades:** `Sector`, `Asiento`
 
-### 3. msv-compras
+### 3. msv-compras Pureto:8003
 Gestionar las solicitudes, compras y entradas.
 
 **Entidades:** `Compra`, `Entrada`, `Solicitud`
 
-### 4. msv-usuarios
+### 4. msv-usuarios Pureto:8004
 Gestionar los usuarios y sus roles.
 
 **Entidades:** `Usuario`, `Rol`
 
-## API Gateway
+## API Gateway Pureto:8080
 
 Centralizar las peticiones HTTP y redirigirlas al microservicio correspondiente.
