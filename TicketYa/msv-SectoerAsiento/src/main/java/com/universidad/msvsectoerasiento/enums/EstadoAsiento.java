@@ -1,4 +1,4 @@
-package com.ticketya.eventos.enums;
+package com.universidad.msvsectoerasiento.enums;
 
 public enum EstadoAsiento {
     DISPONIBLE,

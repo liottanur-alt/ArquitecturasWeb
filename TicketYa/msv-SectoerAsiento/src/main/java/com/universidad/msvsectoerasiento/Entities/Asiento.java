@@ -1,4 +1,4 @@
-package com.ticketya.eventos.entities;
+package com.universidad.msvsectoerasiento.Entities;
 
 import com.ticketya.eventos.enums.EstadoAsiento;
 import jakarta.persistence.Entity;
