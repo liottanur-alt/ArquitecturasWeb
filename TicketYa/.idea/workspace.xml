@@ -4,20 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/RolRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/RolRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/UsuarioRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/UsuarioRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioPersistenceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioPersistenceTests.java" afterDir="false" />
-    </list>
+    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
