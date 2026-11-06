@@ -1,4 +1,4 @@
-package com.ticketya.eventos.enums;
+package msvevento.entity;
 
 public enum TipoEvento {
     RECITAL,

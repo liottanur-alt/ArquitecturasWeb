@@ -1,6 +1,7 @@
-package com.ticketya.eventos.entities;
+package msvevento.entity;
 
-import com.ticketya.eventos.enums.TipoLugar;
+
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

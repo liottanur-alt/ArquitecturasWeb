@@ -1,8 +1,6 @@
-package com.ticketya.eventos.entities;
+package msvevento.entity;
 
-import com.ticketya.eventos.enums.EstadoEvento;
-import com.ticketya.eventos.enums.EstadoPublicacion;
-import com.ticketya.eventos.enums.TipoEvento;
+
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
