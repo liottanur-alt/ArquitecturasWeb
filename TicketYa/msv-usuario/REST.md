@@ -64,7 +64,41 @@ no consulta ni valida su existencia en el microservicio de artistas.
 - 404: usuario o rol inexistente.
 - 409: email, DNI o nombre de rol duplicado; rol en uso; otra restriccion de integridad.
 
-La autenticacion y autorizacion por roles todavia no estan implementadas.
+## Autenticacion JWT
+
+`POST /auth/registro` es publico. Crea un CLIENTE y devuelve su perfil (201),
+sin password ni hash. No acepta la asignacion de roles desde el registro.
+
+```json
+{"nombre":"Ana","email":"ana@example.com","dni":"12345678","ciudad":"Tandil","password":"1234"}
+```
+
+`POST /auth/login` es publico:
+
+```json
+{"email":"ana@example.com","password":"1234"}
+```
+
+Devuelve un access token firmado, valido por 1800 segundos:
+
+```json
+{"accessToken":"<JWT>","tokenType":"Bearer","expiresIn":1800}
+```
+
+Usar `Authorization: Bearer <JWT>` en las rutas protegidas. Credenciales invalidas
+o token invalido/vencido devuelven 401; permisos insuficientes devuelven 403.
+No se implementa refresh token: al vencer, iniciar sesion nuevamente.
+
+Solo ADMINISTRADOR lista todos los usuarios, crea cuentas por el CRUD y administra
+roles. Cada usuario puede consultar, actualizar o eliminar su propia cuenta y
+gestionar sus favoritos; no puede cambiar su rol. ADMINISTRADOR puede gestionar
+cualquier cuenta. Las cuentas creadas mediante el CRUD anterior no reciben password
+y no pueden iniciar sesion; usar `/auth/registro` para cuentas con credenciales.
+
+Los roles se inicializan automaticamente. El perfil local `dev` (predeterminado)
+crea `admin@admin.com` con password `1234`, guardada como hash BCrypt. No se cambia
+la password si esa cuenta ya existe. Otros perfiles no crean ese administrador
+salvo que se active explicitamente `app.seed-admin=true`.
 
 ## Verificacion
 

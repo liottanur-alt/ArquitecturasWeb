@@ -98,13 +98,13 @@ class UsuarioPersistenceTests {
     }
 
     private Long crearRol() {
-        return roles.crear(new RolRequest(TipoRol.CLIENTE)).getId();
+        return roles.listar().stream().filter(r -> r.getName() == TipoRol.CLIENTE).findFirst().orElseThrow().getId();
     }
 
     @Test
     void todosLosTiposDeRolSePersistenPorNombre() {
         for (TipoRol tipo : TipoRol.values()) {
-            Long id = roles.crear(new RolRequest(tipo)).getId();
+            Long id = roles.listar().stream().filter(r -> r.getName() == tipo).findFirst().orElseThrow().getId();
             entityManager.flush();
             entityManager.clear();
             assertEquals(tipo, roles.obtener(id).getName());

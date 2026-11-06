@@ -1,19 +1,19 @@
 server:
   port: 8080
 
+msvc:
+  usuarios:
+    url: ${MSVC_USUARIOS_URL:http://localhost:8004}
+
 spring:
   application:
     name: apigateway
-
   cloud:
     gateway:
-      routes:
-#        - id: msvc-usuarios
-#          uri: http://localhost:8001
-#          predicates:
-#            - Path=/api/usuarios/**
-#
-#        - id: msvc-cursos
-#          uri: http://localhost:8002
-#          predicates:
-#            - Path=/api/cursos/**
+      server:
+        webmvc:
+          routes:
+            - id: msvc-usuarios
+              uri: ${msvc.usuarios.url}
+              predicates:
+                - Path=/auth/**,/usuarios,/usuarios/**,/roles,/roles/**
