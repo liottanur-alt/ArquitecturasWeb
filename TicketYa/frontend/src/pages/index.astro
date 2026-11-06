@@ -1,0 +1,409 @@
+---
+import "../styles/global.css";
+import AccountMenu from "../components/AccountMenu.astro";
+import {
+  ArrowUpRight,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  MapPin,
+  CalendarDays,
+  Ticket,
+  Heart,
+  Menu,
+  X,
+  Pause,
+  Play,
+  Music2,
+  Drama,
+  Trophy,
+  Mic,
+  Sparkles,
+} from "@lucide/astro";
+import { events } from "../data/events";
+const categories = [
+  { name: "Todos", icon: Sparkles },
+  { name: "Música", icon: Music2 },
+  { name: "Teatro", icon: Drama },
+  { name: "Deportes", icon: Trophy },
+  { name: "Comedia", icon: Mic },
+  { name: "Conferencias", icon: Ticket },
+];
+const sections = [
+  {
+    id: "alta-demanda",
+    eyebrow: "QUE NO TE LO CUENTEN",
+    title: "En boca de todos.",
+    description: "Los eventos de alta demanda que tenés que tener en el radar.",
+    items: events.filter((e) => e.high),
+    type: "demand",
+  },
+  {
+    id: "populares",
+    eyebrow: "EL PÚBLICO YA ELIGIÓ",
+    title: "Planes que se llenan.",
+    description: "Los más populares, según sus entradas vendidas.",
+    items: [...events].sort((a, b) => b.sold - a.sold),
+    type: "popular",
+  },
+];
+const money = (n: number) => "$ " + n.toLocaleString("es-AR");
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" /><meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <meta
+      name="description"
+      content="Encontrá tu próximo recital, obra, partido o encuentro en TicketYa. Explorá eventos y elegí tu próxima experiencia."
+    />
+    <meta name="theme-color" content="#2055f5" /><title>
+      TicketYa — Hay que estar ahí.
+    </title>
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a href="#explorar" class="skip-link">Saltar a los eventos</a>
+    <header class="site-header">
+      <a href="/" class="brand" aria-label="TicketYa, inicio"
+        ><span class="brand-symbol"><Ticket size={22} /></span>ticket<span
+          >ya</span
+        ><span class="brand-dot">®</span></a
+      >
+      <nav class="desktop-nav" aria-label="Navegación principal">
+        <a href="#explorar" class="nav-active">Explorar</a><a
+          href="#alta-demanda">Alta demanda</a
+        ><a href="#populares">Populares</a>
+      </nav>
+      <div class="header-actions">
+        <span class="country"><MapPin size={15} /> Argentina</span><AccountMenu /><button
+          class="mobile-toggle icon-button"
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+          aria-label="Abrir menú"><Menu size={22} /></button>
+      </div>
+    </header>
+    <nav
+      id="mobile-nav"
+      class="mobile-nav"
+      hidden
+      aria-label="Navegación móvil"
+    >
+      <a href="#explorar">Explorar eventos</a><a href="#alta-demanda"
+        >Alta demanda</a
+      ><a href="#populares">Populares</a>
+    </nav>
+    <main>
+      <div class="intro wrap">
+        <span class="eyebrow"
+          ><span class="live-dot"></span> SALÍ DE LA RUTINA</span
+        ><p>Los mejores momentos <span>no se scrollean. Se viven.</span></p>
+      </div>
+      <section
+        class="hero wrap"
+        aria-roledescription="carrusel"
+        aria-label="Eventos destacados"
+      >
+        <div
+          class="hero-viewport"
+          tabindex="0"
+          aria-label="Destacados. Usá las flechas izquierda y derecha para cambiar de evento"
+        >
+          {
+            events.slice(0, 3).map((event, i) => (
+              <article
+                class:list={["hero-slide", { active: i === 0 }]}
+                aria-hidden={i !== 0}
+                inert={i !== 0}
+                data-slide
+              >
+                <img
+                  src={event.image}
+                  alt=""
+                  class="hero-photo"
+                  loading={i === 0 ? "eager" : "lazy"}
+                  fetchpriority={i === 0 ? "high" : "auto"}
+                />
+                <>
+                  <div class="hero-shade" />
+                  <span class="hero-top-label">
+                    <span class="live-dot" /> EN VIVO SE SIENTE DISTINTO
+                  </span>
+                </>
+                <div class="hero-content">
+                  <>
+                    <span class="hero-kicker">{event.label}</span>
+                    <h1>{event.title}</h1>
+                    <p>{event.subtitle}</p>
+                    <div class="hero-meta">
+                      <>
+                        <span>
+                          <CalendarDays size={16} />
+                          {event.fullDate}
+                        </span>
+                        <span>
+                          <MapPin size={16} />
+                          {event.city}
+                        </span>
+                      </>
+                    </div>
+                    <a href={`/eventos/${event.id}/`} class="button button-white" data-event={event.id}>
+                      Comprar entradas <ArrowUpRight size={20} />
+                    </a>
+                  </>
+                </div>
+                <div class="hero-date">
+                  <>
+                    <strong>{event.date.split(" ")[0]}</strong>
+                    <span>{event.date.split(" ")[1]} / 2026</span>
+                  </>
+                </div>
+              </article>
+            ))
+          }
+        </div>
+        <div class="hero-controls">
+          <div class="hero-dots" aria-label="Elegir destacado">
+            {
+              events.slice(0, 3).map((e, i) => (
+                <button
+                  class:list={["hero-dot", { selected: i === 0 }]}
+                  data-slide-to={i}
+                  aria-label={`Mostrar ${e.title}`}
+                  aria-current={i === 0 ? "true" : "false"}
+                >
+                  <span />
+                </button>
+              ))
+            }
+          </div><span class="hero-counter"
+            ><span id="slide-number">01</span> / 03</span
+          ><button
+            id="hero-pause"
+            class="hero-control"
+            aria-label="Pausar carrusel"
+            aria-pressed="false"
+            ><Pause size={16} /><Play size={16} class="play-icon" /></button
+          ><button
+            id="hero-prev"
+            class="hero-control"
+            aria-label="Evento anterior"><ChevronLeft size={20} /></button
+          ><button
+            id="hero-next"
+            class="hero-control"
+            aria-label="Evento siguiente"><ChevronRight size={20} /></button>
+        </div>
+      </section>
+      <section class="discovery wrap" id="explorar" aria-label="Buscar eventos">
+        <div class="discovery-title">
+          <h2>Tu próximo <span>“yo estuve ahí”.</span></h2><span
+            >Encontrá un plan que sea muy vos.</span>
+        </div>
+        <form class="search-form" role="search">
+          <label class="search-field"
+            ><Search size={21} /><span class="sr-only"
+              >Evento, artista o lugar</span
+            ><input
+              id="query"
+              type="search"
+              placeholder="Evento, artista o lugar"
+              autocomplete="off"
+            /></label
+          ><label class="city-field"
+            ><MapPin size={19} /><span class="sr-only">Ciudad</span><select
+              id="city"
+              ><option value="">Todas las ciudades</option><option
+                >Buenos Aires</option
+              ><option>Tandil</option><option>Mar del Plata</option></select
+            ></label
+          ><button type="submit" class="button button-blue"
+            >Encontrar mi plan <ArrowRight size={18} /></button>
+        </form>
+        <div class="category-row" aria-label="Categorías">
+          {
+            categories.map(({ name, icon: Icon }, i) => (
+              <button
+                class:list={["category", { chosen: i === 0 }]}
+                data-category={name}
+                aria-pressed={i === 0}
+              >
+                <Icon size={17} />
+                {name}
+              </button>
+            ))
+          }
+        </div>
+        <p
+          id="filter-status"
+          class="filter-status"
+          role="status"
+          aria-live="polite"
+        >
+        </p><button id="clear-filters" class="text-link" hidden
+          >Limpiar filtros <X size={14} /></button
+        >
+      </section>
+      {
+        sections.map((section) => (
+          <section
+            class="events-section wrap"
+            id={section.id}
+            data-events-section
+          >
+            <div class="section-heading">
+              <>
+                <div>
+                  <>
+                    <span class="eyebrow">{section.eyebrow}</span>
+                    <h2>{section.title}</h2>
+                    <p>{section.description}</p>
+                  </>
+                </div>
+                <div class="rail-controls">
+                  <>
+                    <button
+                      class="icon-button rail-prev"
+                      aria-label={`Anterior en ${section.title}`}
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button
+                      class="icon-button rail-next"
+                      aria-label={`Siguiente en ${section.title}`}
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </>
+                </div>
+              </>
+            </div>
+            <>
+              <div class="event-rail" tabindex="0" aria-label={section.title}>
+                {section.items.map((event, rank) => (
+                  <article
+                    class="event-card"
+                    data-card
+                    data-title={`${event.title} ${event.artist} ${event.venue}`}
+                    data-city={event.city}
+                    data-type={event.category}
+                  >
+                    <div class="card-image">
+                      <img
+                        src={event.image}
+                        alt={`Ambiente de ${event.category.toLowerCase()} para ${event.title}`}
+                        loading="lazy"
+                        width="600"
+                        height="440"
+                      />
+                      <span
+                        class:list={[
+                          "card-badge",
+                          { "badge-white": section.type === "popular" },
+                        ]}
+                      >
+                        {section.type === "demand"
+                          ? "↗ Alta demanda"
+                          : `#${rank + 1} en populares`}
+                      </span>
+                      <button
+                        class="favorite"
+                        data-favorite={event.id}
+                        aria-label={`Guardar ${event.title} en favoritos`}
+                        aria-pressed="false"
+                      >
+                        <Heart size={18} />
+                      </button>
+                      <span class="date-stamp">
+                        <strong>{event.date.split(" ")[0]}</strong>
+                        {event.date.split(" ")[1]}
+                      </span>
+                      <a href={`/eventos/${event.id}/`}
+                        class="card-image-link"
+                        data-event={event.id}
+                        aria-label={`Ver entradas de ${event.title}`}
+                      ></a>
+                    </div>
+                    <div class="card-body">
+                      <div class="card-category">
+                        {event.category}
+                        <span>
+                          {section.type === "popular"
+                            ? `${event.sold.toLocaleString("es-AR")} vendidas`
+                            : "Venta abierta"}
+                        </span>
+                      </div>
+                      <h3>
+                        <a href={`/eventos/${event.id}/`} data-event={event.id}>{event.title}</a>
+                      </h3>
+                      <p class="card-artist">{event.artist}</p>
+                      <p class="card-location">
+                        <MapPin size={14} />
+                        {event.venue} · {event.city}
+                      </p>
+                      <div class="card-bottom">
+                        <span>
+                          <small>Desde</small>
+                          <strong>{money(event.price)}</strong>
+                        </span>
+                        <a href={`/eventos/${event.id}/`}
+                          class="card-cta"
+                          data-event={event.id}
+                          aria-label={`Comprar entradas para ${event.title}`}
+                        >
+                          <ArrowUpRight size={20} />
+                        </a>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div class="empty-state" hidden>
+                <>
+                  <Search size={26} />
+                  <h3>Ese plan todavía no apareció.</h3>
+                  <p>Probá con otra ciudad, categoría o búsqueda.</p>
+                </>
+              </div>
+            </>
+          </section>
+        ))
+      }
+      <section class="closing wrap">
+        <div class="closing-icon"><Ticket size={48} /></div><div>
+          <span class="eyebrow">MENOS VUELTAS. MÁS MOMENTOS.</span><h2>
+            El próximo recuerdo<br />empieza con una entrada.
+          </h2>
+        </div><a class="button button-blue" href="#explorar"
+          >Encontrá tu próximo plan <ArrowUpRight size={19} /></a
+        ><span class="closing-decoration" aria-hidden="true">↗</span>
+      </section>
+    </main>
+    <footer class="site-footer wrap">
+      <a class="brand" href="/"
+        >ticket<span>ya</span><span class="brand-dot">®</span></a
+      ><p>Hay que estar ahí.</p><span
+        >© 2026 TicketYa · Boceto con eventos de ejemplo</span
+      ><a href="#explorar">Volver a explorar <ArrowUpRight size={15} /></a>
+    </footer>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script
+      type="application/json"
+      id="events-data"
+      set:html={JSON.stringify(events).replace(/</g, "\\u003c")}
+    />
+    <script>
+      import "../scripts/home";
+    </script>
+  </body>
+</html>

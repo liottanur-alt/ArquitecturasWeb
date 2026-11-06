@@ -1,0 +1,32 @@
+---
+import '../styles/global.css';
+import '../styles/login.css';
+import '../styles/register.css';
+import { Ticket, ArrowLeft, ArrowRight, ArrowUpRight, Mail, LockKeyhole, Eye, EyeOff, ShieldCheck, CircleAlert, Check, UserRound, IdCard, MapPin } from '@lucide/astro';
+---
+<!doctype html>
+<html lang="es-AR">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="description" content="Creá tu cuenta TicketYa para vivir tu próximo gran momento."/><meta name="theme-color" content="#2055f5"/><title>Crear cuenta — TicketYa</title><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/></head>
+<body class="login-page register-page">
+  <main class="login-layout">
+    <section class="login-story" aria-label="Hay que estar ahí"><img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=85" alt=""/><div class="story-shade"></div><a href="/" class="brand story-brand" aria-label="TicketYa, inicio"><span class="brand-symbol"><Ticket size={23}/></span>ticket<span>ya</span><span class="brand-dot">®</span></a><div class="story-content"><span class="eyebrow"><span class="live-dot"></span> EN VIVO SE SIENTE DISTINTO</span><h1>Tu próxima<br/>historia empieza<br/><span>acá.</span></h1><p>A esa canción. A ese plan con amigos.<br/>A estar justo donde querés estar.</p><div class="story-ticket"><span class="ticket-cut"></span><div class="mini-ticket-icon"><Ticket size={28}/></div><div><strong>Tu próximo “yo estuve ahí”.</strong><span>Un buen plan te está esperando.</span></div><ArrowUpRight size={24}/></div></div><span class="story-footer">MENOS PANTALLA. MÁS HISTORIAS PARA CONTAR.</span></section>
+    <section class="login-form-side" aria-labelledby="login-title"><a href="/" class="login-back"><ArrowLeft size={16}/> Volver a explorar</a><a href="/" class="brand mobile-login-brand">ticket<span>ya</span><span class="brand-dot">®</span></a>
+      <div class="login-form-content"><span class="eyebrow">HACÉ LUGAR PARA LO QUE VIENE</span><h2 id="login-title">Una cuenta.<br/>Miles de momentos.</h2><p class="login-subtitle">Creá tu cuenta y empezá a elegir tu próximo plan.</p>
+      <form id="register-form" aria-labelledby="login-title" novalidate>
+  <div class="login-field"><label for="nombre">Nombre completo</label><div class="login-input"><UserRound size={18}/><input id="nombre" name="nombre" autocomplete="name" placeholder="Tu nombre y apellido" required maxlength="100"/></div></div>
+  <div class="login-field"><label for="email">Email</label><div class="login-input"><Mail size={18}/><input id="email" name="email" type="email" autocomplete="email" placeholder="vos@ejemplo.com" required maxlength="254" autocapitalize="none" spellcheck="false"/></div></div>
+  <div class="register-row"><div class="login-field"><label for="dni">DNI</label><div class="login-input"><IdCard size={18}/><input id="dni" name="dni" inputmode="numeric" placeholder="Sin puntos" pattern="[0-9]{7,10}" required minlength="7" maxlength="10" aria-describedby="dni-help"/></div><small id="dni-help" class="field-help">Entre 7 y 10 números, sin puntos.</small></div><div class="login-field"><label for="ciudad">Ciudad</label><div class="login-input"><MapPin size={18}/><input id="ciudad" name="ciudad" autocomplete="address-level2" placeholder="Ej. Tandil" required maxlength="100"/></div></div></div>
+  <div class="login-field"><label for="password">Contraseña</label><div class="login-input"><LockKeyhole size={18}/><input id="password" name="password" type="password" autocomplete="new-password" placeholder="Creá tu contraseña" required minlength="4" aria-describedby="password-help"/><button type="button" data-toggle-password="password" aria-label="Mostrar contraseña" aria-pressed="false" aria-controls="password"><Eye size={18} class="show-password-icon"/><EyeOff size={18} class="hide-password-icon"/></button></div><small id="password-help" class="field-help">Al menos 4 caracteres y hasta 72 bytes.</small></div>
+  <div class="login-field"><label for="confirm-password">Confirmar contraseña</label><div class="login-input"><LockKeyhole size={18}/><input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Repetí tu contraseña" required/><button type="button" data-toggle-password="confirm-password" aria-label="Mostrar confirmación de contraseña" aria-pressed="false" aria-controls="confirm-password"><Eye size={18} class="show-password-icon"/><EyeOff size={18} class="hide-password-icon"/></button></div></div>
+  <div id="register-error" class="login-error" role="alert" tabindex="-1" hidden><CircleAlert size={18}/><p id="register-error-text"></p></div><p id="register-status" class="sr-only" role="status" aria-live="polite"></p>
+  <button id="register-submit" class="button button-blue login-submit" type="submit"><span id="register-submit-label">Crear mi cuenta</span><ArrowRight size={19}/><span class="submit-spinner" aria-hidden="true"></span></button>
+</form>
+<p class="auth-switch">¿Ya tenés cuenta? <a id="login-link" href="/login/">Ingresá acá <ArrowUpRight size={14}/></a></p>
+
+      <div class="login-divider"><span></span> EL MEJOR PLAN ES ESTAR AHÍ <span></span></div><a href="/#explorar" class="browse-without-account">Seguir explorando sin ingresar <ArrowUpRight size={16}/></a><div class="login-assurance"><ShieldCheck size={17}/><span>Tu contraseña es solo tuya.<br/>Nunca la guardamos en este navegador.</span></div></div>
+      <footer class="login-footer"><span>© 2026 TicketYa</span><span>Hay que estar ahí. <Check size={12}/></span></footer>
+    </section>
+  </main>
+  <script>import '../scripts/register';</script>
+</body>
+</html>
