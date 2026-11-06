@@ -1,9 +1,149 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="3435fa66-39be-4a71-89ea-620236caa240" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/msv-compraEntardaSol/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution>
+      <executable />
+    </execution>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0" />
+      <entry key="S60" value="1.0" />
+      <entry key="M2" value="1.0" />
+      <entry key="M5" value="1.0" />
+      <entry key="M10" value="1.0" />
+      <entry key="M15" value="1.0" />
+      <entry key="M30" value="1.0" />
+      <entry key="H1" value="1.0" />
+      <entry key="H2" value="1.0" />
+      <entry key="H4" value="1.0" />
+      <entry key="D1" value="1.0" />
+      <entry key="W1" value="1.0" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="1.7772424109935104E-5" />
+      <entry key="MS500" value="0.11251767078088468" />
+      <entry key="S2" value="0.7134150704845326" />
+      <entry key="S5" value="1.251960827854102" />
+      <entry key="S10" value="1.56605063176332" />
+      <entry key="S30" value="1.8390829327276508" />
+      <entry key="S60" value="1.9172887044951652" />
+      <entry key="M2" value="1.9580631887377993" />
+      <entry key="M5" value="1.983083426948701" />
+      <entry key="M10" value="1.9915178716701998" />
+      <entry key="M15" value="1.9943399346524073" />
+      <entry key="M30" value="1.9971673070148206" />
+      <entry key="H1" value="1.9985829877259396" />
+      <entry key="H2" value="1.999291327329565" />
+      <entry key="H4" value="1.999645622020421" />
+      <entry key="D1" value="1.9999409312185297" />
+      <entry key="W1" value="1.9999915614609645" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.8916464704809653E-5" />
+      <entry key="MS500" value="0.12128311648872579" />
+      <entry key="S2" value="0.9460529853256489" />
+      <entry key="S5" value="1.7633565510313964" />
+      <entry key="S10" value="2.2676788772753285" />
+      <entry key="S30" value="2.723667240538311" />
+      <entry key="S60" value="2.857269716717443" />
+      <entry key="M2" value="2.927448950182381" />
+      <entry key="M5" value="2.970688991082229" />
+      <entry key="M10" value="2.985295556998895" />
+      <entry key="M15" value="2.990186124866057" />
+      <entry key="M30" value="2.9950875963577963" />
+      <entry key="H1" value="2.9975424298740965" />
+      <entry key="H2" value="2.998770872637325" />
+      <entry key="H4" value="2.999385350715774" />
+      <entry key="D1" value="2.999897546560965" />
+      <entry key="W1" value="2.999985363503168" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 0,
+  "fromUser": false
+}]]></component>
   <component name="ProjectId" id="3LWbdCPXuKdJckDGAx1iZVwSp5z" />
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.general&quot;
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/Nur/IdeaProjects/TPEArqui/TicketYa",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "onboarding.tips.debug.path": "C:/Users/Nur/IdeaProjects/TPEArqui/TicketYa/msv-compraEntardaSol/src/main/java/org/example/Main.java",
+    "settings.editor.selected.configurable": "preferences.general"
   }
-}</component>
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-a203e0a19954-intellij.indexing.shared.core-IU-262.10315.125" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3435fa66-39be-4a71-89ea-620236caa240" name="Changes" comment="" />
+      <created>1793892640400</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1793892640400</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/example/Main.java</url>
+          <line>13</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
 </project>
