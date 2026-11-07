@@ -5,9 +5,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "msvc-artistas", url = "${msvc.artistas.url}")
+@FeignClient(name = "msv-evento", url = "${msv.evento.url}")
 public interface ArtistaClientFeign {
 
-    @GetMapping("/artista/{id}")
+    @GetMapping("/api/artistas/{id}")
     ArtistaResponse obtenerPorId(@PathVariable("id") Long id);
 }

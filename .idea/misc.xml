@@ -7,6 +7,7 @@
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/TicketYa/msv-SectoerAsiento/pom.xml" />
         <option value="$PROJECT_DIR$/TicketYa/api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/TicketYa/msv-evento/pom.xml" />
       </list>
     </option>
   </component>
