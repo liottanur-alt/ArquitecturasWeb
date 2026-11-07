@@ -1,26 +1,504 @@
 ---
-import '../styles/global.css';
-import '../styles/profile.css';
-import AccountMenu from '../components/AccountMenu.astro';
-import { Ticket, ArrowLeft, ArrowUpRight, ArrowRight, UserRound, ShoppingBag, ShoppingCart, Mail, MapPin, IdCard, Info, X, Check, Plus, LogOut, CalendarDays } from '@lucide/astro';
+import "../styles/global.css";
+import "../styles/profile.css";
+import "../styles/tickets.css";
+import AccountMenu from "../components/AccountMenu.astro";
+import {
+    Ticket,
+    ArrowLeft,
+    ArrowUpRight,
+    ArrowRight,
+    UserRound,
+    ShoppingBag,
+    ShoppingCart,
+    Mail,
+    MapPin,
+    IdCard,
+    Info,
+    X,
+    Check,
+    Plus,
+    LogOut,
+    CalendarDays,
+} from "@lucide/astro";
 ---
+
 <!doctype html>
-<html lang="es-AR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="description" content="Tu perfil TicketYa, tus compras y los planes que todavía tenés pendientes."/><title>Mi perfil — TicketYa</title><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/></head>
-<body><header class="site-header"><a class="brand" href="/"><span class="brand-symbol"><Ticket size={22}/></span>ticket<span>ya</span><span class="brand-dot">®</span></a><a class="profile-back" href="/#explorar"><ArrowLeft size={16}/> Seguir explorando</a><AccountMenu/></header>
-<main class="wrap profile-main" id="profile-main" hidden>
- <div class="profile-breadcrumb"><a href="/">Inicio</a><span>/</span> Mi cuenta</div>
- <section class="profile-welcome"><div><span class="eyebrow">TU LUGAR EN TICKETYA</span><h1>Hola, <span data-first-name>qué bueno verte</span><span class="blue-period">.</span></h1><p>Los planes que viviste. Los que todavía están por venir.</p></div><a href="/#explorar" class="button button-blue">Un nuevo plan <Plus size={17}/></a></section>
- <div class="demo-banner" id="profile-demo" hidden><Info size={17}/><p><strong>Perfil de demostración.</strong> Estos datos son ficticios. Podés explorar y editar el ejemplo sin crear una cuenta.</p><a href="/login/?volver=/perfil/">Ingresar <ArrowUpRight size={15}/></a></div>
- <div class="profile-grid"><aside class="profile-sidebar"><div class="identity"><span class="profile-avatar" data-initials>TY</span><h2 data-full-name>Tu cuenta</h2><p data-profile-email></p><span class="identity-label" id="identity-label">Mi espacio personal</span></div><div class="profile-tabs" role="tablist" aria-label="Mi cuenta" aria-orientation="vertical"><button id="tab-datos" role="tab" aria-selected="true" aria-controls="panel-datos" data-tab="datos"><UserRound size={18}/> Mis datos <ArrowRight size={15}/></button><button id="tab-compras" role="tab" aria-selected="false" aria-controls="panel-compras" data-tab="compras" tabindex="-1"><ShoppingBag size={18}/> Mis compras <span>3</span></button><button id="tab-carrito" role="tab" aria-selected="false" aria-controls="panel-carrito" data-tab="carrito" tabindex="-1"><ShoppingCart size={18}/> Carrito <span id="cart-count">0</span></button></div><a class="sidebar-explore" href="/#explorar"><Ticket size={18}/><span>Tu próximo recuerdo<br/><strong>te está esperando.</strong></span><ArrowUpRight size={17}/></a></aside>
- <div class="profile-panels">
- <section id="panel-datos" role="tabpanel" aria-labelledby="tab-datos" data-panel="datos"><div class="profile-panel-heading"><span class="eyebrow">A TU MANERA</span><h2>Un poquito sobre vos.</h2><p>Mantené tus datos al día para tu próximo gran momento.</p></div><div id="profile-error" class="profile-alert" role="alert" tabindex="-1" hidden><Info size={17}/><span id="profile-error-text"></span><button id="retry-profile" type="button">Reintentar</button></div><form id="profile-form"><fieldset id="profile-fields" disabled><div class="profile-field"><label for="nombre">Nombre completo</label><div><UserRound size={17}/><input id="nombre" autocomplete="name" maxlength="100" required/></div></div><div class="profile-field"><label for="email">Email</label><div><Mail size={17}/><input id="email" type="email" autocomplete="email" maxlength="254" required/></div></div><div class="profile-fields-row"><div class="profile-field"><label for="dni">DNI</label><div><IdCard size={17}/><input id="dni" inputmode="numeric" maxlength="20" required/></div></div><div class="profile-field"><label for="ciudad">Ciudad</label><div><MapPin size={17}/><input id="ciudad" autocomplete="address-level2" maxlength="100" required/></div></div></div><div class="profile-form-foot"><span>Tu próximo plan empieza por vos.</span><button class="button button-blue" id="save-profile">Guardar cambios <Check size={17}/></button></div></fieldset><p id="profile-status" role="status" aria-live="polite"></p></form></section>
- <section id="panel-compras" role="tabpanel" aria-labelledby="tab-compras" data-panel="compras" hidden><div class="profile-panel-heading"><span class="eyebrow">MOMENTOS QUE YA SON TUYOS</span><h2>Tu historial de planes.</h2><p>Un recorrido por tus entradas y compras.</p></div><div class="sample-note"><Info size={16}/><p><strong>Historial de ejemplo.</strong> Las compras que ves acá son ficticias y no representan pagos ni entradas reales.</p></div><div class="history-filters" role="group" aria-label="Filtrar compras"><button data-history-filter="Todas" aria-pressed="true">Todas <span>3</span></button><button data-history-filter="Confirmada" aria-pressed="false">Confirmadas</button><button data-history-filter="Devuelta" aria-pressed="false">Devueltas</button></div><div id="purchase-list"></div></section>
- <section id="panel-carrito" role="tabpanel" aria-labelledby="tab-carrito" data-panel="carrito" hidden><div class="profile-panel-heading"><span class="eyebrow">TODAVÍA ESTÁS A TIEMPO DE ELEGIR</span><h2>Planes en pausa.</h2><p>Los eventos que guardaste para seguir eligiendo después.</p></div><div class="sample-note"><Info size={16}/><p>Las selecciones se guardan en este navegador. <strong>No reservan lugares ni garantizan disponibilidad.</strong></p></div><div id="cart-list"></div><div id="cart-empty" class="profile-empty" hidden><ShoppingCart size={35}/><h3>Tu próximo plan está por llegar.</h3><p>Elegí un evento y guardá tus entradas en el carrito.</p><a href="/#explorar" class="button button-blue">Explorar eventos <ArrowRight size={17}/></a></div><div class="cart-total" id="cart-total-box" hidden><div><span>Total de tus selecciones</span><strong id="cart-total"></strong></div><p>Importes de ejemplo. Continuá cada evento para revisar sus ubicaciones.</p></div><p id="cart-status" role="status" aria-live="polite"></p></section>
- </div></div>
- <section class="profile-closing"><Ticket size={32}/><div><h2>El próximo “yo estuve ahí” te espera.</h2><p>Siempre hay una nueva historia para vivir.</p></div><a href="/#explorar">Encontrá tu plan <ArrowUpRight size={18}/></a></section>
-</main>
-<noscript><p class="wrap">Activá JavaScript para consultar tu perfil.</p></noscript>
-<footer class="site-footer wrap"><a class="brand" href="/">ticket<span>ya</span><span class="brand-dot">®</span></a><p>Hay que estar ahí.</p><span>© 2026 TicketYa</span><a href="/">Volver al inicio <ArrowUpRight size={15}/></a></footer>
-<dialog id="purchase-dialog" aria-labelledby="purchase-title"><div class="dialog-head"><span class="eyebrow">COMPRA DE EJEMPLO</span><button class="icon-button" data-close-purchase aria-label="Cerrar detalle"><X size={22}/></button></div><div class="dialog-body"><h2 id="purchase-title"></h2><p id="purchase-detail"></p><p id="purchase-payment"></p><div class="purchase-modal-total"><span>Importe de ejemplo</span><strong id="purchase-total"></strong></div><p class="demo-note">Este comprobante es ficticio. No genera entradas ni códigos QR válidos para ingresar a un evento.</p><button class="button button-blue" data-close-purchase>Volver a mis compras <ArrowRight size={17}/></button></div></dialog>
-<script>import '../scripts/profile';</script>
-</body></html>
+<html lang="es-AR">
+    <head
+        ><meta charset="utf-8" /><meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        /><meta
+            name="description"
+            content="Tu perfil TicketYa, tus compras y los planes que todavía tenés pendientes."
+        /><title>Mi perfil — TicketYa</title><link
+            rel="preconnect"
+            href="https://fonts.googleapis.com"
+        /><link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossorigin
+        /><link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        /></head
+    >
+    <body
+        ><header class="site-header">
+            <a class="brand" href="/"
+                ><span class="brand-symbol"><Ticket size={22} /></span
+                >ticket<span>ya</span><span class="brand-dot">®</span></a
+            ><a class="profile-back" href="/#explorar"
+                ><ArrowLeft size={16} /> Seguir explorando</a
+            ><AccountMenu />
+        </header>
+        <main class="wrap profile-main" id="profile-main" hidden>
+            <div class="profile-breadcrumb">
+                <a href="/">Inicio</a><span>/</span> Mi cuenta
+            </div>
+            <section class="profile-welcome">
+                <div>
+                    <span class="eyebrow">TU LUGAR EN TICKETYA</span><h1>
+                        Hola, <span data-first-name>qué bueno verte</span><span
+                            class="blue-period">.</span>
+                    </h1><p>
+                        Los planes que viviste. Los que todavía están por venir.
+                    </p>
+                </div><a href="/#explorar" class="button button-blue"
+                    >Un nuevo plan <Plus size={17} /></a>
+            </section>
+            <div class="demo-banner" id="profile-demo" hidden>
+                <Info size={17} /><p>
+                    <strong>Perfil de demostración.</strong> Estos datos son ficticios.
+                    Podés explorar y editar el ejemplo sin crear una cuenta.
+                </p><a href="/login/?volver=/perfil/"
+                    >Ingresar <ArrowUpRight size={15} /></a>
+            </div>
+            <div class="profile-grid">
+                <aside class="profile-sidebar">
+                    <div class="identity">
+                        <span class="profile-avatar" data-initials>TY</span><h2
+                            data-full-name
+                        >
+                            Tu cuenta
+                        </h2><p data-profile-email></p><span
+                            class="identity-label"
+                            id="identity-label">Mi espacio personal</span>
+                    </div><div
+                        class="profile-tabs"
+                        role="tablist"
+                        aria-label="Mi cuenta"
+                        aria-orientation="vertical"
+                    >
+                        <button
+                            id="tab-datos"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="panel-datos"
+                            data-tab="datos"
+                            ><UserRound size={18} /> Mis datos <ArrowRight
+                                size={15}
+                            /></button
+                        ><button
+                            id="tab-compras"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="panel-compras"
+                            data-tab="compras"
+                            tabindex="-1"
+                            ><ShoppingBag size={18} /> Mis compras <span>3</span
+                            ></button
+                        ><button
+                            id="tab-entradas"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="panel-entradas"
+                            data-tab="entradas"
+                            tabindex="-1"
+                            ><Ticket size={18} /> Mis entradas <span
+                                data-entry-count>5</span
+                            ></button
+                        ><button
+                            id="tab-carrito"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="panel-carrito"
+                            data-tab="carrito"
+                            tabindex="-1"
+                            ><ShoppingCart size={18} /> Carrito <span
+                                id="cart-count">0</span
+                            ></button>
+                    </div><a class="sidebar-explore" href="/#explorar"
+                        ><Ticket size={18} /><span
+                            >Tu próximo recuerdo<br /><strong
+                                >te está esperando.</strong
+                            ></span
+                        ><ArrowUpRight size={17} /></a>
+                </aside>
+                <div class="profile-panels">
+                    <section
+                        id="panel-datos"
+                        role="tabpanel"
+                        aria-labelledby="tab-datos"
+                        data-panel="datos"
+                    >
+                        <div class="profile-panel-heading">
+                            <span class="eyebrow">A TU MANERA</span><h2>
+                                Un poquito sobre vos.
+                            </h2><p>
+                                Mantené tus datos al día para tu próximo gran
+                                momento.
+                            </p>
+                        </div><div
+                            id="profile-error"
+                            class="profile-alert"
+                            role="alert"
+                            tabindex="-1"
+                            hidden
+                        >
+                            <Info size={17} /><span id="profile-error-text"
+                            ></span><button id="retry-profile" type="button"
+                                >Reintentar</button>
+                        </div><form id="profile-form">
+                            <fieldset id="profile-fields" disabled>
+                                <div class="profile-field">
+                                    <label for="nombre">Nombre completo</label
+                                    ><div>
+                                        <UserRound size={17} /><input
+                                            id="nombre"
+                                            autocomplete="name"
+                                            maxlength="100"
+                                            required
+                                        />
+                                    </div>
+                                </div><div class="profile-field">
+                                    <label for="email">Email</label><div>
+                                        <Mail size={17} /><input
+                                            id="email"
+                                            type="email"
+                                            autocomplete="email"
+                                            maxlength="254"
+                                            required
+                                        />
+                                    </div>
+                                </div><div class="profile-fields-row">
+                                    <div class="profile-field">
+                                        <label for="dni">DNI</label><div>
+                                            <IdCard size={17} /><input
+                                                id="dni"
+                                                inputmode="numeric"
+                                                maxlength="20"
+                                                required
+                                            />
+                                        </div>
+                                    </div><div class="profile-field">
+                                        <label for="ciudad">Ciudad</label><div>
+                                            <MapPin size={17} /><input
+                                                id="ciudad"
+                                                autocomplete="address-level2"
+                                                maxlength="100"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </div><div class="profile-form-foot">
+                                    <span>Tu próximo plan empieza por vos.</span
+                                    ><button
+                                        class="button button-blue"
+                                        id="save-profile"
+                                        >Guardar cambios <Check
+                                            size={17}
+                                        /></button>
+                                </div>
+                            </fieldset><p
+                                id="profile-status"
+                                role="status"
+                                aria-live="polite"
+                            >
+                            </p>
+                        </form>
+                    </section>
+                    <section
+                        id="panel-compras"
+                        role="tabpanel"
+                        aria-labelledby="tab-compras"
+                        data-panel="compras"
+                        hidden
+                    >
+                        <div class="profile-panel-heading">
+                            <span class="eyebrow"
+                                >MOMENTOS QUE YA SON TUYOS</span
+                            ><h2>Tu historial de planes.</h2><p>
+                                Un recorrido por tus entradas y compras.
+                            </p>
+                        </div><div class="sample-note">
+                            <Info size={16} /><p>
+                                <strong>Historial de ejemplo.</strong> Las compras
+                                que ves acá son ficticias y no representan pagos ni
+                                entradas reales.
+                            </p>
+                        </div><div
+                            class="history-filters"
+                            role="group"
+                            aria-label="Filtrar compras"
+                        >
+                            <button
+                                data-history-filter="Todas"
+                                aria-pressed="true">Todas <span>3</span></button
+                            ><button
+                                data-history-filter="Confirmada"
+                                aria-pressed="false">Confirmadas</button
+                            ><button
+                                data-history-filter="Devuelta"
+                                aria-pressed="false">Devueltas</button>
+                        </div><div id="purchase-list"></div>
+                    </section>
+                    <section
+                        id="panel-entradas"
+                        role="tabpanel"
+                        aria-labelledby="tab-entradas"
+                        data-panel="entradas"
+                        hidden
+                    >
+                        <div class="profile-panel-heading">
+                            <span class="eyebrow"
+                                >LISTAS PARA TU PRÓXIMO MOMENTO</span
+                            ><h2>Hay que estar ahí.</h2><p>
+                                Tus entradas, una por cada lugar que elegiste.
+                            </p>
+                        </div>
+                        <div class="sample-note">
+                            <Info size={16} /><p>
+                                <strong>Entradas y QR de demostración.</strong> No
+                                sirven para ingresar a eventos. Las solicitudes de
+                                devolución son ejemplos locales, sin reintegros reales.
+                            </p>
+                        </div>
+                        <div class="ticket-stats">
+                            <div>
+                                <strong id="valid-tickets">0</strong><span
+                                    >Válidas</span>
+                            </div><div>
+                                <strong id="pending-tickets">0</strong><span
+                                    >Devoluciones pendientes</span>
+                            </div><div>
+                                <strong id="other-tickets">0</strong><span
+                                    >Utilizadas o devueltas</span>
+                            </div>
+                        </div>
+                        <div
+                            class="history-filters ticket-filters"
+                            role="group"
+                            aria-label="Filtrar entradas"
+                        >
+                            <button
+                                data-ticket-filter="todas"
+                                aria-pressed="true">Todas</button
+                            ><button
+                                data-ticket-filter="valida"
+                                aria-pressed="false">Válidas</button
+                            ><button
+                                data-ticket-filter="pendiente"
+                                aria-pressed="false">Pendientes</button
+                            ><button
+                                data-ticket-filter="utilizada"
+                                aria-pressed="false">Utilizadas</button
+                            ><button
+                                data-ticket-filter="devuelta"
+                                aria-pressed="false">Devueltas</button>
+                        </div>
+                        <div
+                            class="purchase-ticket-filter"
+                            id="purchase-ticket-filter"
+                            hidden
+                        >
+                            <span id="purchase-ticket-label"></span><button
+                                id="clear-purchase-ticket"
+                                >Ver todas las compras <X size={13} /></button>
+                        </div>
+                        <div id="ticket-list"></div><div
+                            id="tickets-empty"
+                            class="profile-empty"
+                            hidden
+                        >
+                            <Ticket size={32} /><h3>
+                                No hay entradas en esta sección.
+                            </h3><p>
+                                Probá con otro filtro para encontrar tu próximo
+                                momento.
+                            </p>
+                        </div>
+                        <p class="refund-rule">
+                            <Info size={16} /> Podés solicitar la devolución de una
+                            entrada válida hasta 72 horas antes del evento. La aprobación
+                            corresponde al administrador.
+                        </p><p
+                            id="tickets-status"
+                            role="status"
+                            aria-live="polite"
+                        >
+                        </p>
+                    </section>
+
+                    <section
+                        id="panel-carrito"
+                        role="tabpanel"
+                        aria-labelledby="tab-carrito"
+                        data-panel="carrito"
+                        hidden
+                    >
+                        <div class="profile-panel-heading">
+                            <span class="eyebrow"
+                                >TODAVÍA ESTÁS A TIEMPO DE ELEGIR</span
+                            ><h2>Planes en pausa.</h2><p>
+                                Los eventos que guardaste para seguir eligiendo
+                                después.
+                            </p>
+                        </div><div class="sample-note">
+                            <Info size={16} /><p>
+                                Las selecciones se guardan en este navegador. <strong
+                                    >No reservan lugares ni garantizan
+                                    disponibilidad.</strong>
+                            </p>
+                        </div><div id="cart-list"></div><div
+                            id="cart-empty"
+                            class="profile-empty"
+                            hidden
+                        >
+                            <ShoppingCart size={35} /><h3>
+                                Tu próximo plan está por llegar.
+                            </h3><p>
+                                Elegí un evento y guardá tus entradas en el
+                                carrito.
+                            </p><a href="/#explorar" class="button button-blue"
+                                >Explorar eventos <ArrowRight size={17} /></a>
+                        </div><div
+                            class="cart-total"
+                            id="cart-total-box"
+                            hidden
+                        >
+                            <div>
+                                <span>Total de tus selecciones</span><strong
+                                    id="cart-total"></strong>
+                            </div><p>
+                                Importes de ejemplo. Continuá cada evento para
+                                revisar sus ubicaciones.
+                            </p>
+                        </div><p
+                            id="cart-status"
+                            role="status"
+                            aria-live="polite"
+                        >
+                        </p>
+                    </section>
+                </div>
+            </div>
+            <section class="profile-closing">
+                <Ticket size={32} /><div>
+                    <h2>El próximo “yo estuve ahí” te espera.</h2><p>
+                        Siempre hay una nueva historia para vivir.
+                    </p>
+                </div><a href="/#explorar"
+                    >Encontrá tu plan <ArrowUpRight size={18} /></a>
+            </section>
+        </main>
+        <noscript
+            ><p class="wrap">
+                Activá JavaScript para consultar tu perfil.
+            </p></noscript
+        >
+        <footer class="site-footer wrap">
+            <a class="brand" href="/"
+                >ticket<span>ya</span><span class="brand-dot">®</span></a
+            ><p>Hay que estar ahí.</p><span>© 2026 TicketYa</span><a href="/"
+                >Volver al inicio <ArrowUpRight size={15} /></a>
+        </footer>
+        <dialog id="purchase-dialog" aria-labelledby="purchase-title">
+            <div class="dialog-head">
+                <span class="eyebrow">COMPRA DE EJEMPLO</span><button
+                    class="icon-button"
+                    data-close-purchase
+                    aria-label="Cerrar detalle"><X size={22} /></button>
+            </div><div class="dialog-body">
+                <h2 id="purchase-title"></h2><p id="purchase-detail"></p><p
+                    id="purchase-payment"
+                >
+                </p><div class="purchase-modal-total">
+                    <span>Importe de ejemplo</span><strong id="purchase-total"
+                    ></strong>
+                </div><p class="demo-note">
+                    Este comprobante es ficticio. No genera entradas ni códigos
+                    QR válidos para ingresar a un evento.
+                </p><button class="button button-blue" data-close-purchase
+                    >Volver a mis compras <ArrowRight size={17} /></button>
+            </div>
+        </dialog>
+        <dialog id="ticket-qr-dialog" aria-labelledby="qr-title">
+            <div class="dialog-head">
+                <span class="eyebrow">TU ENTRADA · DEMOSTRACIÓN</span><button
+                    class="icon-button"
+                    data-close-qr
+                    aria-label="Cerrar QR"><X size={22} /></button>
+            </div><div class="dialog-body ticket-qr-body">
+                <span class="qr-demo-badge">QR DE EJEMPLO · SIN VALIDEZ</span
+                ><h2 id="qr-title"></h2><p id="qr-location"></p><p id="qr-date">
+                </p><div class="qr-frame">
+                    <img
+                        id="ticket-qr-image"
+                        alt="Código QR de demostración, no válido para ingresar"
+                        hidden
+                    /><p id="qr-loading" role="status">Preparando el QR…</p>
+                </div><strong id="qr-ticket-id" class="qr-ticket-id"></strong><p
+                    class="demo-note"
+                >
+                    Este QR identifica una entrada ficticia del boceto. No tiene
+                    validez para ingresar a ningún evento.
+                </p><button class="button button-blue" data-close-qr
+                    >Volver a mis entradas <ArrowRight size={17} /></button>
+            </div>
+        </dialog>
+        <dialog id="ticket-refund-dialog" aria-labelledby="refund-title">
+            <div class="dialog-head">
+                <span class="eyebrow">DEVOLUCIÓN DE EJEMPLO</span><button
+                    class="icon-button"
+                    data-close-refund
+                    aria-label="Cerrar solicitud"><X size={22} /></button>
+            </div><div class="dialog-body">
+                <h2 id="refund-title">¿Cambiaron tus planes?</h2><p
+                    id="refund-event"
+                >
+                </p><p id="refund-seat"></p><div class="refund-amount">
+                    <span>Importe de la entrada</span><strong id="refund-amount"
+                    ></strong>
+                </div><form id="refund-form">
+                    <label for="refund-reason">Motivo de la solicitud</label
+                    ><select id="refund-reason" required
+                        ><option value="">Elegí un motivo</option><option
+                            >No puedo asistir</option
+                        ><option>Cambio de planes</option><option
+                            >Otro motivo</option
+                        ></select
+                    ><p class="demo-note">
+                        La solicitud quedará pendiente de aprobación. En este
+                        boceto se guarda solo en el navegador: no se reintegra
+                        dinero. El QR no se mostrará mientras la devolución esté
+                        pendiente.
+                    </p><p id="refund-error" role="alert" hidden></p><button
+                        class="button button-blue"
+                        id="confirm-refund"
+                        type="submit"
+                        >Solicitar devolución <ArrowRight size={17} /></button
+                    ><button
+                        class="refund-cancel"
+                        data-close-refund
+                        type="button">Conservar mi entrada</button>
+                </form>
+            </div>
+        </dialog>
+
+        <script>
+            import "../scripts/profile";
+        </script>
+    </body>
+</html>

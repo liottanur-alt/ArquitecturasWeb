@@ -27,3 +27,24 @@ transfieren automaticamente a una cuenta al iniciar sesion.
 La vista demo inicia dos selecciones solo cuando no existe un carrito de invitado.
 Al vaciarlo no se vuelven a crear. No se inicia un carrito de ejemplo para usuarios reales.
 Sin almacenamiento disponible se muestra un error al guardar o quitar selecciones.
+
+
+## Mis entradas (demostracion)
+
+La pestaña /perfil/#entradas muestra una entrada por lugar de las compras de
+ejemplo (cinco entradas). Tambien se puede acceder desde Mi cuenta o Ver entradas
+en cada compra. El filtro de compra se puede limpiar para volver a verlas todas.
+
+Cada entrada valida genera un QR distinto con qrcode. El payload lleva el prefijo
+TICKETYA-DEMO y SIN-VALIDEZ-PARA-INGRESAR; no contiene datos personales ni una firma
+de acceso. Los QR de entradas utilizadas, devueltas o con devolucion pendiente no se muestran.
+
+Las solicitudes se guardan por entrada y cuenta en localStorage (invitado en demo).
+Solo se permiten para entradas validas a 72 horas o mas del inicio del evento;
+se usa el timestamp absoluto con zona -03:00 y se vuelve a comprobar al confirmar.
+Se impiden duplicados. El estado queda pendiente de aprobacion, sin reintegros.
+Cancelar el dialogo no solicita la devolucion. Un fallo de almacenamiento no confirma
+la operacion. No hay conexion con un servicio de compras, entrada o devoluciones.
+
+El historial y sus importes siguen siendo de ejemplo; una solicitud pendiente
+no se convierte en una compra devuelta ni en una aprobacion administrativa.
