@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="" />
+    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Asiento.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Asiento.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Sector.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Sector.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/TipoSector.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/TipoSector.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/MsvSectoerAsientoApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/MsvSectoerAsientoApplicationTests.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -29,6 +38,65 @@
     <commands />
     <urls />
   </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0002475487011206" />
+      <entry key="MS500" value="1.1899906070501896" />
+      <entry key="S2" value="1.6602114205075" />
+      <entry key="S5" value="1.8469801125616088" />
+      <entry key="S10" value="1.9203152245625459" />
+      <entry key="S30" value="1.9726998946530765" />
+      <entry key="S60" value="1.9862554915705548" />
+      <entry key="M2" value="1.9931039681576923" />
+      <entry key="M5" value="1.9972358595495852" />
+      <entry key="M10" value="1.9986169733934953" />
+      <entry key="M15" value="1.9990777696024105" />
+      <entry key="M30" value="1.999538778438541" />
+      <entry key="H1" value="1.9997693626224704" />
+      <entry key="H2" value="1.9998846746612684" />
+      <entry key="H4" value="1.9999423356680466" />
+      <entry key="D1" value="1.9999903890470847" />
+      <entry key="W1" value="1.999998627001071" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.6690454380104136" />
+      <entry key="MS500" value="1.0749382449866716" />
+      <entry key="S2" value="1.6046974781685588" />
+      <entry key="S5" value="1.8203920419548354" />
+      <entry key="S10" value="1.906152807748748" />
+      <entry key="S30" value="1.9677714836544604" />
+      <entry key="S60" value="1.983764370249133" />
+      <entry key="M2" value="1.9918516041733283" />
+      <entry key="M5" value="1.9967332715542176" />
+      <entry key="M10" value="1.99836540485832" />
+      <entry key="M15" value="1.9989099961776209" />
+      <entry key="M30" value="1.999454861177212" />
+      <entry key="H1" value="1.9997273963517719" />
+      <entry key="H2" value="1.9998636896155602" />
+      <entry key="H4" value="1.9999318426675592" />
+      <entry key="D1" value="1.9999886401473286" />
+      <entry key="W1" value="1.999998377156624" />
+    </decayedShown>
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8,
   &quot;fromUser&quot;: false
@@ -51,7 +119,7 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "Spring Boot.MsvUsuarioApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "api-gateway",
+    "git-widget-placeholder": "implementacion-jwt",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa",
     "node.js.detected.package.eslint": "true",
@@ -78,7 +146,9 @@
       </method>
     </configuration>
     <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
-      <deployment type="docker-compose.yml" />
+      <deployment type="docker-compose.yml">
+        <settings />
+      </deployment>
       <method v="2" />
     </configuration>
     <configuration name="msv-usuario: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">

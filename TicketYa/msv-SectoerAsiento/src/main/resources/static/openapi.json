@@ -1,0 +1,2153 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TicketYa - Sectores, Asientos e Inventario",
+    "version": "1.0.0",
+    "description": "Entrega 1: sin JWT. Operaciones internas de inventario invocadas por Compras/Eventos; no exponer como operaciones autorizadas de un cliente final en la entrega 2."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Gateway"
+    },
+    {
+      "url": "http://localhost:8002",
+      "description": "Microservicio local"
+    }
+  ],
+  "paths": {
+    "/sectores": {
+      "post": {
+        "summary": "Crear Sector",
+        "operationId": "post__sectores",
+        "responses": {
+          "201": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SectorRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Listar sectores",
+        "operationId": "get__sectores",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SectorResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "idLugar",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/sectores/{id}": {
+      "get": {
+        "summary": "Consultar Sector",
+        "operationId": "get__sectores_id",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "put": {
+        "summary": "Actualizar Sector",
+        "operationId": "put__sectores_id",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SectorRequest"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar Sector",
+        "operationId": "delete__sectores_id",
+        "responses": {
+          "204": {
+            "description": "Operacion realizada"
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/asientos": {
+      "post": {
+        "summary": "Crear Asiento",
+        "operationId": "post__asientos",
+        "responses": {
+          "201": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsientoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsientoRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Listar asientos",
+        "operationId": "get__asientos",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AsientoResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "idSector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/asientos/{id}": {
+      "get": {
+        "summary": "Consultar Asiento",
+        "operationId": "get__asientos_id",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsientoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "put": {
+        "summary": "Actualizar Asiento",
+        "operationId": "put__asientos_id",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AsientoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsientoRequest"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar Asiento",
+        "operationId": "delete__asientos_id",
+        "responses": {
+          "204": {
+            "description": "Operacion realizada"
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/eventos/{idEvento}/inventario": {
+      "put": {
+        "summary": "Inicializar inventario del evento",
+        "operationId": "put__eventos_idEvento_inventario",
+        "responses": {
+          "204": {
+            "description": "Operacion realizada"
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "idEvento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventarioRequest"
+              }
+            }
+          }
+        },
+        "description": "Consulta Eventos por Feign. Repetir el mismo limite es seguro; cambiarlo devuelve 409."
+      }
+    },
+    "/eventos/{idEvento}/sectores": {
+      "put": {
+        "summary": "Configurar precio y capacidad",
+        "operationId": "put__eventos_idEvento_sectores",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisponibilidadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "idEvento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SectorEventoRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Listar disponibilidad por evento",
+        "operationId": "get__eventos_idEvento_sectores",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DisponibilidadResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "idEvento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/eventos/{idEvento}/sectores/{idSector}/disponibilidad": {
+      "get": {
+        "summary": "Consultar disponibilidad sin cache",
+        "operationId": "get__eventos_idEvento_sectores_idSector_disponibilidad",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisponibilidadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "idEvento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "idSector",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/eventos/{idEvento}/inventario/cancelacion": {
+      "post": {
+        "summary": "Liberar inventario del evento cancelado",
+        "operationId": "post__eventos_idEvento_inventario_cancelacion",
+        "responses": {
+          "204": {
+            "description": "Operacion realizada"
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "idEvento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "description": "Idempotente. No reintegra dinero; Compras debe reembolsar y notificar. No admite nuevas reservas."
+      }
+    },
+    "/reservas": {
+      "post": {
+        "summary": "Reservar o recuperar por clave",
+        "operationId": "post__reservas",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaRequest"
+              }
+            }
+          }
+        },
+        "description": "Devuelve 200 tanto al crear como al repetir. IDs de asientos fisicos; lista vacia para CAMPO. Clave repetida con otro contenido: 409."
+      }
+    },
+    "/reservas/{id}": {
+      "get": {
+        "summary": "Consultar reserva y vencimiento",
+        "operationId": "get__reservas_id",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/reservas/{id}/confirmacion": {
+      "post": {
+        "summary": "Confirmar despues del pago",
+        "operationId": "post__reservas_id_confirmacion",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "description": "Idempotente. Si vencio, devuelve 200 con estado VENCIDA y lugares liberados. Compras debe compensar un pago tardio, sin emitir QR."
+      }
+    },
+    "/reservas/{id}/liberacion": {
+      "post": {
+        "summary": "Liberar por rechazo de pago",
+        "operationId": "post__reservas_id_liberacion",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "description": "Idempotente. Una venta confirmada requiere devolucion y devuelve 409."
+      }
+    },
+    "/reservas/{id}/devoluciones": {
+      "post": {
+        "summary": "Aplicar devolucion aprobada",
+        "operationId": "post__reservas_id_devoluciones",
+        "responses": {
+          "200": {
+            "description": "Operacion realizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso inexistente",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto de estado, capacidad o idempotencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Servicio externo o bloqueo no disponible",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "El proveedor Eventos devolvio un contrato incompleto",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevolucionRequest"
+              }
+            }
+          }
+        },
+        "description": "Total o parcial. solicitadaEn proviene de Compras y debe ser al menos 72 horas antes del evento. No solicita reintegro monetario."
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SectorRequest": {
+        "type": "object",
+        "properties": {
+          "idLugar": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "CAMPO",
+              "NUMERADO"
+            ]
+          },
+          "capacidadTotal": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "idLugar",
+          "nombre",
+          "tipo",
+          "capacidadTotal"
+        ],
+        "example": {
+          "idLugar": 1,
+          "nombre": "Platea",
+          "tipo": "NUMERADO",
+          "capacidadTotal": 1
+        }
+      },
+      "AsientoRequest": {
+        "type": "object",
+        "properties": {
+          "idSector": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "fila": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "columna": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "idSector",
+          "fila",
+          "columna"
+        ],
+        "example": {
+          "idSector": 1,
+          "fila": "A",
+          "columna": "1"
+        }
+      },
+      "InventarioRequest": {
+        "type": "object",
+        "properties": {
+          "limitePorCliente": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "limitePorCliente"
+        ],
+        "example": {
+          "limitePorCliente": 4
+        }
+      },
+      "SectorEventoRequest": {
+        "type": "object",
+        "properties": {
+          "idSector": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "precio": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.01
+          },
+          "capacidadHabilitada": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "idSector",
+          "precio",
+          "capacidadHabilitada"
+        ],
+        "example": {
+          "idSector": 1,
+          "precio": 1500,
+          "capacidadHabilitada": 1
+        }
+      },
+      "ReservaRequest": {
+        "type": "object",
+        "properties": {
+          "claveIdempotencia": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "idCliente": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "idEvento": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "idSector": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "cantidad": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "idAsientos": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "maxItems": 1000,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "claveIdempotencia",
+          "idCliente",
+          "idEvento",
+          "idSector",
+          "cantidad",
+          "idAsientos"
+        ],
+        "example": {
+          "claveIdempotencia": "compra-001",
+          "idCliente": 1,
+          "idEvento": 1,
+          "idSector": 1,
+          "cantidad": 1,
+          "idAsientos": [
+            1
+          ]
+        }
+      },
+      "DevolucionRequest": {
+        "type": "object",
+        "properties": {
+          "claveIdempotencia": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "cantidad": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "solicitadaEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idAsientos": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "maxItems": 1000,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "claveIdempotencia",
+          "cantidad",
+          "solicitadaEn",
+          "idAsientos"
+        ],
+        "example": {
+          "claveIdempotencia": "devolucion-001",
+          "cantidad": 1,
+          "solicitadaEn": "2026-11-08T15:00:00Z",
+          "idAsientos": [
+            1
+          ]
+        }
+      },
+      "ReservaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "claveIdempotencia": {
+            "type": "string"
+          },
+          "idCliente": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "idEvento": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "idSector": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "cantidad": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "precioUnitario": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.01
+          },
+          "venceEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "ACTIVA",
+              "CONFIRMADA",
+              "LIBERADA",
+              "VENCIDA",
+              "DEVUELTA"
+            ]
+          },
+          "cantidadDevuelta": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "idAsientos": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "maxItems": 1000,
+            "uniqueItems": true
+          },
+          "idAsientosDevueltos": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "maxItems": 1000,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "claveIdempotencia",
+          "idCliente",
+          "idEvento",
+          "idSector",
+          "cantidad",
+          "precioUnitario",
+          "venceEn",
+          "estado",
+          "cantidadDevuelta",
+          "idAsientos",
+          "idAsientosDevueltos"
+        ],
+        "example": {
+          "id": 1,
+          "claveIdempotencia": "compra-001",
+          "idCliente": 1,
+          "idEvento": 1,
+          "idSector": 1,
+          "cantidad": 1,
+          "precioUnitario": 1500,
+          "venceEn": "2026-11-08T15:10:00Z",
+          "estado": "ACTIVA",
+          "cantidadDevuelta": 0,
+          "idAsientos": [
+            1
+          ],
+          "idAsientosDevueltos": []
+        }
+      },
+      "DisponibilidadResponse": {
+        "type": "object",
+        "properties": {
+          "idEvento": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "idSector": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "CAMPO",
+              "NUMERADO"
+            ]
+          },
+          "precio": {
+            "type": "number",
+            "minimum": 0,
+            "multipleOf": 0.01
+          },
+          "capacidad": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "disponibles": {
+            "type": "integer"
+          },
+          "reservados": {
+            "type": "integer"
+          },
+          "vendidos": {
+            "type": "integer"
+          },
+          "cancelado": {
+            "type": "boolean"
+          },
+          "asientos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "idAsiento": {
+                  "type": "integer",
+                  "format": "int64",
+                  "minimum": 1
+                },
+                "fila": {
+                  "type": "string"
+                },
+                "columna": {
+                  "type": "string"
+                },
+                "estado": {
+                  "type": "string",
+                  "enum": [
+                    "DISPONIBLE",
+                    "RESERVADO",
+                    "VENDIDO"
+                  ]
+                }
+              },
+              "required": [
+                "idAsiento",
+                "fila",
+                "columna",
+                "estado"
+              ]
+            }
+          }
+        },
+        "required": [
+          "idEvento",
+          "idSector",
+          "tipo",
+          "precio",
+          "capacidad",
+          "disponibles",
+          "reservados",
+          "vendidos",
+          "cancelado",
+          "asientos"
+        ]
+      },
+      "ProblemDetail": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "title"
+        ]
+      },
+      "SectorResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "idLugar": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "CAMPO",
+              "NUMERADO"
+            ]
+          },
+          "capacidadTotal": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "idLugar",
+          "nombre",
+          "tipo",
+          "capacidadTotal"
+        ]
+      },
+      "AsientoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "idSector": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "fila": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "columna": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "id",
+          "idSector",
+          "fila",
+          "columna"
+        ]
+      }
+    }
+  }
+}
