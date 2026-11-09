@@ -1,0 +1,16 @@
+info:
+  name: 7 Confirmar pago aprobado
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{baseUrl}}/reservas/{{idReserva}}/confirmacion"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

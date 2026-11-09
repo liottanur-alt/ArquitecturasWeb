@@ -4,11 +4,27 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="" />
+    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GUIA-ARRANQUE.md" beforeDir="false" afterPath="$PROJECT_DIR$/GUIA-ARRANQUE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/compose.mysql.yml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/compose.mysql.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/docker-compose.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseLocalColorSettings">
+    <colors>
+      <entry key="b4ecb129-abfb-4687-9b2d-cadf215bbe38" value="" />
+    </colors>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -38,61 +54,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0" />
-      <entry key="S5" value="1.0" />
-      <entry key="S10" value="1.0" />
-      <entry key="S30" value="1.0000000950989616" />
-      <entry key="S60" value="1.0004361064277967" />
-      <entry key="M2" value="1.029533073227512" />
-      <entry key="M5" value="1.3704595803284594" />
-      <entry key="M10" value="1.8607664060974725" />
-      <entry key="M15" value="2.140075242598239" />
-      <entry key="M30" value="2.5100166766890677" />
-      <entry key="H1" value="2.7378243044701787" />
-      <entry key="H2" value="2.8643091474813263" />
-      <entry key="H4" value="2.930963047772509" />
-      <entry key="D1" value="2.988324772950211" />
-      <entry key="W1" value="2.998327922492561" />
+      <entry key="MS100" value="2.2431952914131504E-34" />
+      <entry key="MS500" value="1.8662810930705322E-7" />
+      <entry key="S2" value="0.027657221798034873" />
+      <entry key="S5" value="0.41824711719044344" />
+      <entry key="S10" value="1.1020330126457836" />
+      <entry key="S30" value="2.1410127475460214" />
+      <entry key="S60" value="2.533641878200572" />
+      <entry key="M2" value="2.783261101041477" />
+      <entry key="M5" value="3.2562379080294677" />
+      <entry key="M10" value="3.793618297631599" />
+      <entry key="M15" value="4.091544138256954" />
+      <entry key="M30" value="4.483264983706595" />
+      <entry key="H1" value="4.723683979150745" />
+      <entry key="H2" value="4.857026835960275" />
+      <entry key="H4" value="4.927266001012817" />
+      <entry key="D1" value="4.987700582420613" />
+      <entry key="W1" value="4.998238552722183" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="0.0" />
-      <entry key="S10" value="0.0" />
-      <entry key="S30" value="0.0" />
-      <entry key="S60" value="0.0" />
-      <entry key="M2" value="0.0" />
-      <entry key="M5" value="0.0" />
-      <entry key="M10" value="0.0" />
-      <entry key="M15" value="0.0" />
-      <entry key="M30" value="0.0" />
-      <entry key="H1" value="0.0" />
-      <entry key="H2" value="0.0" />
-      <entry key="H4" value="0.0" />
-      <entry key="D1" value="0.0" />
-      <entry key="W1" value="0.0" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0000036745525132" />
+      <entry key="S2" value="1.0437825562763166" />
+      <entry key="S5" value="1.2861017049159342" />
+      <entry key="S10" value="1.5348847585377006" />
+      <entry key="S30" value="1.8117458449616717" />
+      <entry key="S60" value="1.9009693918006714" />
+      <entry key="M2" value="1.949194074887044" />
+      <entry key="M5" value="1.9793592000750704" />
+      <entry key="M10" value="1.9896257878991788" />
+      <entry key="M15" value="1.9930718448738474" />
+      <entry key="M30" value="1.996529901645629" />
+      <entry key="H1" value="1.9982634430077209" />
+      <entry key="H2" value="1.9991313442224306" />
+      <entry key="H4" value="1.9995655777498695" />
+      <entry key="D1" value="1.9999275831824221" />
+      <entry key="W1" value="1.9999896544192586" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.14161048566197482" />
-      <entry key="MS500" value="0.6764241155251373" />
-      <entry key="S2" value="0.906890328933143" />
-      <entry key="S5" value="0.9616607887129919" />
-      <entry key="S10" value="0.980643048572207" />
-      <entry key="S30" value="0.9935056917524376" />
-      <entry key="S60" value="0.997183068568961" />
-      <entry key="M2" value="1.027886946220369" />
-      <entry key="M5" value="1.369715011086976" />
-      <entry key="M10" value="1.8603323341883693" />
-      <entry key="M15" value="2.1397623987807823" />
-      <entry key="M30" value="2.5098447166802966" />
-      <entry key="H1" value="2.7377335402068894" />
-      <entry key="H2" value="2.864262437150906" />
-      <entry key="H4" value="2.930939342642149" />
-      <entry key="D1" value="2.9883207718986786" />
-      <entry key="W1" value="2.9983273496632488" />
+      <entry key="MS100" value="1.8631093859381825E-4" />
+      <entry key="MS500" value="0.17949339075379378" />
+      <entry key="S2" value="0.6959743405551077" />
+      <entry key="S5" value="1.445249320863913" />
+      <entry key="S10" value="2.4407827600913414" />
+      <entry key="S30" value="3.8579713146464716" />
+      <entry key="S60" value="4.381978600368266" />
+      <entry key="M2" value="4.704657549127682" />
+      <entry key="M5" value="5.224021776219119" />
+      <entry key="M10" value="5.777330856404231" />
+      <entry key="M15" value="6.080635821172693" />
+      <entry key="M30" value="6.47778182772965" />
+      <entry key="H1" value="6.720934207196573" />
+      <entry key="H2" value="6.8556497624653865" />
+      <entry key="H4" value="6.926576898513303" />
+      <entry key="D1" value="6.987585651751034" />
+      <entry key="W1" value="6.998222132067345" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -129,6 +145,7 @@
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
+    "run.configurations.included.in.services": "true",
     "settings.editor.selected.configurable": "preferences.general"
   },
   "keyToStringList": {

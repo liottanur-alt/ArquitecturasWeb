@@ -1,0 +1,27 @@
+info:
+  name: 2 Crear asiento
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/asientos"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: '{"idSector":{{idSector}},"fila":"A","columna":"1"}'
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: if (res.getStatus() < 300) bru.setCollectionVar("idAsiento", res.getBody().id);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

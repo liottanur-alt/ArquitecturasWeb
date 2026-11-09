@@ -1,0 +1,27 @@
+info:
+  name: 9 Devolucion aprobada
+  type: http
+  seq: 9
+
+http:
+  method: POST
+  url: "{{baseUrl}}/reservas/{{idReserva}}/devoluciones"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: '{"claveIdempotencia":"{{claveDevolucion}}","cantidad":1,"solicitadaEn":"{{solicitadaEn}}","idAsientos":[{{idAsiento}}]}'
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: before-request
+      code: if (!bru.getCollectionVar("solicitadaEn")) bru.setCollectionVar("solicitadaEn", new Date().toISOString());
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

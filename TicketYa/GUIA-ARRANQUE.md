@@ -1,36 +1,71 @@
 # Guía de arranque y prueba de TicketYa
 
-Actualizada al 8 de noviembre de 2026, después de incorporar Eventos desde main y separar JWT en la carpeta `futura jwt`.
+Actualizada al 9 de noviembre de 2026. Instrucciones portables para Windows, Linux y macOS, con MySQL compartido y JWT apartado en `futura jwt`.
 
-Usuarios, Eventos, SectorAsiento y Gateway tienen un proyecto Spring Boot ejecutable. Las bases se levantan con Docker; las aplicaciones, desde PowerShell o IntelliJ. No hay un Compose único para todo el sistema. Compras todavía no está operativo: para probar inventario se simulan sus llamadas desde Postman o PowerShell.
+Usuarios, Eventos, SectorAsiento y Gateway tienen un proyecto Spring Boot ejecutable. Las tres bases se levantan juntas en un contenedor mediante el Compose de la raíz; las aplicaciones Java se ejecutan desde una terminal o IntelliJ. Ese Compose levanta MySQL, no los microservicios Java. Compras todavía no está operativo: para probar inventario se simulan sus llamadas desde Postman o PowerShell.
 
-## 1. Requisitos
+## 1. Requisitos y carpeta de trabajo
 
-- Docker Desktop iniciado, con el motor de contenedores Linux disponible.
-- JDK 21 o superior. En este equipo está instalado `C:/Users/franc/.jdks/openjdk-26.0.2`.
-- Una terminal libre para Docker y pruebas, y cuatro terminales para las aplicaciones Java.
-- Conexión a internet si Maven necesita descargar dependencias. Cada proyecto incluye Maven Wrapper.
+Esta guía sirve para **Windows, Linux y macOS**, independientemente del nombre de usuario, disco o ubicación del proyecto.
 
-Desde PowerShell, comprobar Docker:
+- JDK 21 o superior, con `java` y `javac` disponibles en la terminal.
+- Docker Desktop en Windows/macOS, o Docker Engine en Linux, con contenedores Linux y Docker Compose v2 o superior. Los Compose de compatibilidad dentro de cada microservicio requieren Compose 2.20 o superior; se recomienda usar siempre el de la raíz.
+- Conexión a internet en la primera ejecución para descargar MySQL y las dependencias de Maven.
+- Una terminal para Docker/pruebas y otra por cada aplicación Java.
+- Postman, si se prefiere probar sin comandos HTTP.
+- PowerShell 7.3 o superior **solo para los scripts `.ps1` de migración/verificación y el ejemplo automatizado de la sección 9**. También está disponible en Linux y macOS. No hace falta para el arranque normal con Bash/Zsh.
 
-```powershell
+Clonar o descargar el proyecto donde se prefiera. Abrir en el editor o explorador la carpeta que contiene `docker-compose.yml`, `msv-usuario`, `msv-evento`, `msv-SectoerAsiento` y `api-gateway`; esa es la **raíz del repositorio**.
+
+Todos los comandos Docker de esta guía parten de esa raíz. Cada bloque de arranque Java parte de una **terminal nueva abierta en la raíz**. Los nombres de carpeta son relativos al repositorio; no se necesita ninguna ruta personal.
+
+Comprobar en cualquier terminal:
+
+```sh
+java -version
+javac -version
 docker version
+docker compose version
 ```
 
-Debe aparecer la sección Server. Si no aparece, abrir Docker Desktop y esperar a que el motor esté listo.
+Java y javac deben corresponder a un JDK 21 o superior. Docker debe mostrar también la sección Server. En Windows/macOS, abrir Docker Desktop y esperar a que esté listo. En Linux, iniciar Docker Engine mediante el mecanismo de la distribución y usar una cuenta con acceso al daemon; no es necesario Docker Desktop.
 
-Los bloques de arranque de esta guía incluyen la ruta completa para poder copiarlos en terminales nuevas. La variable JAVA_HOME se define solo para esa terminal, sin cambiar la configuración permanente del equipo.
+### JAVA_HOME sin depender de una ruta fija
+
+Si JAVA_HOME ya apunta al JDK correcto, no cambiarlo. Si falta, estos ejemplos obtienen la ubicación del Java que ya está instalado y configurado en PATH. Ejecutarlos en cada terminal de arranque que lo necesite; solo afectan esa terminal.
+
+**PowerShell:**
+
+```powershell
+$lineaJavaHome = java -XshowSettings:properties -version 2>&1 |
+    Select-String '^\s*java\.home\s*=' |
+    Select-Object -First 1
+if (-not $lineaJavaHome) { throw 'No se pudo localizar el JDK desde PATH.' }
+$env:JAVA_HOME = ($lineaJavaHome.ToString() -split '=', 2)[1].Trim()
+& (Join-Path $env:JAVA_HOME 'bin/javac') -version
+```
+
+**Linux/macOS con Bash o Zsh:**
+
+```bash
+export JAVA_HOME="$(java -XshowSettings:properties -version 2>&1 | sed -n 's/^[[:space:]]*java.home = //p' | head -n 1)"
+"$JAVA_HOME/bin/javac" -version
+```
+
+Si javac no existe en esa ubicación, instalar/configurar un JDK completo; un JRE solo no alcanza. Si hay varias versiones instaladas, seleccionar la correcta en PATH o en el selector de JDK del sistema antes de obtener JAVA_HOME.
+
+Los archivos Maven Wrapper ya vienen en cada módulo. En Windows se usa `mvnw.cmd`; en Linux/macOS se usa `sh ./mvnw`, que evita depender del permiso de ejecución del archivo.
 
 ## 2. Puertos actuales
 
 | Componente | Puerto local | Base / destino |
 | --- | --- | --- |
-| MySQL Usuarios | 3307 | usuarios |
-| MySQL Eventos | 3308 | eventos |
-| MySQL SectorAsiento | 3310 | sectores_asientos |
-| Usuarios | 8004 | MySQL en 3307 |
-| Eventos | 8005 | MySQL en 3308 |
-| SectorAsiento | 8002 | MySQL en 3310; Feign a Eventos en 8005 |
+| MySQL compartido: Usuarios | 3306 | usuarios |
+| MySQL compartido: Eventos | 3306 | eventos |
+| MySQL compartido: SectorAsiento | 3306 | sectores_asientos |
+| Usuarios | 8004 | MySQL en 3306 |
+| Eventos | 8005 | MySQL en 3306 |
+| SectorAsiento | 8002 | MySQL en 3306; Feign a Eventos en 8005 |
 | Gateway | 8080 | Usuarios en 8004 y SectorAsiento en 8002 |
 | Compras | 8003 provisional | Todavía pendiente |
 
@@ -38,25 +73,16 @@ Orden recomendado: **Docker → las tres bases → Usuarios y Eventos → Sector
 
 No se requiere JWT. `/auth/login` y `/auth/registro` están retirados; los perfiles se crean con `POST /usuarios`. La carpeta `futura jwt` conserva la implementación para otra etapa.
 
-## 3. Levantar las tres bases
+## 3. Levantar las tres bases en un solo contenedor
 
-En la terminal de Docker:
+En una terminal abierta en la raíz del repositorio (mismos comandos en todos los sistemas):
 
-```powershell
-Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa'
-
-docker compose -f ./msv-usuario/docker-compose.yml up -d --wait
-docker compose -f ./msv-evento/docker-compose.yaml up -d --wait
-docker compose -f ./msv-SectoerAsiento/compose.mysql.yml up -d --wait
+```sh
+docker compose up -d --wait
+docker compose ps
 ```
 
-Comprobar que estén saludables:
-
-```powershell
-docker compose -f ./msv-usuario/docker-compose.yml ps
-docker compose -f ./msv-evento/docker-compose.yaml ps
-docker compose -f ./msv-SectoerAsiento/compose.mysql.yml ps
-```
+Debe aparecer un único servicio mysql saludable. Dentro están usuarios, eventos y sectores_asientos, todos accesibles en localhost:3306.
 
 | Base | Usuario local | Contraseña local |
 | --- | --- | --- |
@@ -64,20 +90,41 @@ docker compose -f ./msv-SectoerAsiento/compose.mysql.yml ps
 | eventos | evento_app | evento_dev |
 | sectores_asientos | sector_app | sector_dev |
 
-Estos valores coinciden con las configuraciones de desarrollo. Si hay variables DB_URL, DB_USERNAME, DB_PASSWORD o MYSQL_ROOT_PASSWORD definidas previamente, revisar que no reemplacen los valores de la guía. DB_PASSWORD debe coincidir entre el Compose de cada base y su aplicación. Cambiar una variable no cambia las credenciales de un volumen ya inicializado.
+Cada cuenta tiene permisos solo sobre su esquema. Los application.properties ya están actualizados. No hace falta crear las bases a mano: se inicializan al crear el volumen; las tablas las crea Hibernate al iniciar cada microservicio.
 
-No usar el puerto 3308 para SectorAsiento: ahora pertenece a Eventos. SectorAsiento usa **3310**. No confundir `msv-evento`, el proyecto ejecutable, con la carpeta `msv-eventos`.
+**Si ya tenías datos en los contenedores anteriores, migrar antes de iniciar las aplicaciones Java contra el nuevo contenedor:**
+
+```sh
+pwsh -File ./scripts/Migrar-Bases.ps1 -DetenerOrigenes
+```
+
+El script requiere PowerShell 7.3 o superior en cualquiera de los sistemas operativos. Respalda los datos, importa únicamente a esquemas vacíos, compara tablas y filas y después detiene los contenedores antiguos. No borra sus volúmenes. Si no hay datos previos, se puede omitir este paso. Los contenedores anteriores no se detienen automáticamente con el simple comando up.
+
+Para comprobar las tres cuentas y el aislamiento de permisos, con PowerShell 7.3 o superior:
+
+```sh
+pwsh -File ./scripts/Verificar-Bases.ps1
+```
+
+Los detalles de migración, personalización de credenciales y puertos están en [docker/mysql/README.md](docker/mysql/README.md). Si 3306 está ocupado, configurar MYSQL_PORT y las DB_URL correspondientes como indica ese documento. Las variables de un archivo .env de Docker no se cargan automáticamente en las aplicaciones Java ni en IntelliJ. Los puertos y contraseñas de la tabla son valores de desarrollo configurados en el proyecto; no dependen del equipo. Si se personalizan, aplicar los mismos valores al contenedor y a las aplicaciones.
 
 ## 4. Iniciar Usuarios
 
-En una terminal nueva:
+**Windows con PowerShell**, desde una terminal nueva en la raíz:
 
 ```powershell
-Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa/msv-usuario'
-$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
-$env:MSV_EVENTO_URL='http://localhost:8005'
+cd ./msv-usuario
 .\mvnw.cmd spring-boot:run
 ```
+
+**Linux/macOS con Bash/Zsh**, desde una terminal nueva en la raíz:
+
+```bash
+cd ./msv-usuario
+sh ./mvnw spring-boot:run
+```
+
+Si se usa PowerShell en Linux/macOS, ejecutar `sh ./mvnw spring-boot:run` en lugar de `mvnw.cmd`. JAVA_HOME debe estar configurado en esa terminal según la sección 1. Las URLs locales ya tienen los valores por defecto correctos en application.properties.
 
 Esperar `Started MsvUsuarioApplication` y mantener la terminal abierta. Dirección: http://localhost:8004.
 
@@ -85,13 +132,21 @@ Se inicializan los roles. El perfil local dev puede crear un perfil administrado
 
 ## 5. Iniciar Eventos
 
-En otra terminal:
+**Windows con PowerShell**, desde una terminal nueva en la raíz:
 
 ```powershell
-Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa/msv-evento'
-$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
+cd ./msv-evento
 .\mvnw.cmd spring-boot:run
 ```
+
+**Linux/macOS con Bash/Zsh**, desde una terminal nueva en la raíz:
+
+```bash
+cd ./msv-evento
+sh ./mvnw spring-boot:run
+```
+
+Si se usa PowerShell en Linux/macOS, ejecutar `sh ./mvnw spring-boot:run` en lugar de `mvnw.cmd`. JAVA_HOME debe estar configurado en esa terminal según la sección 1. Las URLs locales ya tienen los valores por defecto correctos en application.properties.
 
 Esperar `Started MsvEventoApplication`. Dirección: http://localhost:8005.
 
@@ -108,15 +163,21 @@ El contrato de consulta devuelve `lugar` como objeto anidado. El cliente Feign d
 
 ## 6. Iniciar SectorAsiento
 
-En otra terminal:
+**Windows con PowerShell**, desde una terminal nueva en la raíz:
 
 ```powershell
-Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa/msv-SectoerAsiento'
-$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
-$env:MSVC_EVENTOS_URL='http://localhost:8005'
-$env:MSVC_COMPRAS_URL='http://localhost:8003'
+cd ./msv-SectoerAsiento
 .\mvnw.cmd spring-boot:run
 ```
+
+**Linux/macOS con Bash/Zsh**, desde una terminal nueva en la raíz:
+
+```bash
+cd ./msv-SectoerAsiento
+sh ./mvnw spring-boot:run
+```
+
+Si se usa PowerShell en Linux/macOS, ejecutar `sh ./mvnw spring-boot:run` en lugar de `mvnw.cmd`. JAVA_HOME debe estar configurado en esa terminal según la sección 1. Las URLs locales ya tienen los valores por defecto correctos en application.properties.
 
 Esperar `Started MsvSectoerAsientoApplication`. Dirección: http://localhost:8002.
 
@@ -126,15 +187,21 @@ OpenAPI: http://localhost:8002/openapi.json.
 
 ## 7. Iniciar Gateway
 
-En otra terminal:
+**Windows con PowerShell**, desde una terminal nueva en la raíz:
 
 ```powershell
-Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa/api-gateway'
-$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
-$env:MSVC_USUARIOS_URL='http://localhost:8004'
-$env:MSVC_SECTORES_URL='http://localhost:8002'
+cd ./api-gateway
 .\mvnw.cmd spring-boot:run
 ```
+
+**Linux/macOS con Bash/Zsh**, desde una terminal nueva en la raíz:
+
+```bash
+cd ./api-gateway
+sh ./mvnw spring-boot:run
+```
+
+Si se usa PowerShell en Linux/macOS, ejecutar `sh ./mvnw spring-boot:run` en lugar de `mvnw.cmd`. JAVA_HOME debe estar configurado en esa terminal según la sección 1. Las URLs locales ya tienen los valores por defecto correctos en application.properties.
 
 Esperar `Started ApiGatewayApplication`. Dirección: http://localhost:8080.
 
@@ -148,7 +215,7 @@ El Gateway actualmente enruta:
 
 ## 8. Comprobar que responden
 
-En una terminal libre:
+En una terminal libre, elegir una alternativa. **PowerShell:**
 
 ```powershell
 (Invoke-WebRequest -Uri 'http://localhost:8004/roles' -TimeoutSec 10).StatusCode
@@ -157,11 +224,20 @@ En una terminal libre:
 (Invoke-WebRequest -Uri 'http://localhost:8080/sectores' -TimeoutSec 10).StatusCode
 ```
 
+**Linux/macOS con curl:**
+
+```bash
+curl --fail --silent --show-error --output /dev/null --write-out 'Usuarios: %{http_code}\n' http://localhost:8004/roles
+curl --fail --silent --show-error --output /dev/null --write-out 'Eventos: %{http_code}\n' http://localhost:8005/api/eventos
+curl --fail --silent --show-error --output /dev/null --write-out 'Sectores: %{http_code}\n' http://localhost:8002/sectores
+curl --fail --silent --show-error --output /dev/null --write-out 'Gateway: %{http_code}\n' http://localhost:8080/sectores
+```
+
 Cada consulta debe devolver 200. Una lista vacía es válida. Si no responden, revisar las terminales de Spring y el estado de las bases antes de seguir.
 
 ## 9. Probar un flujo completo de inventario
 
-Ejecutar los bloques siguientes en **la misma terminal de pruebas** para conservar los IDs en variables. Se crean datos nuevos; no se presupone que los IDs sean 1. Los comandos usan Usuarios e inventario por Gateway, y el catálogo de Eventos directamente porque falta su ruta en el Gateway.
+Esta sección utiliza **PowerShell 7.3 o superior**, tanto en Windows como en Linux/macOS. Si se estaba usando Bash/Zsh, abrir `pwsh` antes de empezar. Alternativamente, usar Postman como indica la sección 10. Ejecutar los bloques siguientes en **la misma terminal de pruebas** para conservar los IDs en variables. Se crean datos nuevos; no se presupone que los IDs sean 1. Los comandos usan Usuarios e inventario por Gateway, y el catálogo de Eventos directamente porque falta su ruta en el Gateway.
 
 ### 9.1 Preparar una función para enviar JSON
 
@@ -169,7 +245,7 @@ Ejecutar los bloques siguientes en **la misma terminal de pruebas** para conserv
 function Enviar-Json {
     param([string]$Metodo, [string]$Url, $Datos)
     $jsonPrueba = $Datos | ConvertTo-Json -Depth 10
-    Invoke-RestMethod -Uri $Url -Method $Metodo -ContentType 'application/json' -Body $jsonPrueba
+    Invoke-RestMethod -Uri $Url -Method $Metodo -ContentType 'application/json; charset=utf-8' -Body $jsonPrueba
 }
 
 $gatewayPrueba = 'http://localhost:8080'
@@ -226,13 +302,13 @@ $eventoPrueba = Enviar-Json 'POST' "$eventosPrueba/api/eventos" @{
     tipo = 'RECITAL'
     idOrganizador = $organizadorPrueba.id
     participantesIds = @($artistaPrueba.id)
-    fechaHora = (Get-Date).AddDays(7).ToString('yyyy-MM-ddTHH:mm:ss')
+    fechaHora = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([DateTimeOffset]::UtcNow.AddDays(7), 'America/Argentina/Buenos_Aires').ToString('yyyy-MM-ddTHH:mm:ss')
     idLugar = $lugarPrueba.id
     demanda = $false
 }
 ```
 
-El evento se crea en BORRADOR. La fecha enviada es hora local del evento; el inventario utiliza America/Argentina/Buenos_Aires por defecto. Se eligen siete días de anticipación para poder probar devoluciones.
+El evento se crea en BORRADOR. La fecha se calcula en la zona de Buenos Aires, aunque la computadora esté en otra zona horaria. La fecha enviada es hora local del evento; el inventario utiliza America/Argentina/Buenos_Aires por defecto. Se eligen siete días de anticipación para poder probar devoluciones.
 
 ### 9.4 Crear sector y asiento
 
@@ -357,21 +433,37 @@ Usar la carpeta del microservicio como Working directory. Definir las mismas var
 
 ## 11. Pruebas automáticas y estado verificado
 
-Desde la raíz, con JAVA_HOME definido:
+Desde una terminal en la raíz, con el JDK configurado. Cada bloque regresa a la raíz después de probar un módulo.
+
+**Windows con PowerShell:**
 
 ```powershell
-Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa'
-$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
-
-.\msv-usuario\mvnw.cmd -f ./msv-usuario/pom.xml test
-.\msv-SectoerAsiento\mvnw.cmd -f ./msv-SectoerAsiento/pom.xml test
-.\api-gateway\mvnw.cmd -f ./api-gateway/pom.xml test
-.\msv-evento\mvnw.cmd -f ./msv-evento/pom.xml test
+Push-Location ./msv-usuario
+.\mvnw.cmd test
+Pop-Location
+Push-Location ./msv-SectoerAsiento
+.\mvnw.cmd test
+Pop-Location
+Push-Location ./api-gateway
+.\mvnw.cmd test
+Pop-Location
+Push-Location ./msv-evento
+.\mvnw.cmd test
+Pop-Location
 ```
 
-Si un Wrapper no admite ser invocado desde otra carpeta, abrir una terminal en el proyecto y ejecutar `.\mvnw.cmd test`.
+**Linux/macOS con Bash/Zsh:**
 
-Usuarios, SectorAsiento y Gateway utilizan H2 o proveedores HTTP de prueba y no necesitan servicios externos para sus suites. **Eventos actualmente solo tiene una prueba de arranque y usa su MySQL configurado en 3308**, por lo que esa base debe estar iniciada. Sus pruebas no están aisladas con un perfil H2; con ddl-auto=update, el arranque puede actualizar el esquema configurado.
+```bash
+(cd ./msv-usuario && sh ./mvnw test)
+(cd ./msv-SectoerAsiento && sh ./mvnw test)
+(cd ./api-gateway && sh ./mvnw test)
+(cd ./msv-evento && sh ./mvnw test)
+```
+
+No ejecutar simultáneamente las pruebas de Eventos y la aplicación Eventos sobre la misma base de desarrollo.
+
+Usuarios, SectorAsiento y Gateway utilizan H2 o proveedores HTTP de prueba y no necesitan servicios externos para sus suites. **Eventos actualmente solo tiene una prueba de arranque y usa el esquema eventos del MySQL compartido en 3306**, por lo que esa base debe estar iniciada. Sus pruebas no están aisladas con un perfil H2; con ddl-auto=update, el arranque puede actualizar el esquema configurado.
 
 Última verificación: 15 pruebas de Usuarios y 37 de SectorAsiento pasaron. Eventos compiló, pero su prueba de arranque falló por conexión a MySQL: en esa revisión solo estaba levantada la base de Usuarios. Eso no prueba un error de compilación ni permite certificar el flujo integrado real. El Gateway tenía seis pruebas correctas de la verificación anterior.
 
@@ -383,8 +475,8 @@ Para pruebas específicas con MySQL descartable, consultar README.md de SectorAs
 
 | Síntoma | Qué revisar |
 | --- | --- |
-| Docker no se conecta al motor | Docker Desktop abierto y sección Server en docker version. |
-| JAVA_HOME inválido | Ruta del JDK y variable definida en esa misma terminal. |
+| Docker no se conecta al motor | Docker Desktop iniciado en Windows/macOS o Docker Engine disponible en Linux; docker version debe mostrar Server. |
+| JAVA_HOME inválido | JDK 21+ completo, java/javac disponibles y JAVA_HOME configurado en esa misma terminal según la sección 1. |
 | Communications link failure / no puede determinar el dialecto | Base correspondiente iniciada, puerto y credenciales correctos. No arreglarlo solo forzando un dialecto. |
 | Access denied de MySQL | Credenciales de aplicación y del volumen existente; no cambian al editar variables. |
 | Puerto ocupado | Detener la instancia anterior con Ctrl+C o Stop en IntelliJ. |
@@ -397,20 +489,46 @@ Para pruebas específicas con MySQL descartable, consultar README.md de SectorAs
 
 Ver logs de bases desde la raíz:
 
-```powershell
-docker compose -f ./msv-usuario/docker-compose.yml logs --tail 50 mysql-usuario
-docker compose -f ./msv-evento/docker-compose.yaml logs --tail 50 mysql-evento
-docker compose -f ./msv-SectoerAsiento/compose.mysql.yml logs --tail 50 mysql-sector
+```sh
+docker compose logs --tail 50 mysql
 ```
+
+### Ajustar variables sin rutas personales
+
+Los valores por defecto alcanzan cuando todo corre en la misma computadora. Para personalizarlos, definir variables en la terminal del microservicio antes de iniciarlo, o en su configuración de IntelliJ.
+
+**Ejemplo PowerShell (Usuarios):**
+
+```powershell
+$env:DB_URL='jdbc:mysql://localhost:3306/usuarios'
+$env:MSV_EVENTO_URL='http://localhost:8005'
+```
+
+**Ejemplo Bash/Zsh (Usuarios):**
+
+```bash
+export DB_URL='jdbc:mysql://localhost:3306/usuarios'
+export MSV_EVENTO_URL='http://localhost:8005'
+```
+
+Para otras aplicaciones cambiar el esquema de DB_URL. Las variables de URLs son MSV_EVENTO_URL en Usuarios; MSVC_EVENTOS_URL y MSVC_COMPRAS_URL en SectorAsiento; MSVC_USUARIOS_URL y MSVC_SECTORES_URL en Gateway. Los puertos HTTP por defecto siguen siendo 8004, 8005, 8002 y 8080. Si una variable vieja apunta a otro puerto, corregirla o quitarla.
+
+Si los microservicios también se ejecutan en contenedores, localhost representa a cada contenedor: se requieren URLs con los nombres de servicio de su red Docker. Esta guía describe Java ejecutándose en el equipo y solo MySQL en Docker, no un despliegue completo de las aplicaciones en contenedores.
 
 ## 13. Detener
 
-Detener las aplicaciones con Ctrl+C en sus terminales o Stop en IntelliJ. Después, desde la raíz:
+Detener las aplicaciones con Ctrl+C en sus terminales o Stop en IntelliJ, en cualquiera de los sistemas. Después, desde la raíz:
 
-```powershell
-docker compose -f ./msv-usuario/docker-compose.yml stop
-docker compose -f ./msv-evento/docker-compose.yaml stop
-docker compose -f ./msv-SectoerAsiento/compose.mysql.yml stop
+```sh
+docker compose stop
 ```
 
 Estos comandos conservan los datos de los volúmenes. Para volver a iniciar las bases, repetir los comandos up de la sección 3.
+
+## Nota de verificación del cambio de bases
+
+Se validaron la configuración Compose y la sintaxis de los scripts. No se ejecutó el arranque ni la migración contra MySQL durante este cambio porque Docker Desktop no estaba iniciado. Los volúmenes y datos anteriores no fueron modificados.
+
+## Portabilidad de la guía
+
+No hay rutas absolutas de usuarios ni versiones de JDK ligadas a una computadora. Los comandos se basan en la raíz del repositorio. Se revisó la sintaxis de los ejemplos PowerShell y Bash; eso no equivale a ejecutar toda la aplicación en cada sistema operativo. La prueba completa de las secciones 8 y 9 debe realizarse en el equipo de destino con Docker y los servicios iniciados.

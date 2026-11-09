@@ -1,0 +1,14 @@
+[
+  {
+    "nombreLugar": "Teatro Tandil",
+    "nombreArtista": "Banda Tandil",
+    "nombreEvento": "Recital Tandil",
+    "ciudad": "Tandil"
+  },
+  {
+    "nombreLugar": "Sala Azul",
+    "nombreArtista": "Banda Azul",
+    "nombreEvento": "Recital Azul",
+    "ciudad": "Azul"
+  }
+]

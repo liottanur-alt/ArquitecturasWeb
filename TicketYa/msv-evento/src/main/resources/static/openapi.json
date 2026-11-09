@@ -1,0 +1,2106 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TicketYa - API de Eventos",
+    "version": "1.0.0",
+    "description": "Contrato actual sin JWT. Incluye catálogo de eventos, lugares y artistas. Documenta limitaciones reales, sin prometer validaciones no implementadas. Consultar REST.md y docs/PRUEBAS-POSTMAN.md."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8005",
+      "description": "Microservicio directo; el catálogo aún no está en el Gateway."
+    }
+  ],
+  "security": [],
+  "tags": [
+    {
+      "name": "Eventos"
+    },
+    {
+      "name": "Lugares"
+    },
+    {
+      "name": "Artistas"
+    }
+  ],
+  "paths": {
+    "/api/artistas": {
+      "get": {
+        "tags": [
+          "Artistas"
+        ],
+        "operationId": "get_api_artistas",
+        "summary": "Listar artistas",
+        "description": "Devuelve todos los registros, incluidos eventos no publicados. Para buscar solo publicados usar /api/eventos/buscar.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArtistaResponse"
+                  }
+                },
+                "example": [
+                  {
+                    "id": 17,
+                    "nombre": "Banda de prueba",
+                    "genero": "Rock"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Artistas"
+        ],
+        "operationId": "post_api_artistas",
+        "summary": "Crear artista",
+        "description": "Crea un registro con los campos del cuerpo. Actualmente no hay Bean Validation de campos obligatorios.",
+        "responses": {
+          "201": {
+            "description": "Recurso creado; el controlador actual no envía Location.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtistaResponse"
+                },
+                "example": {
+                  "id": 17,
+                  "nombre": "Banda de prueba",
+                  "genero": "Rock"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/artistas"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/artistas"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArtistaRequest"
+              },
+              "example": {
+                "nombre": "Banda de prueba",
+                "genero": "Rock"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/artistas/{id}": {
+      "get": {
+        "tags": [
+          "Artistas"
+        ],
+        "operationId": "get_api_artistas_id",
+        "summary": "Consultar artista",
+        "description": "Devuelve el registro o 404 si no existe.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtistaResponse"
+                },
+                "example": {
+                  "id": 17,
+                  "nombre": "Banda de prueba",
+                  "genero": "Rock"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/artistas/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/artistas/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Artistas"
+        ],
+        "operationId": "put_api_artistas_id",
+        "summary": "Actualizar artista",
+        "description": "Reemplaza los campos editables. En eventos, estado y estadoPublicacion se conservan; se resuelven nuevamente lugar y artistas. No es una actualización parcial.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtistaResponse"
+                },
+                "example": {
+                  "id": 17,
+                  "nombre": "Banda de prueba",
+                  "genero": "Rock"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/artistas/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/artistas/42"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/artistas/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArtistaRequest"
+              },
+              "example": {
+                "nombre": "Banda de prueba",
+                "genero": "Rock"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Artistas"
+        ],
+        "operationId": "delete_api_artistas_id",
+        "summary": "Eliminar artista",
+        "description": "Elimina el registro. Si un lugar/artista sigue asociado a eventos, la restricción no tiene manejador de negocio y puede devolver 500; eliminar primero los eventos propios de prueba.",
+        "responses": {
+          "204": {
+            "description": "Eliminado, sin cuerpo."
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/artistas/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/artistas/42"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/artistas/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      }
+    },
+    "/api/lugares": {
+      "get": {
+        "tags": [
+          "Lugares"
+        ],
+        "operationId": "get_api_lugares",
+        "summary": "Listar lugares",
+        "description": "Devuelve todos los registros, incluidos eventos no publicados. Para buscar solo publicados usar /api/eventos/buscar.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LugarResponse"
+                  }
+                },
+                "example": [
+                  {
+                    "id": 23,
+                    "nombre": "Teatro de prueba",
+                    "direccion": "Calle 123",
+                    "latitud": -37.3288,
+                    "longitud": -59.1367,
+                    "ciudad": "Tandil",
+                    "tipo": "TEATRO"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Lugares"
+        ],
+        "operationId": "post_api_lugares",
+        "summary": "Crear lugar",
+        "description": "Crea un registro con los campos del cuerpo. Actualmente no hay Bean Validation de campos obligatorios.",
+        "responses": {
+          "201": {
+            "description": "Recurso creado; el controlador actual no envía Location.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LugarResponse"
+                },
+                "example": {
+                  "id": 23,
+                  "nombre": "Teatro de prueba",
+                  "direccion": "Calle 123",
+                  "latitud": -37.3288,
+                  "longitud": -59.1367,
+                  "ciudad": "Tandil",
+                  "tipo": "TEATRO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/lugares"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/lugares"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LugarRequest"
+              },
+              "example": {
+                "nombre": "Teatro de prueba",
+                "direccion": "Calle 123",
+                "latitud": -37.3288,
+                "longitud": -59.1367,
+                "ciudad": "Tandil",
+                "tipo": "TEATRO"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lugares/{id}": {
+      "get": {
+        "tags": [
+          "Lugares"
+        ],
+        "operationId": "get_api_lugares_id",
+        "summary": "Consultar lugar",
+        "description": "Devuelve el registro o 404 si no existe.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LugarResponse"
+                },
+                "example": {
+                  "id": 23,
+                  "nombre": "Teatro de prueba",
+                  "direccion": "Calle 123",
+                  "latitud": -37.3288,
+                  "longitud": -59.1367,
+                  "ciudad": "Tandil",
+                  "tipo": "TEATRO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/lugares/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/lugares/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Lugares"
+        ],
+        "operationId": "put_api_lugares_id",
+        "summary": "Actualizar lugar",
+        "description": "Reemplaza los campos editables. En eventos, estado y estadoPublicacion se conservan; se resuelven nuevamente lugar y artistas. No es una actualización parcial.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LugarResponse"
+                },
+                "example": {
+                  "id": 23,
+                  "nombre": "Teatro de prueba",
+                  "direccion": "Calle 123",
+                  "latitud": -37.3288,
+                  "longitud": -59.1367,
+                  "ciudad": "Tandil",
+                  "tipo": "TEATRO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/lugares/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/lugares/42"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/lugares/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LugarRequest"
+              },
+              "example": {
+                "nombre": "Teatro de prueba",
+                "direccion": "Calle 123",
+                "latitud": -37.3288,
+                "longitud": -59.1367,
+                "ciudad": "Tandil",
+                "tipo": "TEATRO"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Lugares"
+        ],
+        "operationId": "delete_api_lugares_id",
+        "summary": "Eliminar lugar",
+        "description": "Elimina el registro. Si un lugar/artista sigue asociado a eventos, la restricción no tiene manejador de negocio y puede devolver 500; eliminar primero los eventos propios de prueba.",
+        "responses": {
+          "204": {
+            "description": "Eliminado, sin cuerpo."
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/lugares/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/lugares/42"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/lugares/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      }
+    },
+    "/api/eventos": {
+      "get": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "get_api_eventos",
+        "summary": "Listar eventos",
+        "description": "Devuelve todos los registros, incluidos eventos no publicados. Para buscar solo publicados usar /api/eventos/buscar.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoResponse"
+                  }
+                },
+                "example": [
+                  {
+                    "nombre": "Recital de prueba",
+                    "descripcion": "Evento de demostración",
+                    "tipo": "RECITAL",
+                    "idOrganizador": 900001,
+                    "fechaHora": "2030-12-20T21:00:00",
+                    "demanda": false,
+                    "id": 42,
+                    "estado": "EN_CURSO",
+                    "estadoPublicacion": "BORRADOR",
+                    "lugar": {
+                      "id": 23,
+                      "nombre": "Teatro de prueba",
+                      "direccion": "Calle 123",
+                      "latitud": -37.3288,
+                      "longitud": -59.1367,
+                      "ciudad": "Tandil",
+                      "tipo": "TEATRO"
+                    },
+                    "participantes": [
+                      {
+                        "id": 17,
+                        "nombre": "Banda de prueba",
+                        "genero": "Rock"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "post_api_eventos",
+        "summary": "Crear evento",
+        "description": "Crea un registro con los campos del cuerpo. Actualmente no hay Bean Validation de campos obligatorios. Siempre inicia EN_CURSO/BORRADOR. idLugar y participantesIds se resuelven en esta base; referencias ausentes devuelven 404. idOrganizador no se valida contra Usuarios.",
+        "responses": {
+          "201": {
+            "description": "Recurso creado; el controlador actual no envía Location.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                },
+                "example": {
+                  "nombre": "Recital de prueba",
+                  "descripcion": "Evento de demostración",
+                  "tipo": "RECITAL",
+                  "idOrganizador": 900001,
+                  "fechaHora": "2030-12-20T21:00:00",
+                  "demanda": false,
+                  "id": 42,
+                  "estado": "EN_CURSO",
+                  "estadoPublicacion": "BORRADOR",
+                  "lugar": {
+                    "id": 23,
+                    "nombre": "Teatro de prueba",
+                    "direccion": "Calle 123",
+                    "latitud": -37.3288,
+                    "longitud": -59.1367,
+                    "ciudad": "Tandil",
+                    "tipo": "TEATRO"
+                  },
+                  "participantes": [
+                    {
+                      "id": 17,
+                      "nombre": "Banda de prueba",
+                      "genero": "Rock"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/eventos"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/eventos"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/eventos"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventoRequest"
+              },
+              "example": {
+                "nombre": "Recital de prueba",
+                "descripcion": "Evento de demostración",
+                "tipo": "RECITAL",
+                "idOrganizador": 900001,
+                "participantesIds": [
+                  17
+                ],
+                "fechaHora": "2030-12-20T21:00:00",
+                "idLugar": 23,
+                "demanda": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/eventos/{id}": {
+      "get": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "get_api_eventos_id",
+        "summary": "Consultar evento",
+        "description": "Devuelve el registro o 404 si no existe.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                },
+                "example": {
+                  "nombre": "Recital de prueba",
+                  "descripcion": "Evento de demostración",
+                  "tipo": "RECITAL",
+                  "idOrganizador": 900001,
+                  "fechaHora": "2030-12-20T21:00:00",
+                  "demanda": false,
+                  "id": 42,
+                  "estado": "EN_CURSO",
+                  "estadoPublicacion": "BORRADOR",
+                  "lugar": {
+                    "id": 23,
+                    "nombre": "Teatro de prueba",
+                    "direccion": "Calle 123",
+                    "latitud": -37.3288,
+                    "longitud": -59.1367,
+                    "ciudad": "Tandil",
+                    "tipo": "TEATRO"
+                  },
+                  "participantes": [
+                    {
+                      "id": 17,
+                      "nombre": "Banda de prueba",
+                      "genero": "Rock"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/eventos/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/eventos/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "put_api_eventos_id",
+        "summary": "Actualizar evento",
+        "description": "Reemplaza los campos editables. En eventos, estado y estadoPublicacion se conservan; se resuelven nuevamente lugar y artistas. No es una actualización parcial.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                },
+                "example": {
+                  "nombre": "Recital de prueba",
+                  "descripcion": "Evento de demostración",
+                  "tipo": "RECITAL",
+                  "idOrganizador": 900001,
+                  "fechaHora": "2030-12-20T21:00:00",
+                  "demanda": false,
+                  "id": 42,
+                  "estado": "EN_CURSO",
+                  "estadoPublicacion": "BORRADOR",
+                  "lugar": {
+                    "id": 23,
+                    "nombre": "Teatro de prueba",
+                    "direccion": "Calle 123",
+                    "latitud": -37.3288,
+                    "longitud": -59.1367,
+                    "ciudad": "Tandil",
+                    "tipo": "TEATRO"
+                  },
+                  "participantes": [
+                    {
+                      "id": 17,
+                      "nombre": "Banda de prueba",
+                      "genero": "Rock"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/eventos/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/eventos/42"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/eventos/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventoRequest"
+              },
+              "example": {
+                "nombre": "Recital de prueba",
+                "descripcion": "Evento de demostración",
+                "tipo": "RECITAL",
+                "idOrganizador": 900001,
+                "participantesIds": [
+                  17
+                ],
+                "fechaHora": "2030-12-20T21:00:00",
+                "idLugar": 23,
+                "demanda": false
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "delete_api_eventos_id",
+        "summary": "Eliminar evento",
+        "description": "Elimina el registro. Si un lugar/artista sigue asociado a eventos, la restricción no tiene manejador de negocio y puede devolver 500; eliminar primero los eventos propios de prueba.",
+        "responses": {
+          "204": {
+            "description": "Eliminado, sin cuerpo."
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/eventos/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/eventos/42"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/eventos/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      }
+    },
+    "/api/eventos/{id}/publicar": {
+      "patch": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "patch_api_eventos_id_publicar",
+        "summary": "Publicar evento",
+        "description": "Solo admite BORRADOR y lo cambia a PUBLICADO. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                },
+                "example": {
+                  "nombre": "Recital de prueba",
+                  "descripcion": "Evento de demostración",
+                  "tipo": "RECITAL",
+                  "idOrganizador": 900001,
+                  "fechaHora": "2030-12-20T21:00:00",
+                  "demanda": false,
+                  "id": 42,
+                  "estado": "EN_CURSO",
+                  "estadoPublicacion": "BORRADOR",
+                  "lugar": {
+                    "id": 23,
+                    "nombre": "Teatro de prueba",
+                    "direccion": "Calle 123",
+                    "latitud": -37.3288,
+                    "longitud": -59.1367,
+                    "ciudad": "Tandil",
+                    "tipo": "TEATRO"
+                  },
+                  "participantes": [
+                    {
+                      "id": 17,
+                      "nombre": "Banda de prueba",
+                      "genero": "Rock"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/eventos/42/publicar"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/eventos/42/publicar"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Transición incompatible con el estado actual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 409,
+                  "error": "Conflict",
+                  "path": "/api/eventos/42/publicar"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      }
+    },
+    "/api/eventos/{id}/suspender": {
+      "patch": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "patch_api_eventos_id_suspender",
+        "summary": "Suspender evento",
+        "description": "Solo admite PUBLICADO; cambia estadoPublicacion a SUSPENDIDO. No cambia estado. Sin body.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                },
+                "example": {
+                  "nombre": "Recital de prueba",
+                  "descripcion": "Evento de demostración",
+                  "tipo": "RECITAL",
+                  "idOrganizador": 900001,
+                  "fechaHora": "2030-12-20T21:00:00",
+                  "demanda": false,
+                  "id": 42,
+                  "estado": "EN_CURSO",
+                  "estadoPublicacion": "BORRADOR",
+                  "lugar": {
+                    "id": 23,
+                    "nombre": "Teatro de prueba",
+                    "direccion": "Calle 123",
+                    "latitud": -37.3288,
+                    "longitud": -59.1367,
+                    "ciudad": "Tandil",
+                    "tipo": "TEATRO"
+                  },
+                  "participantes": [
+                    {
+                      "id": 17,
+                      "nombre": "Banda de prueba",
+                      "genero": "Rock"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/eventos/42/suspender"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/eventos/42/suspender"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Transición incompatible con el estado actual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 409,
+                  "error": "Conflict",
+                  "path": "/api/eventos/42/suspender"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      }
+    },
+    "/api/eventos/{id}/cancelar": {
+      "patch": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "patch_api_eventos_id_cancelar",
+        "summary": "Cancelar evento",
+        "description": "Cambia estado a CANCELADO y estadoPublicacion a SUSPENDIDO. CANCELADO o FINALIZADO devuelven 409. No llama automáticamente a inventario, pagos ni notificaciones. Sin body.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                },
+                "example": {
+                  "nombre": "Recital de prueba",
+                  "descripcion": "Evento de demostración",
+                  "tipo": "RECITAL",
+                  "idOrganizador": 900001,
+                  "fechaHora": "2030-12-20T21:00:00",
+                  "demanda": false,
+                  "id": 42,
+                  "estado": "EN_CURSO",
+                  "estadoPublicacion": "BORRADOR",
+                  "lugar": {
+                    "id": 23,
+                    "nombre": "Teatro de prueba",
+                    "direccion": "Calle 123",
+                    "latitud": -37.3288,
+                    "longitud": -59.1367,
+                    "ciudad": "Tandil",
+                    "tipo": "TEATRO"
+                  },
+                  "participantes": [
+                    {
+                      "id": 17,
+                      "nombre": "Banda de prueba",
+                      "genero": "Rock"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/eventos/42/cancelar"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso o referencia inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/api/eventos/42/cancelar"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Transición incompatible con el estado actual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 409,
+                  "error": "Conflict",
+                  "path": "/api/eventos/42/cancelar"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42,
+            "description": "ID real devuelto por la creación; no asumir ID 1."
+          }
+        ]
+      }
+    },
+    "/api/eventos/buscar": {
+      "get": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "get_api_eventos_buscar",
+        "summary": "Buscar eventos publicados",
+        "description": "Filtros combinables por AND; ciudad ignora mayúsculas. Devuelve un array, sin metadatos de paginación. No admite orden por precio ni relevancia. pagina negativa o tamanio no positivo carecen de validación HTTP propia y pueden devolver 500.",
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoResponse"
+                  }
+                },
+                "example": [
+                  {
+                    "nombre": "Recital de prueba",
+                    "descripcion": "Evento de demostración",
+                    "tipo": "RECITAL",
+                    "idOrganizador": 900001,
+                    "fechaHora": "2030-12-20T21:00:00",
+                    "demanda": false,
+                    "id": 42,
+                    "estado": "EN_CURSO",
+                    "estadoPublicacion": "BORRADOR",
+                    "lugar": {
+                      "id": 23,
+                      "nombre": "Teatro de prueba",
+                      "direccion": "Calle 123",
+                      "latitud": -37.3288,
+                      "longitud": -59.1367,
+                      "ciudad": "Tandil",
+                      "tipo": "TEATRO"
+                    },
+                    "participantes": [
+                      {
+                        "id": 17,
+                        "nombre": "Banda de prueba",
+                        "genero": "Rock"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/api/eventos/buscar"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error no traducido por el servicio: por ejemplo restricción referencial o argumento inválido sin validación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 500,
+                  "error": "Internal Server Error",
+                  "path": "/api/eventos/buscar"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "RECITAL",
+                "TEATRO",
+                "DEPORTE",
+                "CONFERENCIA",
+                "FESTIVAL",
+                "OTRO"
+              ],
+              "nullable": true
+            },
+            "example": "RECITAL"
+          },
+          {
+            "name": "idOrganizador",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 900001
+          },
+          {
+            "name": "idParticipante",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 17
+          },
+          {
+            "name": "ciudad",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "Tandil"
+          },
+          {
+            "name": "fechaDesde",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?$",
+              "nullable": true,
+              "description": "Fecha y hora local ISO 8601, sin Z ni offset; ejemplo 2030-12-20T21:00:00. No es un instante UTC."
+            },
+            "example": "2030-01-01T00:00:00"
+          },
+          {
+            "name": "fechaHasta",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?$",
+              "nullable": true,
+              "description": "Fecha y hora local ISO 8601, sin Z ni offset; ejemplo 2030-12-20T21:00:00. No es un instante UTC."
+            },
+            "example": "2030-12-31T23:59:59"
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            },
+            "example": 0
+          },
+          {
+            "name": "tamanio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1
+            },
+            "example": 10
+          },
+          {
+            "name": "ordenar",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "fechaHora,asc",
+              "enum": [
+                "fechaHora,asc",
+                "fechaHora,desc",
+                "nombre,asc",
+                "nombre,desc"
+              ]
+            },
+            "example": "fechaHora,asc"
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ArtistaRequest": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "genero": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "example": {
+          "nombre": "Banda de prueba",
+          "genero": "Rock"
+        }
+      },
+      "ArtistaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "genero": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "example": {
+          "id": 17,
+          "nombre": "Banda de prueba",
+          "genero": "Rock"
+        }
+      },
+      "LugarRequest": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "direccion": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "ESTADIO",
+              "TEATRO",
+              "SALA",
+              "OTRO"
+            ],
+            "nullable": true
+          }
+        },
+        "example": {
+          "nombre": "Teatro de prueba",
+          "direccion": "Calle 123",
+          "latitud": -37.3288,
+          "longitud": -59.1367,
+          "ciudad": "Tandil",
+          "tipo": "TEATRO"
+        }
+      },
+      "LugarResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "direccion": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "longitud": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "ESTADIO",
+              "TEATRO",
+              "SALA",
+              "OTRO"
+            ],
+            "nullable": true
+          }
+        },
+        "example": {
+          "id": 23,
+          "nombre": "Teatro de prueba",
+          "direccion": "Calle 123",
+          "latitud": -37.3288,
+          "longitud": -59.1367,
+          "ciudad": "Tandil",
+          "tipo": "TEATRO"
+        }
+      },
+      "EventoRequest": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "RECITAL",
+              "TEATRO",
+              "DEPORTE",
+              "CONFERENCIA",
+              "FESTIVAL",
+              "OTRO"
+            ],
+            "nullable": true
+          },
+          "idOrganizador": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Referencia externa a Usuarios; este servicio no consulta su existencia ni rol."
+          },
+          "participantesIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "IDs de artistas existentes. Si se omite o es null, queda sin participantes."
+          },
+          "fechaHora": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?$",
+            "nullable": true,
+            "description": "Fecha y hora local ISO 8601, sin Z ni offset; ejemplo 2030-12-20T21:00:00. No es un instante UTC."
+          },
+          "idLugar": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID de un lugar existente. Omitirlo no tiene una validación de negocio 400 y puede producir 500."
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "EN_CURSO",
+              "AGOTADO",
+              "CANCELADO",
+              "FINALIZADO"
+            ],
+            "nullable": true,
+            "description": "Aceptado en el DTO pero ignorado al crear/actualizar; usar los endpoints de transición."
+          },
+          "estadoPublicacion": {
+            "type": "string",
+            "enum": [
+              "BORRADOR",
+              "PUBLICADO",
+              "SUSPENDIDO"
+            ],
+            "nullable": true,
+            "description": "Ignorado al crear/actualizar; al crear siempre es BORRADOR."
+          },
+          "demanda": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "example": {
+          "nombre": "Recital de prueba",
+          "descripcion": "Evento de demostración",
+          "tipo": "RECITAL",
+          "idOrganizador": 900001,
+          "participantesIds": [
+            17
+          ],
+          "fechaHora": "2030-12-20T21:00:00",
+          "idLugar": 23,
+          "demanda": false
+        }
+      },
+      "EventoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "RECITAL",
+              "TEATRO",
+              "DEPORTE",
+              "CONFERENCIA",
+              "FESTIVAL",
+              "OTRO"
+            ],
+            "nullable": true
+          },
+          "idOrganizador": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Referencia externa a Usuarios; este servicio no consulta su existencia ni rol."
+          },
+          "fechaHora": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?$",
+            "nullable": true,
+            "description": "Fecha y hora local ISO 8601, sin Z ni offset; ejemplo 2030-12-20T21:00:00. No es un instante UTC."
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "EN_CURSO",
+              "AGOTADO",
+              "CANCELADO",
+              "FINALIZADO"
+            ],
+            "nullable": true,
+            "description": "Aceptado en el DTO pero ignorado al crear/actualizar; usar los endpoints de transición."
+          },
+          "estadoPublicacion": {
+            "type": "string",
+            "enum": [
+              "BORRADOR",
+              "PUBLICADO",
+              "SUSPENDIDO"
+            ],
+            "nullable": true,
+            "description": "Ignorado al crear/actualizar; al crear siempre es BORRADOR."
+          },
+          "demanda": {
+            "type": "boolean",
+            "default": false
+          },
+          "lugar": {
+            "$ref": "#/components/schemas/LugarResponse"
+          },
+          "participantes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtistaResponse"
+            }
+          }
+        },
+        "example": {
+          "nombre": "Recital de prueba",
+          "descripcion": "Evento de demostración",
+          "tipo": "RECITAL",
+          "idOrganizador": 900001,
+          "fechaHora": "2030-12-20T21:00:00",
+          "demanda": false,
+          "id": 42,
+          "estado": "EN_CURSO",
+          "estadoPublicacion": "BORRADOR",
+          "lugar": {
+            "id": 23,
+            "nombre": "Teatro de prueba",
+            "direccion": "Calle 123",
+            "latitud": -37.3288,
+            "longitud": -59.1367,
+            "ciudad": "Tandil",
+            "tipo": "TEATRO"
+          },
+          "participantes": [
+            {
+              "id": 17,
+              "nombre": "Banda de prueba",
+              "genero": "Rock"
+            }
+          ]
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      }
+    }
+  }
+}
