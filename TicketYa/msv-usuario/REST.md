@@ -64,43 +64,12 @@ no consulta ni valida su existencia en el microservicio de artistas.
 - 404: usuario o rol inexistente.
 - 409: email, DNI o nombre de rol duplicado; rol en uso; otra restriccion de integridad.
 
-## Autenticacion JWT
+## Autenticacion diferida
 
-`POST /auth/registro` es publico. Crea un CLIENTE y devuelve su perfil (201),
-sin password ni hash. No acepta la asignacion de roles desde el registro.
+La version activa no requiere token ni contrasena. Crear cuentas con POST /usuarios e idRol obtenido de GET /roles. Las rutas /auth/login y /auth/registro estan retiradas y devuelven 404. El codigo JWT original, sus pruebas y configuracion estan en ../futura jwt, fuera de las fuentes que compila Maven.
 
-```json
-{"nombre":"Ana","email":"ana@example.com","dni":"12345678","ciudad":"Tandil","password":"1234"}
-```
-
-`POST /auth/login` es publico:
-
-```json
-{"email":"ana@example.com","password":"1234"}
-```
-
-Devuelve un access token firmado, valido por 1800 segundos:
-
-```json
-{"accessToken":"<JWT>","tokenType":"Bearer","expiresIn":1800}
-```
-
-Usar `Authorization: Bearer <JWT>` en las rutas protegidas. Credenciales invalidas
-o token invalido/vencido devuelven 401; permisos insuficientes devuelven 403.
-No se implementa refresh token: al vencer, iniciar sesion nuevamente.
-
-Solo ADMINISTRADOR lista todos los usuarios, crea cuentas por el CRUD y administra
-roles. Cada usuario puede consultar, actualizar o eliminar su propia cuenta y
-gestionar sus favoritos; no puede cambiar su rol. ADMINISTRADOR puede gestionar
-cualquier cuenta. Las cuentas creadas mediante el CRUD anterior no reciben password
-y no pueden iniciar sesion; usar `/auth/registro` para cuentas con credenciales.
-
-Los roles se inicializan automaticamente. El perfil local `dev` (predeterminado)
-crea `admin@admin.com` con password `1234`, guardada como hash BCrypt. No se cambia
-la password si esa cuenta ya existe. Otros perfiles no crean ese administrador
-salvo que se active explicitamente `app.seed-admin=true`.
+Los roles siguen siendo datos del dominio; en esta etapa no restringen acceso a los endpoints. La autenticacion y autorizacion se incorporaran cuando se restaure y adapte el modulo JWT.
 
 ## Verificacion
 
-`mvnw.cmd -Dtest=UsuarioServiceTests test` ejecuta pruebas unitarias sin MySQL.
-Los tests usan el perfil test con una base H2 aislada; no requieren MySQL ni Docker.
+`mvnw.cmd test` ejecuta pruebas unitarias, persistencia H2 y CRUD HTTP sin token. No requiere MySQL ni Docker.

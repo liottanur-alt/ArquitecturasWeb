@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class DatosIniciales implements ApplicationRunner {
     private final RolRepository roles;
     private final UsuarioRepository usuarios;
-    private final PasswordEncoder passwords;
 
     @Value("${app.seed-admin:false}")
     private boolean crearAdmin;
@@ -30,7 +28,7 @@ public class DatosIniciales implements ApplicationRunner {
                 roles.save(rol);
             }
         }
-        // Solo crea la cuenta de prueba una vez; no cambia claves de cuentas existentes.
+        // Crea un perfil de prueba sin credenciales; la autenticacion se conserva en futura jwt.
         if (crearAdmin && !usuarios.existsByEmailIgnoreCase("admin@admin.com")) {
             Usuario admin = new Usuario();
             admin.setNombre("Administrador de prueba");
@@ -38,7 +36,6 @@ public class DatosIniciales implements ApplicationRunner {
             admin.setDni("ADMIN-DEMO");
             admin.setCiudad("Tandil");
             admin.setRol(roles.findByName(TipoRol.ADMINISTRADOR).orElseThrow());
-            admin.setPasswordHash(passwords.encode("1234"));
             usuarios.save(admin);
         }
     }

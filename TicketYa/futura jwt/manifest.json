@@ -1,0 +1,132 @@
+[
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/config/SecurityConfig.java",
+    "accion": "movido",
+    "sha256": "92D01CE7E8273B1083184B468552C53704CE93BB36B5DAA13214697943947E31"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/config/UsuarioAccess.java",
+    "accion": "movido",
+    "sha256": "EFA8F2D3A5168F4F0DE9C1411E3C55F2F55BA1AC5D64D523377C0348D5A491CB"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/service/AuthService.java",
+    "accion": "movido",
+    "sha256": "ED863476D2EEBAC2EBC54DD3F5C3ED3C3E9B5ADB5A96082658DED1F308513111"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/controller/AuthController.java",
+    "accion": "movido",
+    "sha256": "779B66FB12D4D8B12AEDD7C7026060843BF9CB0BC9D530D0D4E3AD3792D42086"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/dto/LoginRequest.java",
+    "accion": "movido",
+    "sha256": "ADA6BA54132960A4951E5E39CB32AF282BB99F101C9FCCB130D9C03900436682"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/dto/RegistroRequest.java",
+    "accion": "movido",
+    "sha256": "1EE924D79B69A8FA0FDCA0B4201C3B1840352AAFD1A3387B09626499E5FD4F84"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/dto/TokenResponse.java",
+    "accion": "movido",
+    "sha256": "3178B77A5B80139CF249A1CCEDF2594246F9064BE23C9D39FC06BC36C0AB105A"
+  },
+  {
+    "ruta": "msv-usuario/src/test/java/com/msvusuario/AuthIntegrationTests.java",
+    "accion": "movido",
+    "sha256": "0EAFFD4D9375EF7163FB88C50B95ED68F6D2F88F203554A0668E166557D88C83"
+  },
+  {
+    "ruta": "msv-usuario/pom.xml",
+    "accion": "copia original de archivo compartido",
+    "sha256": "058D859B32BAE6FA306E87D6D0DC59806E01FB65EF04CE53ED6440B5FCA6A34E"
+  },
+  {
+    "ruta": "msv-usuario/README.md",
+    "accion": "copia original de archivo compartido",
+    "sha256": "E63AFC7BDBAC2DC4F35DF3B07D447AC302F63FE8178894B390B196FF3923FD81"
+  },
+  {
+    "ruta": "msv-usuario/REST.md",
+    "accion": "copia original de archivo compartido",
+    "sha256": "E79A697BDFF8B16F204A892B7D3E18DCC14734DB5B6143FF1AB3EA8609F0355C"
+  },
+  {
+    "ruta": "msv-usuario/src/main/resources/application.properties",
+    "accion": "copia original de archivo compartido",
+    "sha256": "1F6B73DD1DB681B48C7732B651A3D8AEFBBEB37FB8DEB43AFEFEDA386E2C5D47"
+  },
+  {
+    "ruta": "msv-usuario/src/main/resources/application-dev.properties",
+    "accion": "copia original de archivo compartido",
+    "sha256": "02994BB6163AF4733D47A8A80AB6B55AEB554703AFB4167B1E097AC22ADE2901"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "515AAC8C7D6FCCFA7F0F0AEA92C3E99B7DEB4AD56345190B9FA709A45A630024"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/config/DatosIniciales.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "1C82FDDE17F2EF60BAE9162B4057D44726E4A31A35047FE9D5D049E41C164FCE"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "D7CC4C2678E1600F0E37221019BBC7E96C595510E9B2661AB0CC715007E8B757"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/entity/Rol.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "20657E1952B6501621C9119CF5077A32EEB1E532323C70F20141B4F496C83F80"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/entity/TipoRol.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "CE8BEDF076475D0718D42849E487A62E0099F7AAF7668343A6B56DF40FCE2A5F"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/repository/UsuarioRepository.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "12C31DECA90F3E72A8088A6C0BB8B76CBAEE26A7BC09B338A3129017534055B2"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/repository/RolRepository.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "E6E031706CFEEABDAA62CD323EA20EA87FDB81560E6E76CF52D653781A881154"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/dto/UsuarioRequest.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "1CCBF822D831120F4CDE59495F006EBDF57699381BE5EAB7E26447144BB75710"
+  },
+  {
+    "ruta": "msv-usuario/src/main/java/com/msvusuario/dto/UsuarioResponse.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "DC5F79764C43291AC3F9E33BD0CAE9C439FEC06A1514927556D0AA7127C78A54"
+  },
+  {
+    "ruta": "api-gateway/src/main/resources/application.yml",
+    "accion": "copia original de archivo compartido",
+    "sha256": "D5F76E02A55556C2F73D90C9906C74C4C2A659A13CABB78FE8C6EEAA7E2D7F7D"
+  },
+  {
+    "ruta": "api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java",
+    "accion": "copia original de archivo compartido",
+    "sha256": "F66D961B133F0605216C6C46EB82E0A5E4EF68B203681385212DF21466109526"
+  },
+  {
+    "ruta": "api-gateway/README.md",
+    "accion": "copia original de archivo compartido",
+    "sha256": "4B16FEA2F5468CFFD8ADB376419A47EF0DE20EE24C81CE7B9584F2EA0FD4B977"
+  },
+  {
+    "ruta": "GUIA-ARRANQUE.md",
+    "accion": "copia original de archivo compartido",
+    "sha256": "C5E47FE549615FD66F9227839E724BDD6C5E1A7CD93D09C873097341B2D40D55"
+  }
+]

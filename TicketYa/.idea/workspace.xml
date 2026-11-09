@@ -6,13 +6,25 @@
   <component name="ChangeListManager">
     <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GUIA-ARRANQUE.md" beforeDir="false" afterPath="$PROJECT_DIR$/GUIA-ARRANQUE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Asiento.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Asiento.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Sector.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Sector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/TipoSector.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/TipoSector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/MsvSectoerAsientoApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/MsvSectoerAsientoApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/DatosIniciales.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/DatosIniciales.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/SecurityConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/UsuarioAccess.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/AuthController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/LoginRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/RegistroRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/TokenResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/AuthService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/AuthIntegrationTests.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,23 +52,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0002475487011206" />
-      <entry key="MS500" value="1.1899906070501896" />
-      <entry key="S2" value="1.6602114205075" />
-      <entry key="S5" value="1.8469801125616088" />
-      <entry key="S10" value="1.9203152245625459" />
-      <entry key="S30" value="1.9726998946530765" />
-      <entry key="S60" value="1.9862554915705548" />
-      <entry key="M2" value="1.9931039681576923" />
-      <entry key="M5" value="1.9972358595495852" />
-      <entry key="M10" value="1.9986169733934953" />
-      <entry key="M15" value="1.9990777696024105" />
-      <entry key="M30" value="1.999538778438541" />
-      <entry key="H1" value="1.9997693626224704" />
-      <entry key="H2" value="1.9998846746612684" />
-      <entry key="H4" value="1.9999423356680466" />
-      <entry key="D1" value="1.9999903890470847" />
-      <entry key="W1" value="1.999998627001071" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0" />
+      <entry key="S30" value="1.0000000950989616" />
+      <entry key="S60" value="1.0004361064277967" />
+      <entry key="M2" value="1.029533073227512" />
+      <entry key="M5" value="1.3704595803284594" />
+      <entry key="M10" value="1.8607664060974725" />
+      <entry key="M15" value="2.140075242598239" />
+      <entry key="M30" value="2.5100166766890677" />
+      <entry key="H1" value="2.7378243044701787" />
+      <entry key="H2" value="2.8643091474813263" />
+      <entry key="H4" value="2.930963047772509" />
+      <entry key="D1" value="2.988324772950211" />
+      <entry key="W1" value="2.998327922492561" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -78,23 +90,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.6690454380104136" />
-      <entry key="MS500" value="1.0749382449866716" />
-      <entry key="S2" value="1.6046974781685588" />
-      <entry key="S5" value="1.8203920419548354" />
-      <entry key="S10" value="1.906152807748748" />
-      <entry key="S30" value="1.9677714836544604" />
-      <entry key="S60" value="1.983764370249133" />
-      <entry key="M2" value="1.9918516041733283" />
-      <entry key="M5" value="1.9967332715542176" />
-      <entry key="M10" value="1.99836540485832" />
-      <entry key="M15" value="1.9989099961776209" />
-      <entry key="M30" value="1.999454861177212" />
-      <entry key="H1" value="1.9997273963517719" />
-      <entry key="H2" value="1.9998636896155602" />
-      <entry key="H4" value="1.9999318426675592" />
-      <entry key="D1" value="1.9999886401473286" />
-      <entry key="W1" value="1.999998377156624" />
+      <entry key="MS100" value="0.14161048566197482" />
+      <entry key="MS500" value="0.6764241155251373" />
+      <entry key="S2" value="0.906890328933143" />
+      <entry key="S5" value="0.9616607887129919" />
+      <entry key="S10" value="0.980643048572207" />
+      <entry key="S30" value="0.9935056917524376" />
+      <entry key="S60" value="0.997183068568961" />
+      <entry key="M2" value="1.027886946220369" />
+      <entry key="M5" value="1.369715011086976" />
+      <entry key="M10" value="1.8603323341883693" />
+      <entry key="M15" value="2.1397623987807823" />
+      <entry key="M30" value="2.5098447166802966" />
+      <entry key="H1" value="2.7377335402068894" />
+      <entry key="H2" value="2.864262437150906" />
+      <entry key="H4" value="2.930939342642149" />
+      <entry key="D1" value="2.9883207718986786" />
+      <entry key="W1" value="2.9983273496632488" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -128,6 +140,11 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.general"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
   }
 }]]></component>
   <component name="RunManager" selected="Spring Boot.MsvUsuarioApplication">

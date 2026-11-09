@@ -1,250 +1,416 @@
-# Guia para levantar TicketYa 
+# Guía de arranque y prueba de TicketYa
 
-Estado revisado del proyecto: Usuarios, SectorAsiento y API Gateway tienen configuracion para ejecutarse. Eventos y Compras todavia requieren completar sus proyectos. Esta guia describe el arranque local con las bases en Docker y las aplicaciones Spring Boot en PowerShell o IntelliJ; no hay aun un Compose que levante todo el sistema.
+Actualizada al 8 de noviembre de 2026, después de incorporar Eventos desde main y separar JWT en la carpeta `futura jwt`.
 
-## 1. Requisitos y carpeta de trabajo
+Usuarios, Eventos, SectorAsiento y Gateway tienen un proyecto Spring Boot ejecutable. Las bases se levantan con Docker; las aplicaciones, desde PowerShell o IntelliJ. No hay un Compose único para todo el sistema. Compras todavía no está operativo: para probar inventario se simulan sus llamadas desde Postman o PowerShell.
 
-- Docker Desktop iniciado y con el motor de contenedores Linux funcionando.
-- JDK 21 o superior. En este equipo existe `C:/Users/franc/.jdks/openjdk-26.0.2`.
-- Maven Wrapper incluido en cada proyecto ejecutable. No hace falta instalar Maven por separado; la primera ejecucion puede descargar dependencias.
-- Una terminal para las bases y una terminal independiente por cada aplicacion Spring Boot.
+## 1. Requisitos
 
-Abrir PowerShell en la carpeta raiz TicketYa. En las terminales nuevas, volver a esta carpeta antes de copiar los comandos de cada seccion:
+- Docker Desktop iniciado, con el motor de contenedores Linux disponible.
+- JDK 21 o superior. En este equipo está instalado `C:/Users/franc/.jdks/openjdk-26.0.2`.
+- Una terminal libre para Docker y pruebas, y cuatro terminales para las aplicaciones Java.
+- Conexión a internet si Maven necesita descargar dependencias. Cada proyecto incluye Maven Wrapper.
 
-```powershell
-Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa'
-```
-
-Comprobar Docker:
+Desde PowerShell, comprobar Docker:
 
 ```powershell
 docker version
 ```
 
-Tiene que aparecer tambien la seccion Server. Si dice que no puede conectarse al motor, abrir Docker Desktop y esperar a que este listo.
+Debe aparecer la sección Server. Si no aparece, abrir Docker Desktop y esperar a que el motor esté listo.
 
-Para usar el JDK de este equipo, ejecutar esto en **cada terminal donde se vaya a iniciar Java**:
+Los bloques de arranque de esta guía incluyen la ruta completa para poder copiarlos en terminales nuevas. La variable JAVA_HOME se define solo para esa terminal, sin cambiar la configuración permanente del equipo.
 
-```powershell
-$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
-& "$env:JAVA_HOME/bin/java.exe" -version
-```
+## 2. Puertos actuales
 
-No hace falta cambiar variables permanentes del equipo. Si se usa otro JDK instalado, reemplazar la ruta por su carpeta raiz.
-
-## 2. Puertos y dependencias
-
-| Componente | Puerto del equipo | Dependencia |
+| Componente | Puerto local | Base / destino |
 | --- | --- | --- |
-| MySQL de Usuarios | 3307 | Docker |
-| MySQL de SectorAsiento | 3308 | Docker |
-| Usuarios | 8004 | Su MySQL |
-| SectorAsiento | 8002 | Su MySQL; Eventos para operar reservas |
-| API Gateway | 8080 | Los servicios a los que se hagan solicitudes |
-| Eventos | 8001 propuesto | Proyecto pendiente de completar |
-| Compras | 8003 propuesto | Proyecto pendiente de completar |
+| MySQL Usuarios | 3307 | usuarios |
+| MySQL Eventos | 3308 | eventos |
+| MySQL SectorAsiento | 3310 | sectores_asientos |
+| Usuarios | 8004 | MySQL en 3307 |
+| Eventos | 8005 | MySQL en 3308 |
+| SectorAsiento | 8002 | MySQL en 3310; Feign a Eventos en 8005 |
+| Gateway | 8080 | Usuarios en 8004 y SectorAsiento en 8002 |
+| Compras | 8003 provisional | Todavía pendiente |
 
-8001 y 8003 son destinos provisionales de Feign, no puertos ya configurados en esos proyectos.
+Orden recomendado: **Docker → las tres bases → Usuarios y Eventos → SectorAsiento → Gateway → pruebas**.
 
-Orden recomendado: **Docker -> bases de datos -> Usuarios y SectorAsiento -> Gateway -> Postman**. Cuando Eventos este implementado, iniciarlo antes de probar el flujo de reservas. El Gateway puede arrancar con un proveedor apagado, pero no podra atender solicitudes dirigidas a el.
+No se requiere JWT. `/auth/login` y `/auth/registro` están retirados; los perfiles se crean con `POST /usuarios`. La carpeta `futura jwt` conserva la implementación para otra etapa.
 
-## 3. Levantar las dos bases
+## 3. Levantar las tres bases
 
-En una terminal ubicada en la raiz TicketYa:
+En la terminal de Docker:
 
 ```powershell
+Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa'
+
 docker compose -f ./msv-usuario/docker-compose.yml up -d --wait
+docker compose -f ./msv-evento/docker-compose.yaml up -d --wait
 docker compose -f ./msv-SectoerAsiento/compose.mysql.yml up -d --wait
 ```
 
-Revisar que los contenedores esten saludables:
+Comprobar que estén saludables:
 
 ```powershell
 docker compose -f ./msv-usuario/docker-compose.yml ps
+docker compose -f ./msv-evento/docker-compose.yaml ps
 docker compose -f ./msv-SectoerAsiento/compose.mysql.yml ps
 ```
 
-Estas configuraciones crean bases distintas:
+| Base | Usuario local | Contraseña local |
+| --- | --- | --- |
+| usuarios | usuario_app | usuario_dev |
+| eventos | evento_app | evento_dev |
+| sectores_asientos | sector_app | sector_dev |
 
-| Base | Puerto | Usuario de desarrollo | Password de desarrollo |
-| --- | --- | --- | --- |
-| usuarios | 3307 | usuario_app | usuario_dev |
-| sectores_asientos | 3308 | sector_app | sector_dev |
+Estos valores coinciden con las configuraciones de desarrollo. Si hay variables DB_URL, DB_USERNAME, DB_PASSWORD o MYSQL_ROOT_PASSWORD definidas previamente, revisar que no reemplacen los valores de la guía. DB_PASSWORD debe coincidir entre el Compose de cada base y su aplicación. Cambiar una variable no cambia las credenciales de un volumen ya inicializado.
 
-Los valores coinciden con application.properties de cada servicio. Los comandos presuponen que no se han definido DB_URL, DB_USERNAME o DB_PASSWORD con otros valores. Si se personalizan, mantener la misma configuracion entre Compose y Spring Boot. Una variable DB_PASSWORD definida globalmente afecta ambos Compose; es preferible usar terminales separadas si se quieren claves distintas. Cambiar una variable no cambia las credenciales de un volumen MySQL ya inicializado.
+No usar el puerto 3308 para SectorAsiento: ahora pertenece a Eventos. SectorAsiento usa **3310**. No confundir `msv-evento`, el proyecto ejecutable, con la carpeta `msv-eventos`.
 
 ## 4. Iniciar Usuarios
 
-En una terminal nueva, ubicada en la raiz TicketYa:
+En una terminal nueva:
 
 ```powershell
+Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa/msv-usuario'
 $env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
-Set-Location ./msv-usuario
+$env:MSV_EVENTO_URL='http://localhost:8005'
 .\mvnw.cmd spring-boot:run
 ```
 
-Mantener esta terminal abierta. Esperar el mensaje `Started MsvUsuarioApplication`.
+Esperar `Started MsvUsuarioApplication` y mantener la terminal abierta. Dirección: http://localhost:8004.
 
-Direccion: http://localhost:8004. El perfil local dev crea, si no existe, el administrador de prueba indicado en el README de Usuarios: admin@admin.com / 1234.
+Se inicializan los roles. El perfil local dev puede crear un perfil administrador de prueba, pero no hay login ni contraseña de acceso en esta etapa. Usuarios, roles y favoritos funcionan sin token.
 
-## 5. Iniciar SectorAsiento
+## 5. Iniciar Eventos
 
-En otra terminal nueva, ubicada en la raiz TicketYa:
+En otra terminal:
 
 ```powershell
+Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa/msv-evento'
 $env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
-$env:MSVC_EVENTOS_URL='http://localhost:8001'
+.\mvnw.cmd spring-boot:run
+```
+
+Esperar `Started MsvEventoApplication`. Dirección: http://localhost:8005.
+
+Endpoints principales:
+
+- `/api/lugares`: crear y consultar lugares.
+- `/api/artistas`: crear y consultar artistas.
+- `/api/eventos`: crear y consultar eventos.
+- `PATCH /api/eventos/{id}/publicar`: publicar un borrador.
+- `PATCH /api/eventos/{id}/cancelar`: cancelar el estado del evento.
+- `GET /api/eventos/buscar`: buscar eventos publicados.
+
+El contrato de consulta devuelve `lugar` como objeto anidado. El cliente Feign de SectorAsiento ya está adaptado a ese formato y a `/api/eventos/{id}`.
+
+## 6. Iniciar SectorAsiento
+
+En otra terminal:
+
+```powershell
+Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa/msv-SectoerAsiento'
+$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
+$env:MSVC_EVENTOS_URL='http://localhost:8005'
 $env:MSVC_COMPRAS_URL='http://localhost:8003'
-Set-Location ./msv-SectoerAsiento
 .\mvnw.cmd spring-boot:run
 ```
 
-Esperar `Started MsvSectoerAsientoApplication` y mantener la terminal abierta.
+Esperar `Started MsvSectoerAsientoApplication`. Dirección: http://localhost:8002.
 
-Direccion: http://localhost:8002. Puede iniciar sin Eventos ni Compras: Feign no realiza llamadas a esos proveedores durante el arranque. El CRUD de sectores y asientos funciona con la base local. Configurar inventario, reservar, confirmar y devolver si consultan Eventos; por eso esas operaciones requieren su endpoint implementado y disponible.
+Puede arrancar sin Eventos, pero configurar inventario, reservar, confirmar y devolver requieren consultar Eventos. Para esas operaciones debe estar iniciado. Compras no hace falta para ejecutar las llamadas manuales de esta guía.
 
-La documentacion OpenAPI esta en http://localhost:8002/openapi.json.
+OpenAPI: http://localhost:8002/openapi.json.
 
-## 6. Iniciar API Gateway
+## 7. Iniciar Gateway
 
-En otra terminal nueva, ubicada en la raiz TicketYa:
+En otra terminal:
 
 ```powershell
+Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa/api-gateway'
 $env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
 $env:MSVC_USUARIOS_URL='http://localhost:8004'
 $env:MSVC_SECTORES_URL='http://localhost:8002'
-Set-Location ./api-gateway
 .\mvnw.cmd spring-boot:run
 ```
 
-Esperar `Started ApiGatewayApplication`. Direccion: http://localhost:8080.
+Esperar `Started ApiGatewayApplication`. Dirección: http://localhost:8080.
 
-El Gateway enruta usuarios/autenticacion y sectores/asientos/reservas/inventario. El catalogo general de Eventos y los endpoints de Compras todavia no tienen rutas propias configuradas. Las llamadas Feign salen directamente del microservicio al proveedor, usando sus URLs configuradas.
+El Gateway actualmente enruta:
 
-## 7. Comprobar desde PowerShell o Postman
+- `/usuarios`, `/roles` y sus subrutas a Usuarios.
+- `/sectores`, `/asientos`, `/reservas` y sus subrutas a SectorAsiento.
+- `/eventos/{id}/inventario` y `/eventos/{id}/sectores`, con sus subrutas, a SectorAsiento.
+
+**El catálogo de Eventos todavía no está en el Gateway.** Para `/api/eventos`, `/api/lugares` y `/api/artistas`, usar directamente http://localhost:8005. Agregar MSVC_EVENTOS_URL al Gateway no crea una ruta por sí mismo: falta configurarla en su application.yml.
+
+## 8. Comprobar que responden
 
 En una terminal libre:
 
 ```powershell
-Invoke-RestMethod -Uri 'http://localhost:8002/sectores' -Method Get
-Invoke-RestMethod -Uri 'http://localhost:8080/sectores' -Method Get
+(Invoke-WebRequest -Uri 'http://localhost:8004/roles' -TimeoutSec 10).StatusCode
+(Invoke-WebRequest -Uri 'http://localhost:8005/api/eventos' -TimeoutSec 10).StatusCode
+(Invoke-WebRequest -Uri 'http://localhost:8002/sectores' -TimeoutSec 10).StatusCode
+(Invoke-WebRequest -Uri 'http://localhost:8080/sectores' -TimeoutSec 10).StatusCode
 ```
 
-Ambas consultas deben responder 200, aunque la lista este vacia. Si PowerShell no muestra contenido porque la lista esta vacia, comprobar el codigo HTTP:
+Cada consulta debe devolver 200. Una lista vacía es válida. Si no responden, revisar las terminales de Spring y el estado de las bases antes de seguir.
+
+## 9. Probar un flujo completo de inventario
+
+Ejecutar los bloques siguientes en **la misma terminal de pruebas** para conservar los IDs en variables. Se crean datos nuevos; no se presupone que los IDs sean 1. Los comandos usan Usuarios e inventario por Gateway, y el catálogo de Eventos directamente porque falta su ruta en el Gateway.
+
+### 9.1 Preparar una función para enviar JSON
 
 ```powershell
-(Invoke-WebRequest -Uri 'http://localhost:8080/sectores').StatusCode
+function Enviar-Json {
+    param([string]$Metodo, [string]$Url, $Datos)
+    $jsonPrueba = $Datos | ConvertTo-Json -Depth 10
+    Invoke-RestMethod -Uri $Url -Method $Metodo -ContentType 'application/json' -Body $jsonPrueba
+}
+
+$gatewayPrueba = 'http://localhost:8080'
+$eventosPrueba = 'http://localhost:8005'
+$marcaPrueba = [guid]::NewGuid().ToString('N').Substring(0, 8)
 ```
 
-Ejemplo de creacion a traves del Gateway:
+### 9.2 Crear cliente y organizador
 
 ```powershell
-$sectorPrueba = @{
-    idLugar = 1
-    nombre = 'Platea de prueba'
-    tipo = 'NUMERADO'
-    capacidadTotal = 1
-} | ConvertTo-Json
+$rolesPrueba = Invoke-RestMethod "$gatewayPrueba/roles"
+$rolClientePrueba = $rolesPrueba | Where-Object { $_.name -eq 'CLIENTE' } | Select-Object -First 1
+$rolOrganizadorPrueba = $rolesPrueba | Where-Object { $_.name -eq 'ORGANIZADOR' } | Select-Object -First 1
 
-$sectorCreado = Invoke-RestMethod -Uri 'http://localhost:8080/sectores' -Method Post -ContentType 'application/json' -Body $sectorPrueba
-$sectorCreado
+$clientePrueba = Enviar-Json 'POST' "$gatewayPrueba/usuarios" @{
+    nombre = 'Cliente prueba'
+    email = "cliente-$marcaPrueba@example.com"
+    dni = "CLI-$marcaPrueba"
+    ciudad = 'Tandil'
+    idRol = $rolClientePrueba.id
+}
 
-$asientoPrueba = @{
-    idSector = $sectorCreado.id
-    fila = 'A'
-    columna = '1'
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri 'http://localhost:8080/asientos' -Method Post -ContentType 'application/json' -Body $asientoPrueba
-```
-
-Esto crea datos de prueba locales. idLugar se guarda como referencia externa; el CRUD fisico no comprueba su existencia en Eventos. Para configurar inventario mas adelante, el sector debe pertenecer al lugar real del evento.
-
-Login local de Usuarios por Gateway:
-
-```powershell
-$loginPrueba = @{ email = 'admin@admin.com'; password = '1234' } | ConvertTo-Json
-Invoke-RestMethod -Uri 'http://localhost:8080/auth/login' -Method Post -ContentType 'application/json' -Body $loginPrueba
-```
-
-Para los endpoints protegidos de Usuarios, usar el accessToken recibido como Bearer en Postman. El CRUD de SectorAsiento corresponde a la entrega 1 y aun no exige JWT.
-
-Para el flujo de inventario, importar `msv-SectoerAsiento/TicketYa-SectorAsiento.postman_collection.json`; los pasos estan en el README del microservicio. Hace falta Eventos funcionando para completar ese flujo.
-
-## 8. Estado de Eventos y Compras
-
-**Eventos:** la carpeta msv-evento contiene fuentes, pero al revisar esta guia no tenia pom.xml, clase de arranque ni application.properties; su docker-compose.yaml contiene el marcador `$END$`. msv-eventos solo contenia target. Por lo tanto, ninguna de esas carpetas permite seguir actualmente un comando Maven de arranque valido. No utilizar ese Compose incompleto.
-
-Para habilitar Eventos hay que completar el proyecto Spring Boot, su base, configuracion, clase principal y los endpoints. SectorAsiento espera `GET http://localhost:8001/eventos/{id}` con este contrato propuesto:
-
-```json
-{
-  "id": 1,
-  "idLugar": 1,
-  "nombre": "Recital",
-  "idOrganizador": 1,
-  "fechaHora": "2030-12-20T21:00:00",
-  "estado": null,
-  "estadoPublicacion": "PUBLICADO"
+$organizadorPrueba = Enviar-Json 'POST' "$gatewayPrueba/usuarios" @{
+    nombre = 'Organizador prueba'
+    email = "organizador-$marcaPrueba@example.com"
+    dni = "ORG-$marcaPrueba"
+    ciudad = 'Tandil'
+    idRol = $rolOrganizadorPrueba.id
 }
 ```
 
-La fecha debe ser futura y el evento debe estar publicado para vender. Si Eventos se ejecuta en otro puerto, modificar MSVC_EVENTOS_URL en la terminal de SectorAsiento antes de iniciarlo. No se inicio ni completo Eventos como parte de la escritura de esta guia.
+Se esperan respuestas 201. No se envía contraseña ni Authorization.
 
-**Compras:** msv-compraEntardaSol tiene un pom.xml incompleto para Spring Boot: dependencias sin versiones/BOM y sin clase de arranque encontrada. Sus entidades tambien tienen referencias pendientes. Todavia no tiene un arranque operativo. El destino 8003 es provisional. No hace falta levantarlo para probar inventario: Postman puede simular reservar, confirmar pago y liberar. Eso no prueba cobros, reintegros monetarios ni emision de QR.
+### 9.3 Crear lugar, artista y evento
 
-## 9. Alternativa con IntelliJ
+```powershell
+$lugarPrueba = Enviar-Json 'POST' "$eventosPrueba/api/lugares" @{
+    nombre = "Teatro prueba $marcaPrueba"
+    direccion = 'Calle de prueba 123'
+    ciudad = 'Tandil'
+    latitud = -37.3288
+    longitud = -59.1367
+    tipo = 'TEATRO'
+}
 
-Levantar primero las bases con los comandos de Docker. Abrir cada proyecto ejecutable desde su pom.xml y dejar que IntelliJ sincronice Maven. Seleccionar un Project SDK Java 21 o superior.
+$artistaPrueba = Enviar-Json 'POST' "$eventosPrueba/api/artistas" @{
+    nombre = "Artista prueba $marcaPrueba"
+    genero = 'Rock'
+}
 
-Ejecutar estas clases en configuraciones separadas:
+$eventoPrueba = Enviar-Json 'POST' "$eventosPrueba/api/eventos" @{
+    nombre = "Recital prueba $marcaPrueba"
+    descripcion = 'Evento para comprobar la integracion'
+    tipo = 'RECITAL'
+    idOrganizador = $organizadorPrueba.id
+    participantesIds = @($artistaPrueba.id)
+    fechaHora = (Get-Date).AddDays(7).ToString('yyyy-MM-ddTHH:mm:ss')
+    idLugar = $lugarPrueba.id
+    demanda = $false
+}
+```
 
-- Usuarios: `com.msvusuario.MsvUsuarioApplication`.
-- SectorAsiento: `com.universidad.msvsectoerasiento.MsvSectoerAsientoApplication`.
-- Gateway: `com.apigateway.ApiGatewayApplication`.
+El evento se crea en BORRADOR. La fecha enviada es hora local del evento; el inventario utiliza America/Argentina/Buenos_Aires por defecto. Se eligen siete días de anticipación para poder probar devoluciones.
 
-En cada configuracion, usar la carpeta del microservicio como Working directory. Si se necesitan URLs o credenciales diferentes, definirlas en Environment variables de esa configuracion. No hace falta ejecutar tambien Maven por terminal: usar una sola instancia de cada servicio para evitar puertos ocupados.
+### 9.4 Crear sector y asiento
 
-## 10. Problemas habituales
+```powershell
+$sectorPrueba = Enviar-Json 'POST' "$gatewayPrueba/sectores" @{
+    idLugar = $lugarPrueba.id
+    nombre = "Platea prueba $marcaPrueba"
+    tipo = 'NUMERADO'
+    capacidadTotal = 1
+}
 
-| Mensaje o sintoma | Que revisar |
+$asientoPrueba = Enviar-Json 'POST' "$gatewayPrueba/asientos" @{
+    idSector = $sectorPrueba.id
+    fila = 'A'
+    columna = '1'
+}
+```
+
+Los asientos se crean antes de asociar el sector a un evento. Después, el servicio impide cambiar esa distribución.
+
+### 9.5 Configurar inventario y publicar
+
+```powershell
+Enviar-Json 'PUT' "$gatewayPrueba/eventos/$($eventoPrueba.id)/inventario" @{
+    limitePorCliente = 4
+}
+
+Enviar-Json 'PUT' "$gatewayPrueba/eventos/$($eventoPrueba.id)/sectores" @{
+    idSector = $sectorPrueba.id
+    precio = 1500
+    capacidadHabilitada = 1
+}
+
+Invoke-RestMethod -Uri "$eventosPrueba/api/eventos/$($eventoPrueba.id)/publicar" -Method Patch
+
+$urlDisponibilidadPrueba = "$gatewayPrueba/eventos/$($eventoPrueba.id)/sectores/$($sectorPrueba.id)/disponibilidad"
+Invoke-RestMethod $urlDisponibilidadPrueba
+```
+
+Se esperan 204 al inicializar el inventario y 200 al configurar, publicar y consultar. La disponibilidad debe indicar un lugar disponible.
+
+### 9.6 Reservar y repetir la misma solicitud
+
+```powershell
+$pedidoReservaPrueba = @{
+    claveIdempotencia = "reserva-$marcaPrueba"
+    idCliente = $clientePrueba.id
+    idEvento = $eventoPrueba.id
+    idSector = $sectorPrueba.id
+    cantidad = 1
+    idAsientos = @($asientoPrueba.id)
+}
+
+$reservaPrueba = Enviar-Json 'POST' "$gatewayPrueba/reservas" $pedidoReservaPrueba
+$reservaRepetidaPrueba = Enviar-Json 'POST' "$gatewayPrueba/reservas" $pedidoReservaPrueba
+$reservaPrueba
+$reservaRepetidaPrueba
+```
+
+Ambas solicitudes devuelven 200 y el mismo ID. El estado debe ser ACTIVA. La reserva dura diez minutos. Usar otra clave para intentar reservar el mismo asiento mientras sigue ocupado debe devolver 409.
+
+### 9.7 Simular pago aprobado
+
+```powershell
+Invoke-RestMethod -Uri "$gatewayPrueba/reservas/$($reservaPrueba.id)/confirmacion" -Method Post
+Invoke-RestMethod $urlDisponibilidadPrueba
+```
+
+El estado debe ser CONFIRMADA y la disponibilidad debe mostrar vendidos=1, reservados=0 y disponibles=0. Repetir la confirmación no vende una segunda vez.
+
+Si pasó el plazo, la confirmación puede devolver 200 con estado VENCIDA: no equivale a una venta. Compras debería compensar un pago tardío. Esta prueba manual no cobra dinero ni emite QR.
+
+### 9.8 Probar una devolución aprobada
+
+```powershell
+$pedidoDevolucionPrueba = @{
+    claveIdempotencia = "devolucion-$marcaPrueba"
+    cantidad = 1
+    solicitadaEn = (Get-Date).ToUniversalTime().ToString('o')
+    idAsientos = @($asientoPrueba.id)
+}
+
+Enviar-Json 'POST' "$gatewayPrueba/reservas/$($reservaPrueba.id)/devoluciones" $pedidoDevolucionPrueba
+Enviar-Json 'POST' "$gatewayPrueba/reservas/$($reservaPrueba.id)/devoluciones" $pedidoDevolucionPrueba
+Invoke-RestMethod $urlDisponibilidadPrueba
+```
+
+La reserva debe quedar DEVUELTA y el lugar disponible. El reintento utiliza exactamente el mismo contenido, incluida solicitadaEn. Esa fecha representa la solicitud original que informará Compras; debe respetar las 72 horas previas al evento. No se reintegra dinero desde SectorAsiento.
+
+### 9.9 Alternativas: rechazo, vencimiento y campo
+
+- Para simular pago rechazado, crear una nueva reserva con otra clave y llamar a `POST /reservas/{id}/liberacion` antes de confirmarla. Debe quedar LIBERADA; repetir es seguro.
+- Para probar vencimiento, crear una nueva reserva y esperar diez minutos. Consultar `GET /reservas/{id}`: debe quedar VENCIDA y liberar el lugar. También hay un barrido automático cada 30 segundos.
+- Para CAMPO, crear otro sector de tipo CAMPO con la capacidad deseada, sin crear Asientos. Configurarlo para el evento con su precio/capacidad. Reservar con `idAsientos: []` y la cantidad deseada. La cantidad no puede superar el cupo ni el límite por cliente.
+
+No reutilizar una clave de idempotencia para una solicitud diferente: devuelve 409.
+
+### 9.10 Cancelación: todavía requiere dos llamadas
+
+```powershell
+Invoke-RestMethod -Uri "$eventosPrueba/api/eventos/$($eventoPrueba.id)/cancelar" -Method Patch
+Invoke-RestMethod -Uri "$gatewayPrueba/eventos/$($eventoPrueba.id)/inventario/cancelacion" -Method Post
+Invoke-RestMethod $urlDisponibilidadPrueba
+```
+
+Hacer esto al terminar la prueba: el evento ya no admitirá nuevas reservas. La primera llamada cancela el estado de Eventos; la segunda libera inventario y marca cancelado=true. **Eventos todavía no invoca automáticamente la segunda operación.** La cancelación del inventario se puede repetir; el endpoint de cancelación de Eventos devuelve 409 si ya estaba cancelado.
+
+## 10. Alternativa con Postman e IntelliJ
+
+Para Postman, importar `msv-SectoerAsiento/TicketYa-SectorAsiento.postman_collection.json`. Crear antes el evento/lugar en Eventos, configurar idEvento y usar los IDs reales. La colección captura IDs de sector, asiento y reserva. Cambiar las claves para nuevas ejecuciones y limpiar solicitadaEn antes de iniciar una nueva devolución.
+
+Para IntelliJ, importar cada proyecto desde su pom.xml, sincronizar Maven y seleccionar un SDK Java 21 o superior. Iniciar las bases y después ejecutar:
+
+| Proyecto | Clase principal |
 | --- | --- |
-| Docker no puede conectarse al motor | Abrir Docker Desktop y esperar que docker version muestre Server. |
-| JAVA_HOME no definido o apunta a una ruta invalida | Definir JAVA_HOME en esa misma terminal, apuntando a la carpeta del JDK. |
-| Puerto 8002, 8004 u 8080 ocupado | Detener la instancia anterior en IntelliJ o con Ctrl+C en su terminal. |
-| MySQL: Connection refused / Communications link failure | Revisar compose ps y esperar el healthcheck. |
-| MySQL: Access denied | Comparar credenciales y variables; un volumen existente conserva las claves con las que fue creado. |
-| GET /sectores directo funciona pero por Gateway falla | Revisar que Gateway este iniciado y MSVC_SECTORES_URL apunte a 8002. |
-| Configurar inventario o reservar devuelve 503 | Eventos esta apagado, su URL es incorrecta o no responde a tiempo. |
-| Eventos devuelve 404 | Falta GET /eventos/{id} o el evento solicitado no existe. |
-| Reserva devuelve 409 | Revisar publicacion, fecha, cupos, asientos, limite por cliente y clave de idempotencia. |
+| msv-usuario | com.msvusuario.MsvUsuarioApplication |
+| msv-evento | msvevento.MsvEventoApplication |
+| msv-SectoerAsiento | com.universidad.msvsectoerasiento.MsvSectoerAsientoApplication |
+| api-gateway | com.apigateway.ApiGatewayApplication |
 
-Logs de las bases, desde TicketYa:
+Usar la carpeta del microservicio como Working directory. Definir las mismas variables de entorno que muestran los comandos de arranque cuando se quieran personalizar valores. Iniciar cada aplicación una sola vez: no ejecutar a la vez la misma desde IntelliJ y PowerShell.
+
+## 11. Pruebas automáticas y estado verificado
+
+Desde la raíz, con JAVA_HOME definido:
+
+```powershell
+Set-Location 'C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa'
+$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
+
+.\msv-usuario\mvnw.cmd -f ./msv-usuario/pom.xml test
+.\msv-SectoerAsiento\mvnw.cmd -f ./msv-SectoerAsiento/pom.xml test
+.\api-gateway\mvnw.cmd -f ./api-gateway/pom.xml test
+.\msv-evento\mvnw.cmd -f ./msv-evento/pom.xml test
+```
+
+Si un Wrapper no admite ser invocado desde otra carpeta, abrir una terminal en el proyecto y ejecutar `.\mvnw.cmd test`.
+
+Usuarios, SectorAsiento y Gateway utilizan H2 o proveedores HTTP de prueba y no necesitan servicios externos para sus suites. **Eventos actualmente solo tiene una prueba de arranque y usa su MySQL configurado en 3308**, por lo que esa base debe estar iniciada. Sus pruebas no están aisladas con un perfil H2; con ddl-auto=update, el arranque puede actualizar el esquema configurado.
+
+Última verificación: 15 pruebas de Usuarios y 37 de SectorAsiento pasaron. Eventos compiló, pero su prueba de arranque falló por conexión a MySQL: en esa revisión solo estaba levantada la base de Usuarios. Eso no prueba un error de compilación ni permite certificar el flujo integrado real. El Gateway tenía seis pruebas correctas de la verificación anterior.
+
+Pendientes conocidos: rutas del catálogo de Eventos en Gateway, coordinación automática de cancelación e inventario, y validaciones/pruebas de negocio de Eventos. El escenario de la sección 9 es la comprobación manual que debe realizarse con los servicios y bases reales. No se ejecutó ese escenario como parte de la actualización de esta guía.
+
+Para pruebas específicas con MySQL descartable, consultar README.md de SectorAsiento. Su compose.mysql-test.yml usa 3309 y no es la base de desarrollo de esta guía.
+
+## 12. Problemas frecuentes
+
+| Síntoma | Qué revisar |
+| --- | --- |
+| Docker no se conecta al motor | Docker Desktop abierto y sección Server en docker version. |
+| JAVA_HOME inválido | Ruta del JDK y variable definida en esa misma terminal. |
+| Communications link failure / no puede determinar el dialecto | Base correspondiente iniciada, puerto y credenciales correctos. No arreglarlo solo forzando un dialecto. |
+| Access denied de MySQL | Credenciales de aplicación y del volumen existente; no cambian al editar variables. |
+| Puerto ocupado | Detener la instancia anterior con Ctrl+C o Stop en IntelliJ. |
+| Inventario devuelve 503 | Eventos disponible en 8005 y MSVC_EVENTOS_URL correcta. |
+| Evento devuelve 404 desde Feign | Comprobar GET http://localhost:8005/api/eventos/{id}. |
+| /api/eventos devuelve 404 por Gateway | Falta la ruta del catálogo; usar directamente 8005 por ahora. |
+| Reserva devuelve 409 | Publicación/fecha del evento, cupos, asientos, límite por cliente y clave de idempotencia. |
+| Inventario devuelve 502 | Revisar el contrato del proveedor: evento con lugar.id y fechaHora. |
+| Ya se canceló el evento, pero el inventario sigue abierto | Ejecutar la segunda llamada de cancelación indicada en 9.10. |
+
+Ver logs de bases desde la raíz:
 
 ```powershell
 docker compose -f ./msv-usuario/docker-compose.yml logs --tail 50 mysql-usuario
+docker compose -f ./msv-evento/docker-compose.yaml logs --tail 50 mysql-evento
 docker compose -f ./msv-SectoerAsiento/compose.mysql.yml logs --tail 50 mysql-sector
 ```
 
-## 11. Detener y ejecutar pruebas
+## 13. Detener
 
-Detener cada aplicacion Java con Ctrl+C en su terminal, o con Stop en IntelliJ. Desde una terminal ubicada en TicketYa:
+Detener las aplicaciones con Ctrl+C en sus terminales o Stop en IntelliJ. Después, desde la raíz:
 
 ```powershell
 docker compose -f ./msv-usuario/docker-compose.yml stop
+docker compose -f ./msv-evento/docker-compose.yaml stop
 docker compose -f ./msv-SectoerAsiento/compose.mysql.yml stop
 ```
 
-Los datos quedan en sus volumenes. Estos comandos no eliminan las bases.
-
-Las pruebas automaticas de SectorAsiento no requieren Docker, Eventos ni Compras, porque utilizan H2 y un proveedor HTTP de prueba:
-
-```powershell
-$env:JAVA_HOME='C:/Users/franc/.jdks/openjdk-26.0.2'
-Set-Location ./msv-SectoerAsiento
-.\mvnw.cmd test
-```
-
-La prueba con MySQL tiene su base descartable y sus instrucciones especificas en el README de SectorAsiento. No usar una base con datos a conservar para esa suite.
-
-Esta guia se preparo leyendo la configuracion existente; no inicia procesos ni cambia servicios, variables permanentes o bases de datos.
+Estos comandos conservan los datos de los volúmenes. Para volver a iniciar las bases, repetir los comandos up de la sección 3.
