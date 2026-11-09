@@ -1,0 +1,12 @@
+[
+  {
+    "clienteNombre": "Ana de prueba",
+    "organizadorNombre": "Productora Tandil",
+    "ciudad": "Tandil"
+  },
+  {
+    "clienteNombre": "Luis de prueba",
+    "organizadorNombre": "Productora Azul",
+    "ciudad": "Azul"
+  }
+]

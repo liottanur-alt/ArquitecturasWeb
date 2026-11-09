@@ -73,3 +73,9 @@ Los roles siguen siendo datos del dominio; en esta etapa no restringen acceso a 
 ## Verificacion
 
 `mvnw.cmd test` ejecuta pruebas unitarias, persistencia H2 y CRUD HTTP sin token. No requiere MySQL ni Docker.
+
+## Contrato OpenAPI y colección de pruebas
+
+El contrato OpenAPI 3.0.3 está en [src/main/resources/static/openapi.json](src/main/resources/static/openapi.json) y se sirve directamente en http://localhost:8004/openapi.json cuando Usuarios está iniciado.
+
+Importar [TicketYa-Usuarios.postman_collection.json](TicketYa-Usuarios.postman_collection.json) en Postman. Incluye 32 solicitudes ordenadas, captura de IDs, casos normales/errores y limpieza de los perfiles creados. [datos-prueba.postman.json](datos-prueba.postman.json) permite ejecutar dos iteraciones con datos diferentes. Las instrucciones y los límites de las pruebas de roles están en [docs/PRUEBAS-POSTMAN.md](docs/PRUEBAS-POSTMAN.md).

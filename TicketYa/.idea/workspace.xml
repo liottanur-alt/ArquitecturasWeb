@@ -4,28 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GUIA-ARRANQUE.md" beforeDir="false" afterPath="$PROJECT_DIR$/GUIA-ARRANQUE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/DatosIniciales.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/DatosIniciales.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/SecurityConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/UsuarioAccess.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/AuthController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/LoginRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/RegistroRequest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/TokenResponse.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/AuthService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/AuthIntegrationTests.java" beforeDir="false" />
-    </list>
+    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -46,6 +25,13 @@
     &quot;accountId&quot;: &quot;f845ae37-2b44-44c3-8aef-a0f5d06932f3&quot;
   }
 }</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -128,6 +114,7 @@
     "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "Spring Boot.MsvUsuarioApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
@@ -139,6 +126,9 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
     "settings.editor.selected.configurable": "preferences.general"
   },
   "keyToStringList": {
@@ -147,7 +137,40 @@
     ]
   }
 }]]></component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="KtorApplicationConfigurationType" />
+        <option value="MicronautRunConfigurationType" />
+        <option value="QuarkusRunConfigurationType" />
+        <option value="SpringBootApplicationConfigurationType" />
+      </set>
+    </option>
+  </component>
   <component name="RunManager" selected="Spring Boot.MsvUsuarioApplication">
+    <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="api-gateway" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.apigateway.ApiGatewayApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MsvEventoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="msv-evento" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="msvevento.MsvEventoApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MsvSectoerAsientoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="msv-SectoerAsiento" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.universidad.msvsectoerasiento.MsvSectoerAsientoApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="MsvUsuarioApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
       <module name="msv-usuario" />

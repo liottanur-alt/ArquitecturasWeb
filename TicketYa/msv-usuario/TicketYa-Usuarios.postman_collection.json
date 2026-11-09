@@ -1,0 +1,917 @@
+{
+  "info": {
+    "name": "TicketYa Usuarios - Entrega 1",
+    "description": "Ejecutar completa en orden. Sin JWT. Consulta roles, captura IDs, genera perfiles únicos y elimina solo los que crea. Una respuesta inesperada detiene el recorrido; si se interrumpe, limpiar los IDs creados siguiendo docs/PRUEBAS-POSTMAN.md. No necesita Eventos para favoritos. CRUD de roles documentado en OpenAPI; la colección conserva los roles inicializados.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idArtistaPrueba",
+      "value": "900001"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Consultar roles e iniciar datos de la ejecución",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/roles",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runId = pm.variables.replaceIn(\"{{$guid}}\").replace(/-/g, \"\").slice(0, 12);",
+              "pm.collectionVariables.set(\"runId\", runId);",
+              "[\"idCliente\",\"idOrganizador\",\"idRolCliente\",\"idRolOrganizador\",\"idRolInexistente\"].forEach(k => pm.collectionVariables.unset(k));",
+              "const dato = (key, fallback) => pm.iterationData.get(key) || fallback;",
+              "pm.collectionVariables.set(\"clienteNombre\", dato(\"clienteNombre\", \"Ana de prueba\"));",
+              "pm.collectionVariables.set(\"organizadorNombre\", dato(\"organizadorNombre\", \"Productora de prueba\"));",
+              "pm.collectionVariables.set(\"ciudadPrueba\", dato(\"ciudad\", \"Tandil\"));",
+              "pm.collectionVariables.set(\"clienteEmail\", \"cliente-\" + runId + \"@example.com\");",
+              "pm.collectionVariables.set(\"organizadorEmail\", \"organizador-\" + runId + \"@example.com\");",
+              "pm.collectionVariables.set(\"clienteDni\", \"CLI-\" + runId);",
+              "pm.collectionVariables.set(\"organizadorDni\", \"ORG-\" + runId);",
+              "pm.collectionVariables.set(\"dniDuplicadoEmail\", \"DUP-\" + runId);",
+              "pm.collectionVariables.set(\"emailDuplicadoDni\", \"duplicado-\" + runId + \"@example.com\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const roles = pm.response.json();",
+              "for (const [tipo, variable] of [[\"CLIENTE\",\"idRolCliente\"],[\"ORGANIZADOR\",\"idRolOrganizador\"]]) { const rol = roles.find(r => r.name === tipo); pm.test(\"Rol \" + tipo + \" inicializado\", () => pm.expect(rol).to.exist); if (!rol) { pm.execution.setNextRequest(null); throw new Error(\"Falta el rol \" + tipo); } pm.collectionVariables.set(variable, rol.id); }",
+              "pm.collectionVariables.set(\"idRolInexistente\", Math.max(0, ...roles.map(r => Number(r.id))) + 1);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Consultar rol cliente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/roles/{{idRolCliente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Tipo CLIENTE\", () => pm.expect(pm.response.json().name).to.eql(\"CLIENTE\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Crear cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"{{clienteEmail}}\",\n  \"dni\": \"{{clienteDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.collectionVariables.set(\"idCliente\", pm.response.json().id);",
+              "pm.test(\"Rol real y Location\", () => { pm.expect(pm.response.json().idRol).to.eql(Number(pm.collectionVariables.get(\"idRolCliente\"))); pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/usuarios/\" + pm.response.json().id); });",
+              "pm.test(\"Sin datos de credenciales\", () => { pm.expect(pm.response.json()).not.to.have.property(\"password\"); pm.expect(pm.response.json()).not.to.have.property(\"passwordHash\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Crear organizador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{organizadorNombre}}\",\n  \"email\": \"{{organizadorEmail}}\",\n  \"dni\": \"{{organizadorDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolOrganizador}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.collectionVariables.set(\"idOrganizador\", pm.response.json().id);",
+              "pm.test(\"Rol real y Location\", () => { pm.expect(pm.response.json().idRol).to.eql(Number(pm.collectionVariables.get(\"idRolOrganizador\"))); pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/usuarios/\" + pm.response.json().id); });",
+              "pm.test(\"Sin datos de credenciales\", () => { pm.expect(pm.response.json()).not.to.have.property(\"password\"); pm.expect(pm.response.json()).not.to.have.property(\"passwordHash\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Listar perfiles y comprobar los creados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const ids = pm.response.json().map(u => u.id); pm.test(\"Incluye cliente y organizador\", () => { pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idCliente\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idOrganizador\"))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Consultar cliente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Email del cliente\", () => pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get(\"clienteEmail\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Consultar organizador",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idOrganizador}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Actualizar cliente",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}} actualizado\",\n  \"email\": \"{{clienteEmail}}\",\n  \"dni\": \"{{clienteDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Nombre actualizado\", () => pm.expect(pm.response.json().nombre).to.eql(pm.collectionVariables.get(\"clienteNombre\") + \" actualizado\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Actualizar organizador",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idOrganizador}}",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{organizadorNombre}} actualizado\",\n  \"email\": \"{{organizadorEmail}}\",\n  \"dni\": \"{{organizadorDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolOrganizador}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Repetir el mismo tipo del rol (sin cambiar política)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/roles/{{idRolCliente}}",
+        "description": "Conserva el rol existente; no lo renombra ni elimina.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"CLIENTE\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Agregar favorito externo",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Agregar el mismo favorito otra vez",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Listar favoritos sin duplicados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const id = Number(pm.variables.get(\"idArtistaPrueba\")); pm.test(\"Una sola relación\", () => pm.expect(pm.response.json().filter(x => x === id)).to.have.lengthOf(1));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Quitar favorito",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Comprobar favoritos vacíos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Lista vacía\", () => pm.expect(pm.response.json()).to.eql([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 Email duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"{{clienteEmail}}\",\n  \"dni\": \"{{dniDuplicadoEmail}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 DNI duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"{{emailDuplicadoDni}}\",\n  \"dni\": \"{{clienteDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 Rol inexistente al crear perfil",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"{{emailDuplicadoDni}}\",\n  \"dni\": \"{{dniDuplicadoEmail}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolInexistente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 Datos obligatorios ausentes",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 Email inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"correo-invalido\",\n  \"dni\": \"{{clienteDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 Favorito con ID no positivo",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/0",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 Crear rol duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/roles",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"CLIENTE\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "23 Rol sin tipo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/roles",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 Consultar rol inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/roles/{{idRolInexistente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "25 No permite eliminar el rol utilizado",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/roles/{{idRolCliente}}",
+        "description": "El cliente creado en esta ejecución asegura la asociación; el rol no se elimina."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 Volver a agregar favorito para comprobar borrado del usuario",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 Eliminar cliente creado",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "28 Cliente eliminado devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "29 Favoritos del usuario eliminado devuelven 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "30 Comprobar que el organizador sigue existiendo",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idOrganizador}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "31 Eliminar organizador creado",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idOrganizador}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "32 Roles inicializados se conservan",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/roles",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const ids = pm.response.json().map(r => r.id); pm.test(\"Conserva ambos roles\", () => { pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idRolCliente\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idRolOrganizador\"))); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

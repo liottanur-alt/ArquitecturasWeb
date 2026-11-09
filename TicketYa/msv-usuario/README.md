@@ -92,3 +92,9 @@ prueba de persistencia. No requiere Docker ni modifica la base de desarrollo.
 Estas pruebas no reemplazan una verificacion contra MySQL real.
 
 Tambien se prueban por HTTP las operaciones de usuarios, roles y favoritos sin token, y se verifica que las rutas /auth retiradas respondan 404. Las pruebas originales de JWT estan archivadas en futura jwt.
+
+## Contrato OpenAPI y colección de pruebas
+
+El contrato OpenAPI 3.0.3 está en [src/main/resources/static/openapi.json](src/main/resources/static/openapi.json) y se sirve directamente en http://localhost:8004/openapi.json cuando Usuarios está iniciado.
+
+Importar [TicketYa-Usuarios.postman_collection.json](TicketYa-Usuarios.postman_collection.json) en Postman. Incluye 32 solicitudes ordenadas, captura de IDs, casos normales/errores y limpieza de los perfiles creados. [datos-prueba.postman.json](datos-prueba.postman.json) permite ejecutar dos iteraciones con datos diferentes. Las instrucciones y los límites de las pruebas de roles están en [docs/PRUEBAS-POSTMAN.md](docs/PRUEBAS-POSTMAN.md).
