@@ -5,18 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/1 Crear sector numerado.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/2 Crear asiento.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/3 Inicializar evento.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/4 Configurar sector del evento.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/5 Consultar disponibilidad.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/6 Reservar (repetir comprueba idempotencia).yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/7 Confirmar pago aprobado.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/8 Consultar reserva.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/9 Devolucion aprobada.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/Alternativa- liberar por rechazo (usar antes de confirmar).yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/Cancelar inventario (hacer al final).yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa - SectorAsiento entrega 1/opencollection.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/TicketYa-Usuarios.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/TicketYa-Usuarios.postman_collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/docs/PRUEBAS-POSTMAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/docs/PRUEBAS-POSTMAN.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/UsuarioService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/UsuarioService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioPersistenceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioPersistenceTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioSinAuthIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioSinAuthIntegrationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/service/UsuarioServiceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/service/UsuarioServiceTests.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,40 +121,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Docker.msv-usuario: Compose Deployment.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Spring Boot.MsvUsuarioApplication.executor": "Run",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "preferences.general"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Docker.msv-usuario: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.MsvUsuarioApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.general&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "mysql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>

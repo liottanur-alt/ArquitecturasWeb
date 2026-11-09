@@ -1,12 +1,35 @@
 {
   "info": {
     "name": "TicketYa Usuarios - Entrega 1",
-    "description": "Ejecutar completa en orden. Sin JWT. Consulta roles, captura IDs, genera perfiles únicos y elimina solo los que crea. Una respuesta inesperada detiene el recorrido; si se interrumpe, limpiar los IDs creados siguiendo docs/PRUEBAS-POSTMAN.md. No necesita Eventos para favoritos. CRUD de roles documentado en OpenAPI; la colección conserva los roles inicializados.",
+    "description": "Ejecutar completa en orden, comenzando por 01 Consultar roles e iniciar datos de la ejecución. Sin JWT. idRol se envia como numero, nunca como objeto. Los IDs se obtienen de GET /roles; las variables de entorno no reemplazan los IDs capturados en esta coleccion. Genera perfiles unicos y elimina solo los que crea. Una respuesta inesperada detiene el recorrido; si se interrumpe, limpiar los IDs creados siguiendo docs/PRUEBAS-POSTMAN.md. Eventos debe estar iniciado y idArtistaPrueba debe existir para listar favoritos con nombre y genero. CRUD de roles documentado en OpenAPI; la coleccion conserva los roles inicializados.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
     "type": "noauth"
   },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const raw = pm.request.body && pm.request.body.mode === 'raw' ? pm.request.body.raw : '';",
+          "for (const key of ['idRolCliente', 'idRolOrganizador', 'idRolInexistente']) {",
+          "  if (!raw.includes('{{' + key + '}}')) continue;",
+          "  const saved = pm.collectionVariables.get(key);",
+          "  const id = Number(saved);",
+          "  if ((typeof saved !== 'number' && typeof saved !== 'string') || !Number.isSafeInteger(id) || id <= 0) { pm.execution.skipRequest(); throw new Error('Ejecuta primero 01 Consultar roles. ' + key + ' debe contener solo el ID numerico del rol, no el objeto de GET /roles.'); }",
+          "  pm.variables.set(key, id);",
+          "}",
+          "if (raw.includes('\"idRol\"')) {",
+          "  let body;",
+          "  try { body = JSON.parse(pm.variables.replaceIn(raw)); } catch (e) { pm.execution.skipRequest(); throw new Error('Body JSON incompleto: ejecuta primero la solicitud 01 para inicializar las variables.'); }",
+          "  if (typeof body.idRol !== 'number' || !Number.isSafeInteger(body.idRol) || body.idRol <= 0) { pm.execution.skipRequest(); throw new Error('idRol debe ser un numero, por ejemplo 1 para CLIENTE o 2 para ORGANIZADOR en la base actual. No enviar {id: 1} ni el objeto del rol.'); }",
+          "}"
+        ]
+      }
+    }
+  ],
   "variable": [
     {
       "key": "baseUrl",
@@ -392,7 +415,8 @@
             "exec": [
               "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
               "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
-              "const id = Number(pm.variables.get(\"idArtistaPrueba\")); pm.test(\"Una sola relación\", () => pm.expect(pm.response.json().filter(x => x === id)).to.have.lengthOf(1));"
+              "const id = Number(pm.variables.get(\"idArtistaPrueba\")); pm.test(\"Una sola relación\", () => pm.expect(pm.response.json().filter(x => x.idArtista === id)).to.have.lengthOf(1));",
+              "pm.test(\"Incluye nombre y genero\", () => pm.response.json().forEach(x => { pm.expect(x.nombre).to.be.a('string').and.not.empty; pm.expect(x).to.have.property('genero'); }));"
             ]
           }
         }

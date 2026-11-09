@@ -2,6 +2,7 @@ package com.msvusuario.controller;
 
 import com.msvusuario.dto.UsuarioRequest;
 import com.msvusuario.dto.UsuarioResponse;
+import com.msvusuario.dto.ArtistaResponse;
 import com.msvusuario.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +45,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}/artistas-favoritos")
-    public List<Long> listarFavoritos(@PathVariable Long id) {
+    public List<ArtistaResponse> listarFavoritos(@PathVariable Long id) {
         return service.listarFavoritos(id);
     }
 

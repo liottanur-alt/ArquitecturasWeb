@@ -14,7 +14,7 @@ Con Usuarios iniciado, el contrato se descarga de http://localhost:8004/openapi.
 2. Si se quiere probar el Gateway, iniciarlo en 8080 con destino Usuarios en 8004.
 3. En Postman usar Import y seleccionar TicketYa-Usuarios.postman_collection.json.
 4. En las variables de la colección, definir baseUrl sin barra final: http://localhost:8080 para Gateway o http://localhost:8004 para conexión directa.
-5. Mantener No Auth. idArtistaPrueba es un ID externo positivo; su valor por defecto 900001 es ilustrativo, no un registro de la base de Eventos. Usuarios no consulta Eventos al guardar favoritos.
+5. Mantener No Auth. Configurar idArtistaPrueba con un ID existente en Eventos: el valor por defecto 900001 es ilustrativo. Usuarios no consulta Eventos al guardar favoritos, pero al listarlos obtiene nombre y genero desde ese servicio. Iniciar Eventos y configurar MSV_EVENTO_URL para ejecutar el recorrido completo; un artista inexistente devuelve 502 y un servicio no disponible devuelve 503.
 6. No definir variables de entorno con los mismos nombres que las variables generadas (idCliente, idOrganizador, idRolCliente, idRolOrganizador, etc.): podrían ocultar los valores capturados. Solo baseUrl e idArtistaPrueba están pensadas para personalizarse.
 
 ## Ejecutar el recorrido

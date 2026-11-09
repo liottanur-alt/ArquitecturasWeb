@@ -857,7 +857,7 @@
         ],
         "operationId": "get_usuarios_id_artistas-favoritos",
         "summary": "Listar artistas favoritos",
-        "description": "Devuelve IDs externos. No consulta Eventos; no se garantiza el orden de la lista.",
+        "description": "Devuelve idArtista, nombre y genero consultando Eventos. Sin favoritos devuelve []. No se garantiza el orden. Responde 502 si un artista ya no existe o devuelve datos incompletos y 503 si Eventos no esta disponible.",
         "responses": {
           "200": {
             "description": "Consulta o actualización exitosa.",
@@ -866,13 +866,33 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "integer",
-                    "format": "int64"
+                    "properties": {
+                      "nombre": {
+                        "type": "string"
+                      },
+                      "idArtista": {
+                        "format": "int64",
+                        "type": "integer"
+                      },
+                      "genero": {
+                        "nullable": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "idArtista",
+                      "nombre",
+                      "genero"
+                    ],
+                    "type": "object"
                   }
                 },
                 "example": [
-                  900,
-                  901
+                  {
+                    "nombre": "Soda Stereo",
+                    "idArtista": 123,
+                    "genero": "Rock"
+                  }
                 ]
               }
             }
@@ -908,6 +928,12 @@
                 }
               }
             }
+          },
+          "502": {
+            "description": "Artista inexistente en Eventos o respuesta incompleta."
+          },
+          "503": {
+            "description": "Servicio de Eventos no disponible."
           }
         },
         "parameters": [

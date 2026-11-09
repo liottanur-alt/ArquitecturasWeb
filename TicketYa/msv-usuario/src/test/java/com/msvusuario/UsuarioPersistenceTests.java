@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @Transactional
 class UsuarioPersistenceTests {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.msvusuario.client.ArtistaClientFeign artistas;
     @Autowired private UsuarioService usuarios;
     @Autowired private RolService roles;
     @Autowired private UsuarioRepository usuarioRepository;
@@ -64,7 +66,9 @@ class UsuarioPersistenceTests {
         usuarios.agregarFavorito(id, 900L);
         entityManager.flush();
         entityManager.clear();
-        assertEquals(java.util.List.of(900L), usuarios.listarFavoritos(id));
+        var artista = new com.msvusuario.dto.ArtistaResponse(900L, "Soda Stereo", "Rock");
+        org.mockito.Mockito.when(artistas.obtenerPorId(900L)).thenReturn(artista);
+        assertEquals(java.util.List.of(artista), usuarios.listarFavoritos(id));
     }
 
     @Test

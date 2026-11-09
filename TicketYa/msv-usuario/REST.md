@@ -51,12 +51,23 @@ En la base se guarda el nombre del enum, no su posicion numerica.
 
 | Metodo | Ruta | Resultado |
 | --- | --- | --- |
-| GET | /usuarios/{id}/artistas-favoritos | Lista de IDs de artistas |
+| GET | /usuarios/{id}/artistas-favoritos | Lista de artistas con ID, nombre y genero |
 | PUT | /usuarios/{id}/artistas-favoritos/{idArtista} | Agrega un favorito (204, sin body) |
 | DELETE | /usuarios/{id}/artistas-favoritos/{idArtista} | Quita un favorito (204) |
 
-El ID del artista debe ser positivo. Este servicio guarda la referencia externa;
-no consulta ni valida su existencia en el microservicio de artistas.
+El ID del artista debe ser positivo. Al guardar, este servicio persiste solo la
+referencia externa. Al listar consulta `GET /api/artistas/{id}` en el servicio
+de eventos, configurado mediante `MSV_EVENTO_URL` (por defecto localhost:8005).
+
+Ejemplo de respuesta del listado:
+
+```json
+[{"idArtista":123,"nombre":"Soda Stereo","genero":"Rock"}]
+```
+
+Sin favoritos devuelve `[]` y no consulta Eventos. Si Eventos no responde devuelve
+503; si un artista ya no existe o devuelve datos incompletos devuelve 502.
+Los favoritos guardados no se eliminan ante fallos del servicio externo.
 
 ## Errores
 

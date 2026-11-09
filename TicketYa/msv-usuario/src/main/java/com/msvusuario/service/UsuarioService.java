@@ -2,6 +2,9 @@ package com.msvusuario.service;
 
 import com.msvusuario.dto.UsuarioRequest;
 import com.msvusuario.dto.UsuarioResponse;
+import com.msvusuario.dto.ArtistaResponse;
+import com.msvusuario.client.ArtistaClientFeign;
+import feign.FeignException;
 import com.msvusuario.entity.ArtistaFavorito;
 import com.msvusuario.entity.ArtistaFavoritoID;
 import com.msvusuario.entity.Usuario;
@@ -23,6 +26,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarios;
     private final RolRepository roles;
     private final ArtistaFavoritoRepository favoritos;
+    private final ArtistaClientFeign artistas;
 
     public List<UsuarioResponse> listar() {
         return usuarios.findAll().stream().map(UsuarioResponse::from).toList();
@@ -49,9 +53,29 @@ public class UsuarioService {
         usuarios.delete(usuario);
     }
 
-    public List<Long> listarFavoritos(Long idUsuario) {
+    public List<ArtistaResponse> listarFavoritos(Long idUsuario) {
         buscar(idUsuario);
-        return favoritos.findByUsuarioId(idUsuario).stream().map(favorito -> favorito.getId().getIdArtista()).toList();
+        return favoritos.findByUsuarioId(idUsuario).stream()
+                .map(favorito -> obtenerArtista(favorito.getId().getIdArtista())).toList();
+    }
+
+    private ArtistaResponse obtenerArtista(Long idArtista) {
+        try {
+            ArtistaResponse artista = artistas.obtenerPorId(idArtista);
+            if (artista == null || artista.nombre() == null || artista.nombre().isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                        "El servicio de artistas devolvio datos incompletos para el artista " + idArtista);
+            }
+            // El ID almacenado en el favorito identifica el recurso consultado.
+            return new ArtistaResponse(idArtista, artista.nombre(), artista.genero());
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                        "El artista favorito " + idArtista + " ya no existe en el catalogo");
+            }
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "No se pudieron consultar los artistas favoritos. Intenta nuevamente mas tarde");
+        }
     }
 
     @Transactional
