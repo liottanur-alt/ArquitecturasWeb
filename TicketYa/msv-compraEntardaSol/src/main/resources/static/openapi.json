@@ -1,0 +1,647 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TicketYa - Compras, entradas y solicitudes",
+    "version": "1.0.0",
+    "description": "Microservicio de compra (HU-08 a HU-14): reserva, pago simulado, emision de entradas con QR, devoluciones, reintegros y cancelacion de eventos."
+  },
+  "servers": [
+    { "url": "http://localhost:8003", "description": "Ejecucion local" }
+  ],
+  "tags": [
+    { "name": "Compras" },
+    { "name": "Entradas" },
+    { "name": "Solicitudes" }
+  ],
+  "paths": {
+    "/compras": {
+      "post": {
+        "tags": ["Compras"],
+        "summary": "Crear una compra y su reserva",
+        "operationId": "crearCompra",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CompraRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Compra creada o recuperada por idempotencia",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompraResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "502": { "$ref": "#/components/responses/BadGateway" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/compras/{id}": {
+      "get": {
+        "tags": ["Compras"],
+        "summary": "Consultar una compra",
+        "operationId": "buscarCompra",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdCompra" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compra encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompraResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/compras/cliente/{idCliente}": {
+      "get": {
+        "tags": ["Compras"],
+        "summary": "Listar compras de un cliente",
+        "operationId": "listarComprasPorCliente",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdCliente" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compras del cliente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CompraResponse" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/compras/{id}/pago": {
+      "put": {
+        "tags": ["Compras"],
+        "summary": "Procesar el pago simulado",
+        "operationId": "procesarPago",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdCompra" },
+          {
+            "name": "aprobado",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean" },
+            "description": "true aprueba; false rechaza y libera la reserva"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado del pago",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompraResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "502": { "$ref": "#/components/responses/BadGateway" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/compras/eventos/{idEvento}/cancelacion": {
+      "post": {
+        "tags": ["Compras"],
+        "summary": "Cancelar un evento y reintegrar las entradas vendidas",
+        "operationId": "cancelarEvento",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdEvento" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumen de la cancelacion",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CancelacionEventoResponse" }
+              }
+            }
+          },
+          "502": { "$ref": "#/components/responses/BadGateway" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/entradas/{id}": {
+      "get": {
+        "tags": ["Entradas"],
+        "summary": "Consultar una entrada por ID",
+        "operationId": "buscarEntrada",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdEntrada" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entrada encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EntradaResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/entradas/qr/{qr}": {
+      "get": {
+        "tags": ["Entradas"],
+        "summary": "Consultar una entrada por QR",
+        "operationId": "buscarEntradaPorQr",
+        "parameters": [
+          { "$ref": "#/components/parameters/Qr" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entrada encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EntradaResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/entradas/compra/{idCompra}": {
+      "get": {
+        "tags": ["Entradas"],
+        "summary": "Listar entradas de una compra",
+        "operationId": "listarEntradasPorCompra",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdCompra" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entradas de la compra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/EntradaResponse" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entradas/cliente/{idCliente}": {
+      "get": {
+        "tags": ["Entradas"],
+        "summary": "Listar entradas de un cliente",
+        "operationId": "listarEntradasPorCliente",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdCliente" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entradas del cliente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/EntradaResponse" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entradas/{id}/uso": {
+      "patch": {
+        "tags": ["Entradas"],
+        "summary": "Marcar una entrada como utilizada",
+        "operationId": "marcarEntradaUsada",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdEntrada" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entrada escaneada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EntradaResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/entradas/qr/{qr}/uso": {
+      "patch": {
+        "tags": ["Entradas"],
+        "summary": "Marcar una entrada como utilizada por QR",
+        "operationId": "marcarEntradaUsadaPorQr",
+        "parameters": [
+          { "$ref": "#/components/parameters/Qr" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entrada escaneada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EntradaResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/solicitudes": {
+      "post": {
+        "tags": ["Solicitudes"],
+        "summary": "Solicitar la devolucion de una entrada",
+        "operationId": "crearSolicitud",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SolicitudRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Solicitud pendiente",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SolicitudResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "502": { "$ref": "#/components/responses/BadGateway" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    },
+    "/solicitudes/{id}": {
+      "get": {
+        "tags": ["Solicitudes"],
+        "summary": "Consultar una solicitud",
+        "operationId": "buscarSolicitud",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdSolicitud" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solicitud encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SolicitudResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/solicitudes/entrada/{idEntrada}": {
+      "get": {
+        "tags": ["Solicitudes"],
+        "summary": "Listar solicitudes de una entrada",
+        "operationId": "listarSolicitudesPorEntrada",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdEntrada" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solicitudes de la entrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SolicitudResponse" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/solicitudes/pendientes": {
+      "get": {
+        "tags": ["Solicitudes"],
+        "summary": "Listar solicitudes pendientes",
+        "operationId": "listarSolicitudesPendientes",
+        "responses": {
+          "200": {
+            "description": "Solicitudes pendientes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SolicitudResponse" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/solicitudes/cliente/{idCliente}": {
+      "get": {
+        "tags": ["Solicitudes"],
+        "summary": "Listar solicitudes de un cliente",
+        "operationId": "listarSolicitudesPorCliente",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdCliente" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solicitudes del cliente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SolicitudResponse" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/solicitudes/{id}/resolver": {
+      "put": {
+        "tags": ["Solicitudes"],
+        "summary": "Aprobar o rechazar una solicitud",
+        "operationId": "resolverSolicitud",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdSolicitud" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SolicitudResolucion" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitud resuelta",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SolicitudResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "502": { "$ref": "#/components/responses/BadGateway" },
+          "503": { "$ref": "#/components/responses/ServiceUnavailable" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "IdCompra": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64" }
+      },
+      "IdEntrada": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64" }
+      },
+      "IdSolicitud": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64" }
+      },
+      "IdCliente": {
+        "name": "idCliente",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64" }
+      },
+      "IdEvento": {
+        "name": "idEvento",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64" }
+      },
+      "Qr": {
+        "name": "qr",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Datos invalidos o pedido incompleto",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "La entrada no pertenece al cliente",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso inexistente",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflicto de negocio o idempotencia",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "BadGateway": {
+        "description": "Un servicio requerido devolvio un error",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Un servicio requerido no esta disponible",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "CompraRequest": {
+        "type": "object",
+        "required": ["claveIdempotencia", "idCliente", "idEvento", "idSector", "medioDePago"],
+        "properties": {
+          "claveIdempotencia": { "type": "string", "maxLength": 100, "example": "compra-2026-0001" },
+          "idCliente": { "type": "integer", "format": "int64", "example": 12 },
+          "idEvento": { "type": "integer", "format": "int64", "example": 40 },
+          "idSector": { "type": "integer", "format": "int64", "example": 7 },
+          "idsAsientos": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": { "type": "integer", "format": "int64" },
+            "example": [101, 102]
+          },
+          "cantidadEntradas": { "type": "integer", "minimum": 1, "maximum": 1000, "example": 2 },
+          "medioDePago": { "type": "string", "example": "TARJETA" }
+        },
+        "description": "Se debe informar idsAsientos no vacio o cantidadEntradas positivo."
+      },
+      "CompraResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 1 },
+          "idCliente": { "type": "integer", "format": "int64", "example": 12 },
+          "idEvento": { "type": "integer", "format": "int64", "example": 40 },
+          "idSector": { "type": "integer", "format": "int64", "example": 7 },
+          "cantidadEntradas": { "type": "integer", "format": "int64", "example": 2 },
+          "medioDePago": { "type": "string", "example": "TARJETA" },
+          "descripcion": { "type": "string", "example": "Compra pendiente de pago" },
+          "estadoCompra": {
+            "type": "string",
+            "enum": ["PENDIENTE", "APROBADA", "RECHAZADA", "EXPIRADA", "CANCELADA"]
+          },
+          "claveIdempotencia": { "type": "string", "example": "compra-2026-0001" },
+          "idReserva": { "type": "integer", "format": "int64", "example": 500 },
+          "precioUnitario": { "type": "number", "format": "double", "example": 1500.0 },
+          "importeTotal": { "type": "number", "format": "double", "example": 3000.0 },
+          "referenciaPago": { "type": "string", "nullable": true, "example": "SIM-..." },
+          "referenciaReintegro": { "type": "string", "nullable": true, "example": "SIM-REF-..." },
+          "estadoReintegro": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["PENDIENTE", "COMPLETADO"]
+          },
+          "idsAsientos": {
+            "type": "array",
+            "items": { "type": "integer", "format": "int64" },
+            "example": [101, 102]
+          }
+        }
+      },
+      "EntradaResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 10 },
+          "qr": { "type": "string", "example": "6f1c2a0e-..." },
+          "estadoQr": { "type": "string", "enum": ["NO_ESCANEADO", "ESCANEADO"] },
+          "idCliente": { "type": "integer", "format": "int64", "example": 12 },
+          "idEvento": { "type": "integer", "format": "int64", "example": 40 },
+          "idSector": { "type": "integer", "format": "int64", "example": 7 },
+          "idAsiento": { "type": "integer", "format": "int64", "nullable": true, "example": 101 },
+          "precio": { "type": "number", "format": "double", "example": 1500.0 },
+          "estadoEntrada": {
+            "type": "string",
+            "enum": ["PAGA", "SOLICITUD_DEVOLUCION", "DEVOLUCION_ACEPTADA", "DEVOLUCION_RECHAZADA", "EVENTO_CANCELADO"]
+          }
+        }
+      },
+      "SolicitudRequest": {
+        "type": "object",
+        "required": ["idEntrada", "idCliente", "descripcion"],
+        "properties": {
+          "idEntrada": { "type": "integer", "format": "int64", "example": 10 },
+          "idCliente": { "type": "integer", "format": "int64", "example": 12 },
+          "descripcion": { "type": "string", "example": "No puedo asistir al evento" }
+        }
+      },
+      "SolicitudResolucion": {
+        "type": "object",
+        "required": ["idAdministrador", "estadoSolicitud"],
+        "properties": {
+          "idAdministrador": { "type": "integer", "format": "int64", "example": 9 },
+          "estadoSolicitud": { "type": "string", "enum": ["ACEPTADA", "RECHAZADA"] }
+        }
+      },
+      "SolicitudResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64", "example": 3 },
+          "idEntrada": { "type": "integer", "format": "int64", "example": 10 },
+          "idCompra": { "type": "integer", "format": "int64", "example": 1 },
+          "idCliente": { "type": "integer", "format": "int64", "example": 12 },
+          "idAdministrador": { "type": "integer", "format": "int64", "nullable": true, "example": 9 },
+          "fechaSolicitud": { "type": "string", "format": "date-time" },
+          "fechaResolucion": { "type": "string", "format": "date-time", "nullable": true },
+          "referenciaReintegro": { "type": "string", "nullable": true, "example": "SIM-REF-..." },
+          "estadoReintegro": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["PENDIENTE", "COMPLETADO"]
+          },
+          "descripcion": { "type": "string", "example": "No puedo asistir al evento" },
+          "estadoSolicitud": {
+            "type": "string",
+            "enum": ["PENDIENTE", "ACEPTADA", "RECHAZADA", "CANCELADA"]
+          }
+        }
+      },
+      "CancelacionEventoResponse": {
+        "type": "object",
+        "properties": {
+          "idEvento": { "type": "integer", "format": "int64", "example": 40 },
+          "comprasCanceladas": { "type": "integer", "example": 2 },
+          "entradasReintegradas": { "type": "integer", "example": 3 },
+          "importeReintegrado": { "type": "number", "format": "double", "example": 4500.0 },
+          "inventarioCancelado": { "type": "boolean", "example": true }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "Compra no encontrada" },
+          "detalle": { "type": "string", "nullable": true },
+          "correlationId": { "type": "string", "nullable": true, "example": "3f2c..." },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

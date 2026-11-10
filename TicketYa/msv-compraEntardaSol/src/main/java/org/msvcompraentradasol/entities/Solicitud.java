@@ -2,6 +2,7 @@ package org.msvcompraentradasol.entities;
 
 import java.time.Instant;
 import jakarta.persistence.*;
+import org.msvcompraentradasol.enums.EstadoReintegro;
 import org.msvcompraentradasol.enums.EstadoSolicitud;
 
 @Entity
@@ -31,6 +32,10 @@ public class Solicitud {
 
     @Column(name = "referencia_reintegro")
     private String referenciaReintegro;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_reintegro")
+    private EstadoReintegro estadoReintegro;
 
     @Column(nullable = false)
     private String descripcion;
@@ -89,6 +94,14 @@ public class Solicitud {
 
     public void setReferenciaReintegro(String referenciaReintegro) {
         this.referenciaReintegro = referenciaReintegro;
+    }
+
+    public EstadoReintegro getEstadoReintegro() {
+        return estadoReintegro;
+    }
+
+    public void setEstadoReintegro(EstadoReintegro estadoReintegro) {
+        this.estadoReintegro = estadoReintegro;
     }
 
     public String getDescripcion() {

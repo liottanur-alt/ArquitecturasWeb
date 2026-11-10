@@ -1,5 +1,7 @@
 package org.msvcompraentradasol.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -31,6 +33,13 @@ public class CompraRequestDTO {
 
     @NotBlank
     private String medioDePago;
+
+    @JsonIgnore
+    @AssertTrue(message = "Debe indicar idsAsientos o cantidadEntradas")
+    public boolean isPedidoValido() {
+        return (idsAsientos != null && !idsAsientos.isEmpty())
+                || (cantidadEntradas != null && cantidadEntradas > 0);
+    }
 
     public String getClaveIdempotencia() {return claveIdempotencia;}
     public void setClaveIdempotencia(String claveIdempotencia) {this.claveIdempotencia = claveIdempotencia;}

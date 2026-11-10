@@ -3,6 +3,7 @@ package org.msvcompraentradasol.services;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import org.msvcompraentradasol.enums.EstadoReintegro;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,19 +24,31 @@ public class PagoSimuladoService {
         return new ResultadoPago(aprobado, referencia, importe, detalle);
     }
 
-    public ResultadoPago reintegrar(
+    public ResultadoReintegro reintegrar(
             String referenciaPago,
             BigDecimal importe,
             String claveIdempotencia
     ) {
         if (referenciaPago == null || importe == null || importe.signum() < 0) {
-            return new ResultadoPago(false, null, importe, "No se pudo validar el reintegro");
+            return new ResultadoReintegro(
+                    false,
+                    null,
+                    importe,
+                    "No se pudo validar el reintegro",
+                    null
+            );
         }
 
         String referencia = "SIM-REF-" + UUID.nameUUIDFromBytes(
                 claveIdempotencia.getBytes(StandardCharsets.UTF_8)
         );
-        return new ResultadoPago(true, referencia, importe, "Reintegro aprobado por el simulador");
+        return new ResultadoReintegro(
+                true,
+                referencia,
+                importe,
+                "Reintegro aprobado por el simulador",
+                EstadoReintegro.COMPLETADO
+        );
     }
 
     public record ResultadoPago(
@@ -43,6 +56,15 @@ public class PagoSimuladoService {
             String referencia,
             BigDecimal importe,
             String detalle
+    ) {
+    }
+
+    public record ResultadoReintegro(
+            boolean aprobado,
+            String referencia,
+            BigDecimal importe,
+            String detalle,
+            EstadoReintegro estado
     ) {
     }
 }

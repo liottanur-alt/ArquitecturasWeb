@@ -14,5 +14,9 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Long> {
 
     List<Solicitud> findAllByEntrada_IdOrderByIdAsc(Long idEntrada);
 
+    List<Solicitud> findAllByEntrada_IdAndEstadoSolicitud(Long idEntrada, EstadoSolicitud estadoSolicitud);
+
     List<Solicitud> findAllByEstadoSolicitudOrderByIdAsc(EstadoSolicitud estadoSolicitud);
+
+    List<Solicitud> findAllByIdClienteOrderByIdAsc(Long idCliente);
 }

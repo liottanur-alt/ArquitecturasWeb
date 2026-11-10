@@ -1,8 +1,7 @@
 package org.msvcompraentradasol.controllers;
 
-import java.math.BigDecimal;
 import java.util.List;
-import org.msvcompraentradasol.entities.Entrada;
+import org.msvcompraentradasol.dtos.EntradaResponseDTO;
 import org.msvcompraentradasol.services.EntradaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,58 +21,32 @@ public class EntradaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntradaResponse> buscarPorId(@PathVariable Long id) {
-        Entrada entrada = entradaService.buscarPorId(id);
-        return ResponseEntity.ok(toResponse(entrada));
+    public ResponseEntity<EntradaResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(entradaService.buscarPorId(id));
+    }
+
+    @GetMapping("/qr/{qr}")
+    public ResponseEntity<EntradaResponseDTO> buscarPorQr(@PathVariable String qr) {
+        return ResponseEntity.ok(entradaService.buscarPorQr(qr));
     }
 
     @GetMapping("/compra/{idCompra}")
-    public ResponseEntity<List<EntradaResponse>> listarPorCompra(@PathVariable Long idCompra) {
-        List<EntradaResponse> entradas = entradaService.listarPorCompra(idCompra)
-                .stream()
-                .map(this::toResponse)
-                .toList();
-        return ResponseEntity.ok(entradas);
+    public ResponseEntity<List<EntradaResponseDTO>> listarPorCompra(@PathVariable Long idCompra) {
+        return ResponseEntity.ok(entradaService.listarPorCompra(idCompra));
     }
 
     @GetMapping("/cliente/{idCliente}")
-    public ResponseEntity<List<EntradaResponse>> listarPorCliente(@PathVariable Long idCliente) {
-        List<EntradaResponse> entradas = entradaService.listarPorCliente(idCliente)
-                .stream()
-                .map(this::toResponse)
-                .toList();
-        return ResponseEntity.ok(entradas);
+    public ResponseEntity<List<EntradaResponseDTO>> listarPorCliente(@PathVariable Long idCliente) {
+        return ResponseEntity.ok(entradaService.listarPorCliente(idCliente));
     }
 
     @PatchMapping("/{id}/uso")
-    public ResponseEntity<EntradaResponse> marcarUsada(@PathVariable Long id) {
-        return ResponseEntity.ok(toResponse(entradaService.marcarUsada(id)));
+    public ResponseEntity<EntradaResponseDTO> marcarUsada(@PathVariable Long id) {
+        return ResponseEntity.ok(entradaService.marcarUsada(id));
     }
 
-    private EntradaResponse toResponse(Entrada entrada) {
-        return new EntradaResponse(
-                entrada.getId(),
-                entrada.getQr(),
-                entrada.getEstadoqr().name(),
-                entrada.getIdCliente(),
-                entrada.getIdEvento(),
-                entrada.getIdSector(),
-                entrada.getIdAsiento(),
-                entrada.getPrecio(),
-                entrada.getEstadoEntrada().name()
-        );
+    @PatchMapping("/qr/{qr}/uso")
+    public ResponseEntity<EntradaResponseDTO> marcarUsadaPorQr(@PathVariable String qr) {
+        return ResponseEntity.ok(entradaService.marcarUsadaPorQr(qr));
     }
-
-    /** Contrato de respuesta consumido por el cliente Feign de SectorAsiento. */
-    public record EntradaResponse(
-            Long id,
-            String qr,
-            String estadoQr,
-            Long idCliente,
-            Long idEvento,
-            Long idSector,
-            Long idAsiento,
-            BigDecimal precio,
-            String estadoEntrada
-    ) {}
 }

@@ -9,5 +9,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface EventoClientFeign {
 
     @GetMapping("/api/eventos/{id}")
-    EventoFechaResponseDTO obtenerFecha(@PathVariable("id") Long idEvento);
+    EventoFechaResponseDTO obtenerEvento(@PathVariable("id") Long idEvento);
 }

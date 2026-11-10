@@ -1,0 +1,437 @@
+{
+  "info": {
+    "_postman_id": "b7c1e2f4-1a2b-4c3d-9e8f-0a1b2c3d4e5f",
+    "name": "TicketYa - Compras",
+    "description": "Circuito de compra, entradas, devoluciones y cancelacion del microservicio de Compras (HU-08 a HU-14). Configurar idCliente, idEvento, idSector e idAsiento antes de ejecutar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8003" },
+    { "key": "idCliente", "value": "1" },
+    { "key": "idEvento", "value": "1" },
+    { "key": "idSector", "value": "1" },
+    { "key": "idAsiento", "value": "1" },
+    { "key": "idCompra", "value": "" },
+    { "key": "idEntrada", "value": "" },
+    { "key": "qr", "value": "" },
+    { "key": "idSolicitud", "value": "" },
+    { "key": "idAdministrador", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Compras",
+      "item": [
+        {
+          "name": "Crear compra con asientos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Queda pendiente', () => pm.expect(pm.response.json().estadoCompra).to.eql('PENDIENTE'));",
+                  "pm.collectionVariables.set('idCompra', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claveIdempotencia\": \"compra-{{$guid}}\",\n  \"idCliente\": {{idCliente}},\n  \"idEvento\": {{idEvento}},\n  \"idSector\": {{idSector}},\n  \"idsAsientos\": [{{idAsiento}}],\n  \"medioDePago\": \"TARJETA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/compras", "host": ["{{baseUrl}}"], "path": ["compras"] }
+          }
+        },
+        {
+          "name": "Crear compra sin asientos (sector sin numerar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idCompra', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claveIdempotencia\": \"compra-campo-{{$guid}}\",\n  \"idCliente\": {{idCliente}},\n  \"idEvento\": {{idEvento}},\n  \"idSector\": {{idSector}},\n  \"cantidadEntradas\": 2,\n  \"medioDePago\": \"EFECTIVO\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/compras", "host": ["{{baseUrl}}"], "path": ["compras"] }
+          }
+        },
+        {
+          "name": "Consultar compra",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/compras/{{idCompra}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["compras", "{{idCompra}}"]
+            }
+          }
+        },
+        {
+          "name": "Listar compras del cliente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/compras/cliente/{{idCliente}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["compras", "cliente", "{{idCliente}}"]
+            }
+          }
+        },
+        {
+          "name": "Aprobar pago",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda aprobada', () => pm.expect(pm.response.json().estadoCompra).to.eql('APROBADA'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/compras/{{idCompra}}/pago?aprobado=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["compras", "{{idCompra}}", "pago"],
+              "query": [{ "key": "aprobado", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "Rechazar pago",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/compras/{{idCompra}}/pago?aprobado=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["compras", "{{idCompra}}", "pago"],
+              "query": [{ "key": "aprobado", "value": "false" }]
+            }
+          }
+        },
+        {
+          "name": "Cancelar evento y reintegrar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/compras/eventos/{{idEvento}}/cancelacion",
+              "host": ["{{baseUrl}}"],
+              "path": ["compras", "eventos", "{{idEvento}}", "cancelacion"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Entradas",
+      "item": [
+        {
+          "name": "Listar entradas de la compra",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const entradas = pm.response.json();",
+                  "if (entradas.length > 0) {",
+                  "  pm.collectionVariables.set('idEntrada', entradas[0].id);",
+                  "  pm.collectionVariables.set('qr', entradas[0].qr);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/entradas/compra/{{idCompra}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["entradas", "compra", "{{idCompra}}"]
+            }
+          }
+        },
+        {
+          "name": "Consultar entrada por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/entradas/{{idEntrada}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["entradas", "{{idEntrada}}"]
+            }
+          }
+        },
+        {
+          "name": "Consultar entrada por QR",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/entradas/qr/{{qr}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["entradas", "qr", "{{qr}}"]
+            }
+          }
+        },
+        {
+          "name": "Listar entradas del cliente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/entradas/cliente/{{idCliente}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["entradas", "cliente", "{{idCliente}}"]
+            }
+          }
+        },
+        {
+          "name": "Marcar entrada usada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda escaneada', () => pm.expect(pm.response.json().estadoQr).to.eql('ESCANEADO'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/entradas/{{idEntrada}}/uso",
+              "host": ["{{baseUrl}}"],
+              "path": ["entradas", "{{idEntrada}}", "uso"]
+            }
+          }
+        },
+        {
+          "name": "Marcar entrada usada por QR",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/entradas/qr/{{qr}}/uso",
+              "host": ["{{baseUrl}}"],
+              "path": ["entradas", "qr", "{{qr}}", "uso"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Solicitudes de devolucion",
+      "item": [
+        {
+          "name": "Crear solicitud",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('idSolicitud', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEntrada\": {{idEntrada}},\n  \"idCliente\": {{idCliente}},\n  \"descripcion\": \"No puedo asistir al evento\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/solicitudes", "host": ["{{baseUrl}}"], "path": ["solicitudes"] }
+          }
+        },
+        {
+          "name": "Listar solicitudes pendientes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/pendientes",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "pendientes"]
+            }
+          }
+        },
+        {
+          "name": "Consultar solicitud",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{idSolicitud}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{idSolicitud}}"]
+            }
+          }
+        },
+        {
+          "name": "Listar solicitudes de la entrada",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/entrada/{{idEntrada}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "entrada", "{{idEntrada}}"]
+            }
+          }
+        },
+        {
+          "name": "Listar solicitudes del cliente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/cliente/{{idCliente}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "cliente", "{{idCliente}}"]
+            }
+          }
+        },
+        {
+          "name": "Aprobar solicitud",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Reintegro completo', () => pm.expect(pm.response.json().estadoReintegro).to.eql('COMPLETADO'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idAdministrador\": {{idAdministrador}},\n  \"estadoSolicitud\": \"ACEPTADA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{idSolicitud}}/resolver",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{idSolicitud}}", "resolver"]
+            }
+          }
+        },
+        {
+          "name": "Rechazar solicitud",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idAdministrador\": {{idAdministrador}},\n  \"estadoSolicitud\": \"RECHAZADA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{idSolicitud}}/resolver",
+              "host": ["{{baseUrl}}"],
+              "path": ["solicitudes", "{{idSolicitud}}", "resolver"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Errores",
+      "item": [
+        {
+          "name": "Compra sin clave de idempotencia (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCliente\": {{idCliente}},\n  \"idEvento\": {{idEvento}},\n  \"idSector\": {{idSector}},\n  \"idsAsientos\": [{{idAsiento}}],\n  \"medioDePago\": \"TARJETA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/compras", "host": ["{{baseUrl}}"], "path": ["compras"] }
+          }
+        },
+        {
+          "name": "Compra inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 404', () => pm.response.to.have.status(404));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/compras/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["compras", "999999"]
+            }
+          }
+        },
+        {
+          "name": "Reutilizar clave con otro pedido (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claveIdempotencia\": \"compra-conflicto-fija\",\n  \"idCliente\": {{idCliente}},\n  \"idEvento\": {{idEvento}},\n  \"idSector\": {{idSector}},\n  \"idsAsientos\": [{{idAsiento}}],\n  \"medioDePago\": \"TARJETA\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/compras", "host": ["{{baseUrl}}"], "path": ["compras"] }
+          }
+        }
+      ]
+    }
+  ]
+}

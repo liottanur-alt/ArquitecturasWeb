@@ -115,6 +115,8 @@ public class InventarioService {
                 .filter(p -> ids.contains(p.getAsiento().getId())).toList();
             if (elegidos.size() != ids.size()) throw conflicto("Hay asientos que no pertenecen a este sector/evento");
             if (elegidos.stream().anyMatch(p -> p.getEstado() != EstadoAsiento.DISPONIBLE)) throw conflicto("Asiento no disponible");
+
+        /** Modofica el estado de los asientos y los reserva temporalmenta */
             elegidos.forEach(p -> p.setEstado(EstadoAsiento.RESERVADO));
         } else {
             if (c.getEspaciosDisponibles() < request.cantidad()) throw conflicto("Cupo insuficiente");

@@ -8,10 +8,10 @@ import org.msvcompraentradasol.enums.Estadoqr;
 @Entity
 @Table(
         name = "entrada",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_entrada_evento_asiento",
-                columnNames = {"id_evento", "id_asiento"}
-        )
+        indexes = {
+                @Index(name = "idx_entrada_evento_asiento", columnList = "id_evento, id_asiento"),
+                @Index(name = "idx_entrada_compra", columnList = "id_compra")
+        }
 )
 public class Entrada {
 

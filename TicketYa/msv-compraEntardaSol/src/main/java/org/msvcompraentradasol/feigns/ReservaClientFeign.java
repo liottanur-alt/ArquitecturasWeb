@@ -25,4 +25,7 @@ public interface ReservaClientFeign {
             @PathVariable("id") Long idReserva,
             @RequestBody DevolucionRequestDTO solicitud
     );
+
+    @PostMapping("/eventos/{id}/inventario/cancelacion")
+    void cancelarInventario(@PathVariable("id") Long idEvento);
 }

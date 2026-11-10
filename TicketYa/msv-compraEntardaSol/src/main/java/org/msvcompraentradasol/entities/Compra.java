@@ -2,6 +2,7 @@ package org.msvcompraentradasol.entities;
 
 import jakarta.persistence.*;
 import org.msvcompraentradasol.enums.EstadoCompra;
+import org.msvcompraentradasol.enums.EstadoReintegro;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.ArrayList;
@@ -54,10 +55,16 @@ public class Compra {
     @Column(name = "referencia_reintegro")
     private String referenciaReintegro;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_reintegro")
+    private EstadoReintegro estadoReintegro;
+
     @ElementCollection
     @CollectionTable(name = "compra_asientos", joinColumns = @JoinColumn(name = "id_compra"))
     @Column(name = "id_asiento")
     private List<Long> idsAsientos = new ArrayList<>();
+
+
 
     public Long getId() { return id; }
 
@@ -82,7 +89,6 @@ public class Compra {
     public Long getIdSector() {
         return idSector;
     }
-
     public void setIdSector(Long idSector) {
         this.idSector = idSector;
     }
@@ -90,7 +96,6 @@ public class Compra {
     public String getClaveIdempotencia() {
         return claveIdempotencia;
     }
-
     public void setClaveIdempotencia(String claveIdempotencia) {
         this.claveIdempotencia = claveIdempotencia;
     }
@@ -98,7 +103,6 @@ public class Compra {
     public Long getIdReserva() {
         return idReserva;
     }
-
     public void setIdReserva(Long idReserva) {
         this.idReserva = idReserva;
     }
@@ -106,7 +110,6 @@ public class Compra {
     public BigDecimal getPrecioUnitario() {
         return precioUnitario;
     }
-
     public void setPrecioUnitario(BigDecimal precioUnitario) {
         this.precioUnitario = precioUnitario;
     }
@@ -114,7 +117,6 @@ public class Compra {
     public BigDecimal getImporteTotal() {
         return importeTotal;
     }
-
     public void setImporteTotal(BigDecimal importeTotal) {
         this.importeTotal = importeTotal;
     }
@@ -122,7 +124,6 @@ public class Compra {
     public String getReferenciaPago() {
         return referenciaPago;
     }
-
     public void setReferenciaPago(String referenciaPago) {
         this.referenciaPago = referenciaPago;
     }
@@ -130,15 +131,20 @@ public class Compra {
     public String getReferenciaReintegro() {
         return referenciaReintegro;
     }
-
     public void setReferenciaReintegro(String referenciaReintegro) {
         this.referenciaReintegro = referenciaReintegro;
+    }
+
+    public EstadoReintegro getEstadoReintegro() {
+        return estadoReintegro;
+    }
+    public void setEstadoReintegro(EstadoReintegro estadoReintegro) {
+        this.estadoReintegro = estadoReintegro;
     }
 
     public List<Long> getIdsAsientos() {
         return idsAsientos;
     }
-
     public void setIdsAsientos(List<Long> idsAsientos) {
         this.idsAsientos = idsAsientos;
     }

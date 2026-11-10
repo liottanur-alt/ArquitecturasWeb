@@ -1,51 +1,72 @@
 package org.msvcompraentradasol.controllers;
 
-import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import java.util.List;
+import org.msvcompraentradasol.dtos.SolicitudRequestDTO;
+import org.msvcompraentradasol.dtos.SolicitudResolucionDTO;
+import org.msvcompraentradasol.dtos.SolicitudResponseDTO;
 import org.msvcompraentradasol.services.SolicitudService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.msvcompraentradasol.entities.Solicitud;
-import org.msvcompraentradasol.dtos.SolicitudRequestDTO;
-import org.msvcompraentradasol.dtos.SolicitudResolucionDTO;
-import org.springframework.beans.factory.annotation.Autowired;
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/solicitudes")
 public class SolicitudController {
 
-    @Autowired
-    private SolicitudService solicitudService;
+    private final SolicitudService solicitudService;
+
+    public SolicitudController(SolicitudService solicitudService) {
+        this.solicitudService = solicitudService;
+    }
 
     @PostMapping
-    public ResponseEntity<Solicitud> crearSolicitud(@Valid @RequestBody SolicitudRequestDTO dto) {
-        Solicitud solicitud = solicitudService.crearSolicitud(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(solicitud);
+    public ResponseEntity<SolicitudResponseDTO> crearSolicitud(
+            @Valid @RequestBody SolicitudRequestDTO dto
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(solicitudService.crearSolicitud(dto));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SolicitudResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(solicitudService.buscarPorId(id));
     }
 
     @GetMapping("/entrada/{idEntrada}")
-    public ResponseEntity<List<Solicitud>> listarPorEntrada(@PathVariable Long idEntrada) {
+    public ResponseEntity<List<SolicitudResponseDTO>> listarPorEntrada(
+            @PathVariable Long idEntrada
+    ) {
         return ResponseEntity.ok(solicitudService.listarPorEntrada(idEntrada));
     }
 
     @GetMapping("/pendientes")
-    public ResponseEntity<List<Solicitud>> listarPendientes() {
+    public ResponseEntity<List<SolicitudResponseDTO>> listarPendientes() {
         return ResponseEntity.ok(solicitudService.listarPendientes());
     }
 
-    @PutMapping("/{id}/resolver")
-    public ResponseEntity<Solicitud> resolverSolicitud(
-            @PathVariable Long id,
-            @Valid @RequestBody SolicitudResolucionDTO dto) {
+    @GetMapping("/cliente/{idCliente}")
+    public ResponseEntity<List<SolicitudResponseDTO>> listarPorCliente(
+            @PathVariable Long idCliente
+    ) {
+        return ResponseEntity.ok(solicitudService.listarPorCliente(idCliente));
+    }
 
-        Solicitud solicitud = solicitudService.resolverSolicitud(
+    @PutMapping("/{id}/resolver")
+    public ResponseEntity<SolicitudResponseDTO> resolverSolicitud(
+            @PathVariable Long id,
+            @Valid @RequestBody SolicitudResolucionDTO dto
+    ) {
+        return ResponseEntity.ok(solicitudService.resolverSolicitud(
                 id,
                 dto.getIdAdministrador(),
                 dto.getEstadoSolicitud()
-        );
-
-        return ResponseEntity.ok(solicitud);
+        ));
     }
-
 }

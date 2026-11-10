@@ -6,6 +6,8 @@ msvc:
     url: ${MSVC_SECTORES_URL:http://localhost:8002}
   usuarios:
     url: ${MSVC_USUARIOS_URL:http://localhost:8004}
+  compras:
+    url: ${MSVC_COMPRAS_URL:http://localhost:8003}
 
 spring:
   application:
@@ -23,3 +25,7 @@ spring:
               uri: ${msvc.sectores.url}
               predicates:
                 - Path=/sectores,/sectores/**,/asientos,/asientos/**,/reservas,/reservas/**,/eventos/*/inventario,/eventos/*/inventario/**,/eventos/*/sectores,/eventos/*/sectores/**
+            - id: msvc-compras
+              uri: ${msvc.compras.url}
+              predicates:
+                - Path=/compras,/compras/**,/entradas,/entradas/**,/solicitudes,/solicitudes/**
