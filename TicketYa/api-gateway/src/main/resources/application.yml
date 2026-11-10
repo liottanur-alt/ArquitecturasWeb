@@ -18,7 +18,7 @@ spring:
             - id: msvc-usuarios
               uri: ${msvc.usuarios.url}
               predicates:
-                - Path=/auth/**,/usuarios,/usuarios/**,/roles,/roles/**
+                - Path=/usuarios,/usuarios/**,/roles,/roles/**
             - id: msvc-sectores-asientos
               uri: ${msvc.sectores.url}
               predicates:

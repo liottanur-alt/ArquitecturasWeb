@@ -1,0 +1,27 @@
+name: ticketya-db
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_ticketya_dev}
+      MYSQL_USUARIO_PASSWORD: ${USUARIO_DB_PASSWORD:-${DB_PASSWORD:-usuario_dev}}
+      MYSQL_EVENTO_PASSWORD: ${EVENTO_DB_PASSWORD:-${DB_PASSWORD:-evento_dev}}
+      MYSQL_SECTOR_PASSWORD: ${SECTOR_DB_PASSWORD:-${DB_PASSWORD:-sector_dev}}
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+      - ./docker/mysql/check-health.sh:/opt/ticketya/check-health.sh:ro
+    healthcheck:
+      test: ["CMD", "bash", "/opt/ticketya/check-health.sh"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+volumes:
+  mysql_data:
+    name: ticketya_mysql_data

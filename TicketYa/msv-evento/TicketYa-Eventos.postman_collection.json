@@ -1,0 +1,1100 @@
+{
+  "info": {
+    "name": "TicketYa Eventos - Entrega 1",
+    "description": "Ejecutar completa en orden. Usa la API directa en 8005, sin JWT. Cada iteración crea lugar/artista/evento propios, captura IDs y limpia evento antes que sus relaciones. Se detiene ante una respuesta inesperada. idOrganizadorPrueba es una referencia externa ilustrativa: Eventos no la valida en Usuarios. Ver docs/PRUEBAS-POSTMAN.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8005"
+    },
+    {
+      "key": "idOrganizadorPrueba",
+      "value": "900001"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Crear lugar e iniciar datos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/lugares",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreLugarPrueba}}\",\n  \"direccion\": \"Calle prueba 123\",\n  \"latitud\": -37.3288,\n  \"longitud\": -59.1367,\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"tipo\": \"TEATRO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runId = pm.variables.replaceIn(\"{{$guid}}\").replace(/-/g, \"\").slice(0,12);",
+              "pm.collectionVariables.set(\"runId\", runId);",
+              "[\"idLugar\",\"idArtista\",\"idEvento\"].forEach(k => pm.collectionVariables.unset(k));",
+              "const dato = (k,f) => pm.iterationData.get(k) || f;",
+              "pm.collectionVariables.set(\"nombreLugarPrueba\", dato(\"nombreLugar\",\"Teatro prueba\") + \" \" + runId);",
+              "pm.collectionVariables.set(\"nombreArtistaPrueba\", dato(\"nombreArtista\",\"Banda prueba\") + \" \" + runId);",
+              "pm.collectionVariables.set(\"nombreEventoPrueba\", dato(\"nombreEvento\",\"Recital prueba\") + \" \" + runId);",
+              "pm.collectionVariables.set(\"ciudadPrueba\", dato(\"ciudad\",\"Tandil\"));",
+              "pm.collectionVariables.set(\"fechaEvento\", new Date(Date.now() + 7*86400000).toISOString().slice(0,19));",
+              "pm.collectionVariables.set(\"fechaDesde\", new Date(Date.now() - 86400000).toISOString().slice(0,19));",
+              "pm.collectionVariables.set(\"fechaHasta\", new Date(Date.now() + 8*86400000).toISOString().slice(0,19));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.collectionVariables.set(\"idLugar\", pm.response.json().id);",
+              "pm.test(\"ID generado positivo\", () => pm.expect(pm.response.json().id).to.be.above(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Consultar lugar",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/lugares/{{idLugar}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Lugar propio\", () => pm.expect(pm.response.json().nombre).to.eql(pm.collectionVariables.get(\"nombreLugarPrueba\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Actualizar lugar",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/lugares/{{idLugar}}",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreLugarPrueba}}\",\n  \"direccion\": \"Calle prueba 456\",\n  \"latitud\": -37.3288,\n  \"longitud\": -59.1367,\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"tipo\": \"TEATRO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Dirección actualizada\", () => pm.expect(pm.response.json().direccion).to.eql(\"Calle prueba 456\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Listar lugares",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/lugares",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Incluye el lugar propio\", () => pm.expect(pm.response.json().map(x=>x.id)).to.include(Number(pm.collectionVariables.get(\"idLugar\"))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Crear artista",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/artistas",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreArtistaPrueba}}\",\n  \"genero\": \"Rock\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.collectionVariables.set(\"idArtista\", pm.response.json().id);",
+              "pm.test(\"ID generado positivo\", () => pm.expect(pm.response.json().id).to.be.above(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Consultar artista",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/artistas/{{idArtista}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Actualizar artista",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/artistas/{{idArtista}}",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreArtistaPrueba}}\",\n  \"genero\": \"Rock actualizado\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Listar artistas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/artistas",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Incluye artista propio\", () => pm.expect(pm.response.json().map(x=>x.id)).to.include(Number(pm.collectionVariables.get(\"idArtista\"))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Crear evento siempre en borrador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreEventoPrueba}}\",\n  \"descripcion\": \"Datos exclusivos de esta ejecución\",\n  \"tipo\": \"RECITAL\",\n  \"idOrganizador\": {{idOrganizadorPrueba}},\n  \"participantesIds\": [\n    {{idArtista}}\n  ],\n  \"fechaHora\": \"{{fechaEvento}}\",\n  \"idLugar\": {{idLugar}},\n  \"demanda\": false,\n  \"estado\": \"CANCELADO\",\n  \"estadoPublicacion\": \"PUBLICADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.collectionVariables.set(\"idEvento\", pm.response.json().id);",
+              "pm.test(\"ID generado positivo\", () => pm.expect(pm.response.json().id).to.be.above(0));",
+              "pm.test(\"Estado EN_CURSO/BORRADOR\", () => { pm.expect(pm.response.json().estado).to.eql(\"EN_CURSO\"); pm.expect(pm.response.json().estadoPublicacion).to.eql(\"BORRADOR\"); });",
+              "pm.test(\"Relaciones anidadas\", () => { const e=pm.response.json(); pm.expect(e.lugar.id).to.eql(Number(pm.collectionVariables.get(\"idLugar\"))); pm.expect(e.participantes.map(a=>a.id)).to.include(Number(pm.collectionVariables.get(\"idArtista\"))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Consultar evento",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Actualizar evento sin cambiar estados por DTO",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreEventoPrueba}} actualizado\",\n  \"descripcion\": \"Datos exclusivos de esta ejecución\",\n  \"tipo\": \"RECITAL\",\n  \"idOrganizador\": {{idOrganizadorPrueba}},\n  \"participantesIds\": [\n    {{idArtista}}\n  ],\n  \"fechaHora\": \"{{fechaEvento}}\",\n  \"idLugar\": {{idLugar}},\n  \"demanda\": false,\n  \"estado\": \"CANCELADO\",\n  \"estadoPublicacion\": \"PUBLICADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado EN_CURSO/BORRADOR\", () => { pm.expect(pm.response.json().estado).to.eql(\"EN_CURSO\"); pm.expect(pm.response.json().estadoPublicacion).to.eql(\"BORRADOR\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Listar eventos incluye borradores",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Incluye borrador propio\", () => pm.expect(pm.response.json().map(e=>e.id)).to.include(Number(pm.collectionVariables.get(\"idEvento\"))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Búsqueda excluye borrador",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?tipo=RECITAL&idOrganizador={{idOrganizadorPrueba}}&idParticipante={{idArtista}}&ciudad={{ciudadPrueba}}&fechaDesde={{fechaDesde}}&fechaHasta={{fechaHasta}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Visibilidad del evento propio\", () => pm.expect(pm.response.json().some(e=>e.id===Number(pm.collectionVariables.get(\"idEvento\")))) .to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Publicar evento",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado EN_CURSO/PUBLICADO\", () => { pm.expect(pm.response.json().estado).to.eql(\"EN_CURSO\"); pm.expect(pm.response.json().estadoPublicacion).to.eql(\"PUBLICADO\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Repetir publicación devuelve conflicto",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 Buscar publicado con todos los filtros",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?tipo=RECITAL&idOrganizador={{idOrganizadorPrueba}}&idParticipante={{idArtista}}&ciudad={{ciudadPrueba}}&fechaDesde={{fechaDesde}}&fechaHasta={{fechaHasta}}&ordenar=fechaHora,asc&pagina=0&tamanio=1",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Visibilidad del evento propio\", () => pm.expect(pm.response.json().some(e=>e.id===Number(pm.collectionVariables.get(\"idEvento\")))) .to.eql(true));",
+              "pm.test(\"Una coincidencia propia\", () => pm.expect(pm.response.json()).to.have.lengthOf(1));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 Buscar por nombre descendente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?tipo=RECITAL&idOrganizador={{idOrganizadorPrueba}}&idParticipante={{idArtista}}&ciudad={{ciudadPrueba}}&fechaDesde={{fechaDesde}}&fechaHasta={{fechaHasta}}&ordenar=nombre,desc",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Visibilidad del evento propio\", () => pm.expect(pm.response.json().some(e=>e.id===Number(pm.collectionVariables.get(\"idEvento\")))) .to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 Página siguiente sin resultados propios",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?tipo=RECITAL&idOrganizador={{idOrganizadorPrueba}}&idParticipante={{idArtista}}&ciudad={{ciudadPrueba}}&fechaDesde={{fechaDesde}}&fechaHasta={{fechaHasta}}&pagina=1&tamanio=1",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Página vacía\", () => pm.expect(pm.response.json()).to.eql([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 Ciudad distinta excluye el evento",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?idParticipante={{idArtista}}&ciudad=SinCoincidencia-{{runId}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Visibilidad del evento propio\", () => pm.expect(pm.response.json().some(e=>e.id===Number(pm.collectionVariables.get(\"idEvento\")))) .to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 Ordenamiento no admitido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?ordenar=precio,asc",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 Dirección de ordenamiento inválida",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?ordenar=fechaHora,incorrecta",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 Fecha de filtro inválida",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?fechaDesde=no-es-fecha",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "23 Enum de evento inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreEventoPrueba}}\",\n  \"descripcion\": \"Datos exclusivos de esta ejecución\",\n  \"tipo\": \"NO_EXISTE\",\n  \"idOrganizador\": {{idOrganizadorPrueba}},\n  \"participantesIds\": [\n    {{idArtista}}\n  ],\n  \"fechaHora\": \"{{fechaEvento}}\",\n  \"idLugar\": {{idLugar}},\n  \"demanda\": false,\n  \"estado\": \"CANCELADO\",\n  \"estadoPublicacion\": \"PUBLICADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 Enum de lugar inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/lugares",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreLugarPrueba}}\",\n  \"direccion\": \"Calle prueba 123\",\n  \"latitud\": -37.3288,\n  \"longitud\": -59.1367,\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"tipo\": \"NO_EXISTE\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "25 ID de ruta no numérico",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/no-es-numero",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 Suspender publicado",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/suspender",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado EN_CURSO/SUSPENDIDO\", () => { pm.expect(pm.response.json().estado).to.eql(\"EN_CURSO\"); pm.expect(pm.response.json().estadoPublicacion).to.eql(\"SUSPENDIDO\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 Repetir suspensión devuelve conflicto",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/suspender",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "28 Búsqueda excluye suspendido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/buscar?tipo=RECITAL&idOrganizador={{idOrganizadorPrueba}}&idParticipante={{idArtista}}&ciudad={{ciudadPrueba}}&fechaDesde={{fechaDesde}}&fechaHasta={{fechaHasta}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Visibilidad del evento propio\", () => pm.expect(pm.response.json().some(e=>e.id===Number(pm.collectionVariables.get(\"idEvento\")))) .to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "29 Republicar suspendido no está implementado",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "30 Cancelar evento",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/cancelar",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado CANCELADO/SUSPENDIDO\", () => { pm.expect(pm.response.json().estado).to.eql(\"CANCELADO\"); pm.expect(pm.response.json().estadoPublicacion).to.eql(\"SUSPENDIDO\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "31 Cancelar nuevamente devuelve conflicto",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/cancelar",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "32 Eliminar evento propio primero",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "33 Evento eliminado devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "34 Publicar evento inexistente",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "35 Actualizar evento inexistente",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreEventoPrueba}}\",\n  \"descripcion\": \"Datos exclusivos de esta ejecución\",\n  \"tipo\": \"RECITAL\",\n  \"idOrganizador\": {{idOrganizadorPrueba}},\n  \"participantesIds\": [\n    {{idArtista}}\n  ],\n  \"fechaHora\": \"{{fechaEvento}}\",\n  \"idLugar\": {{idLugar}},\n  \"demanda\": false,\n  \"estado\": \"CANCELADO\",\n  \"estadoPublicacion\": \"PUBLICADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "36 Eliminar artista propio",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/artistas/{{idArtista}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "37 Artista eliminado devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/artistas/{{idArtista}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "38 Referencia de artista inexistente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreEventoPrueba}}\",\n  \"descripcion\": \"Datos exclusivos de esta ejecución\",\n  \"tipo\": \"RECITAL\",\n  \"idOrganizador\": {{idOrganizadorPrueba}},\n  \"participantesIds\": [\n    {{idArtista}}\n  ],\n  \"fechaHora\": \"{{fechaEvento}}\",\n  \"idLugar\": {{idLugar}},\n  \"demanda\": false,\n  \"estado\": \"CANCELADO\",\n  \"estadoPublicacion\": \"PUBLICADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "39 Eliminar lugar propio",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/lugares/{{idLugar}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "40 Lugar eliminado devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/lugares/{{idLugar}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "41 Referencia de lugar inexistente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{nombreEventoPrueba}}\",\n  \"descripcion\": \"Datos exclusivos de esta ejecución\",\n  \"tipo\": \"RECITAL\",\n  \"idOrganizador\": {{idOrganizadorPrueba}},\n  \"participantesIds\": [\n    {{idArtista}}\n  ],\n  \"fechaHora\": \"{{fechaEvento}}\",\n  \"idLugar\": {{idLugar}},\n  \"demanda\": false,\n  \"estado\": \"CANCELADO\",\n  \"estadoPublicacion\": \"PUBLICADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

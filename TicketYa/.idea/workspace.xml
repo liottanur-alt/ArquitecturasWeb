@@ -1,79 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <project version="4">
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/GUIA-ARRANQUE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-gateway/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/InventarioRoutesTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/MODELO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/TicketYa-SectorAsiento.postman_collection.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/compose.mysql-test.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/compose.mysql.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/docs/arquitectura.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/AsientoEvento.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Devolucion.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/InventarioEvento.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Reserva.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/SectorEvento.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/client/CompraClientFeign.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/client/EventoClientFeign.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/client/dto/CompraResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/client/dto/EntradaResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/client/dto/EventoResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/client/dto/LugarResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/config/FeignConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/config/TiempoConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/controller/ApiExceptionHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/controller/AsientoController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/controller/InventarioController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/controller/ReservaController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/controller/SectorController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/AsientoRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/AsientoResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/DevolucionRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/DisponibilidadResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/InventarioRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/ReservaRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/ReservaResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/SectorEventoRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/SectorRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/dto/SectorResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/EstadoReserva.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/repository/AsientoEventoRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/repository/AsientoRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/repository/DevolucionRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/repository/InventarioEventoRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/repository/ReservaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/repository/SectorEventoRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/repository/SectorRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/service/AsientoService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/service/EventoRemotoService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/service/InventarioService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/service/SectorService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/service/VencimientoReservas.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/static/openapi.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/AsientoControllerTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/FeignClientsTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/InventarioIntegrationTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/SectorControllerTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/ServiceValidationTests.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/resources/application-test.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/DatosIniciales.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/SecurityConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/UsuarioAccess.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/AuthController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/LoginRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/RegistroRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/TokenResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/AuthService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application-dev.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/AuthIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" afterDir="false" />
@@ -82,124 +13,118 @@
       <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/TipoSector.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/TipoSector.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/MsvSectoerAsientoApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/MsvSectoerAsientoApplicationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Compra.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Compra.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Entrada.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Entrada.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Solicitud.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Solicitud.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/enum/EstadoEntrada.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/enums/EstadoEntrada.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/enum/EstadoSolicitud.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/enum/Estadoqr.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/enums/Estadoqr.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/TicketYa-Usuarios.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/TicketYa-Usuarios.postman_collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/docs/PRUEBAS-POSTMAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/docs/PRUEBAS-POSTMAN.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/RolRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/RolRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/UsuarioRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/UsuarioRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/UsuarioService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/UsuarioService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioPersistenceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioPersistenceTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioSinAuthIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioSinAuthIntegrationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/service/UsuarioServiceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/service/UsuarioServiceTests.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ComposerSettings">
-    <execution>
-      <executable />
-    </execution>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;cocirio17&quot;
-  }
-}</component>
+    "lastFilter": {
+    "state": "OPEN",
+    "assignee": "cocirio17"
+    }
+    }</component>
   <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/liottanur-alt/ArquitecturasWeb.git&quot;,
-    &quot;accountId&quot;: &quot;f845ae37-2b44-44c3-8aef-a0f5d06932f3&quot;
-  }
-}</component>
+    "selectedUrlAndAccountId": {
+    "url": "https://github.com/liottanur-alt/ArquitecturasWeb.git",
+    "accountId": "f845ae37-2b44-44c3-8aef-a0f5d06932f3"
+    }
+    }</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.217125478079611" />
-      <entry key="MS500" value="3.238360011245097" />
-      <entry key="S2" value="11.11022001399475" />
-      <entry key="S5" value="25.331786074137202" />
-      <entry key="S10" value="42.42555009180597" />
-      <entry key="S30" value="70.4495877372898" />
-      <entry key="S60" value="89.21142526401461" />
-      <entry key="M2" value="108.25576603449196" />
-      <entry key="M5" value="126.82575408766623" />
-      <entry key="M10" value="135.56016635995576" />
-      <entry key="M15" value="140.34667104766422" />
-      <entry key="M30" value="152.50372812210009" />
-      <entry key="H1" value="181.16578043959976" />
-      <entry key="H2" value="236.9817987272403" />
-      <entry key="H4" value="302.1494222257445" />
-      <entry key="D1" value="401.7634465868474" />
-      <entry key="W1" value="425.7429063355214" />
+      <entry key="MS100" value="2.2431952914131504E-34" />
+      <entry key="MS500" value="1.8662810930705322E-7" />
+      <entry key="S2" value="0.027657221798034873" />
+      <entry key="S5" value="0.41824711719044344" />
+      <entry key="S10" value="1.1020330126457836" />
+      <entry key="S30" value="2.1410127475460214" />
+      <entry key="S60" value="2.533641878200572" />
+      <entry key="M2" value="2.783261101041477" />
+      <entry key="M5" value="3.2562379080294677" />
+      <entry key="M10" value="3.793618297631599" />
+      <entry key="M15" value="4.091544138256954" />
+      <entry key="M30" value="4.483264983706595" />
+      <entry key="H1" value="4.723683979150745" />
+      <entry key="H2" value="4.857026835960275" />
+      <entry key="H4" value="4.927266001012817" />
+      <entry key="D1" value="4.987700582420613" />
+      <entry key="W1" value="4.998238552722183" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="0.0" />
-      <entry key="S10" value="0.0" />
-      <entry key="S30" value="0.0" />
-      <entry key="S60" value="0.0" />
-      <entry key="M2" value="0.0" />
-      <entry key="M5" value="0.0" />
-      <entry key="M10" value="0.0" />
-      <entry key="M15" value="0.0" />
-      <entry key="M30" value="0.0" />
-      <entry key="H1" value="0.0" />
-      <entry key="H2" value="0.0" />
-      <entry key="H4" value="0.0" />
-      <entry key="D1" value="0.0" />
-      <entry key="W1" value="0.0" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0000036745525132" />
+      <entry key="S2" value="1.0437825562763166" />
+      <entry key="S5" value="1.2861017049159342" />
+      <entry key="S10" value="1.5348847585377006" />
+      <entry key="S30" value="1.8117458449616717" />
+      <entry key="S60" value="1.9009693918006714" />
+      <entry key="M2" value="1.949194074887044" />
+      <entry key="M5" value="1.9793592000750704" />
+      <entry key="M10" value="1.9896257878991788" />
+      <entry key="M15" value="1.9930718448738474" />
+      <entry key="M30" value="1.996529901645629" />
+      <entry key="H1" value="1.9982634430077209" />
+      <entry key="H2" value="1.9991313442224306" />
+      <entry key="H4" value="1.9995655777498695" />
+      <entry key="D1" value="1.9999275831824221" />
+      <entry key="W1" value="1.9999896544192586" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.1424730945418213" />
-      <entry key="MS500" value="3.1960116514971473" />
-      <entry key="S2" value="11.083162032855677" />
-      <entry key="S5" value="25.309918870044193" />
-      <entry key="S10" value="42.40809080951906" />
-      <entry key="S30" value="70.44020419679867" />
-      <entry key="S60" value="89.20550339422616" />
-      <entry key="M2" value="108.25216690761377" />
-      <entry key="M5" value="126.82389982708365" />
-      <entry key="M10" value="135.55798853671968" />
-      <entry key="M15" value="140.34335423664317" />
-      <entry key="M30" value="152.49859144540193" />
-      <entry key="H1" value="181.16085207161217" />
-      <entry key="H2" value="236.9783004340101" />
-      <entry key="H4" value="302.147315161181" />
-      <entry key="D1" value="401.76303202450123" />
-      <entry key="W1" value="425.7428453081932" />
+      <entry key="MS100" value="1.8631093859381825E-4" />
+      <entry key="MS500" value="0.17949339075379378" />
+      <entry key="S2" value="0.6959743405551077" />
+      <entry key="S5" value="1.445249320863913" />
+      <entry key="S10" value="2.4407827600913414" />
+      <entry key="S30" value="3.8579713146464716" />
+      <entry key="S60" value="4.381978600368266" />
+      <entry key="M2" value="4.704657549127682" />
+      <entry key="M5" value="5.224021776219119" />
+      <entry key="M10" value="5.777330856404231" />
+      <entry key="M15" value="6.080635821172693" />
+      <entry key="M30" value="6.47778182772965" />
+      <entry key="H1" value="6.720934207196573" />
+      <entry key="H2" value="6.8556497624653865" />
+      <entry key="H4" value="6.926576898513303" />
+      <entry key="D1" value="6.987585651751034" />
+      <entry key="W1" value="6.998222132067345" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 8,
-  &quot;fromUser&quot;: false
-}</component>
+    "associatedIndex": 8,
+    "fromUser": false
+    }</component>
   <component name="ProjectId" id="3LWbdCPXuKdJckDGAx1iZVwSp5z" />
-  <component name="ProjectLevelVcsManager">
-    <ConfirmationsSetting value="1" id="Add" />
-  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
+  <component name="PropertiesComponent">{
+    "keyToString": {
     "Docker.msv-usuario: Compose Deployment.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RequestMappingsPanelOrder0": "0",
@@ -211,24 +136,27 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "Spring Boot.MsvUsuarioApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "Merging main",
+    "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa",
     "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.jshint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.jshint": "",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.general"
-  }
-}]]></component>
-  <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\Nur\IdeaProjects\TPEArqui\TicketYa\msv-compraEntardaSol\src\main\java\org\msvcompraentradasol\enums" />
-    </key>
-  </component>
+    "settings.editor.selected.configurable": "preferences.general",
+    "RunOnceActivity.git.unshallow": "true",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "run.configurations.included.in.services": "true"
+    },
+    "keyToStringList": {
+    "DatabaseDriversLRU": [
+    "mysql"
+    ]
+    }
+    }</component>
   <component name="RunManager" selected="Spring Boot.MsvUsuarioApplication">
     <configuration name="MsvUsuarioApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
@@ -264,11 +192,35 @@
         <item itemvalue="Docker.msv-usuario: Compose Deployment" />
       </list>
     </recent_temporary>
+    <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="api-gateway" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.apigateway.ApiGatewayApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MsvEventoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="msv-evento" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="msvevento.MsvEventoApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MsvSectoerAsientoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="msv-SectoerAsiento" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.universidad.msvsectoerasiento.MsvSectoerAsientoApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-a203e0a19954-intellij.indexing.shared.core-IU-262.10315.125" />
+        <option value="bundled-jdk-30f59d01ecdd-34e2839f716b-intellij.indexing.shared.core-IU-262.9437.185" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.9437.185" />
       </set>
     </attachedChunks>
   </component>
@@ -284,5 +236,20 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="DatabaseLocalColorSettings">
+    <colors>
+      <entry key="b4ecb129-abfb-4687-9b2d-cadf215bbe38" value="" />
+    </colors>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="KtorApplicationConfigurationType" />
+        <option value="MicronautRunConfigurationType" />
+        <option value="QuarkusRunConfigurationType" />
+        <option value="SpringBootApplicationConfigurationType" />
+      </set>
+    </option>
   </component>
 </project>

@@ -1,0 +1,1311 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "TicketYa - API de Usuarios",
+    "version": "1.0.0",
+    "description": "Contrato de la entrega 1, sin JWT. Usuarios, roles y artistas favoritos. Los ejemplos de IDs son ilustrativos. Los errores de Spring pueden omitir detail; solo status es obligatorio en Error."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "API Gateway"
+    },
+    {
+      "url": "http://localhost:8004",
+      "description": "Microservicio directo"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Usuarios"
+    },
+    {
+      "name": "Roles"
+    },
+    {
+      "name": "Favoritos"
+    }
+  ],
+  "security": [],
+  "paths": {
+    "/usuarios": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "get_usuarios",
+        "summary": "Listar usuarios",
+        "description": "Devuelve todos los perfiles sin paginación ni autenticación.",
+        "responses": {
+          "200": {
+            "description": "Consulta o actualización exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioResponse"
+                  }
+                },
+                "example": [
+                  {
+                    "id": 42,
+                    "nombre": "Ana Pérez",
+                    "email": "ana.prueba@example.com",
+                    "dni": "PRUEBA-001",
+                    "ciudad": "Tandil",
+                    "idRol": 7
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "post_usuarios",
+        "summary": "Crear usuario",
+        "description": "Nombre, email, DNI, ciudad e idRol son obligatorios. El rol debe existir. Email y DNI tienen unicidad en la base. No acepta credenciales JWT.",
+        "responses": {
+          "201": {
+            "description": "Recurso creado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                },
+                "example": {
+                  "id": 42,
+                  "nombre": "Ana Pérez",
+                  "email": "ana.prueba@example.com",
+                  "dni": "PRUEBA-001",
+                  "ciudad": "Tandil",
+                  "idRol": 7
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "description": "Ruta relativa del recurso creado.",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "/usuarios/42"
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/usuarios"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/usuarios"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Datos duplicados o recurso con relaciones que impiden la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/usuarios"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/usuarios"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioRequest"
+              },
+              "example": {
+                "nombre": "Ana Pérez",
+                "email": "ana.prueba@example.com",
+                "dni": "PRUEBA-001",
+                "ciudad": "Tandil",
+                "idRol": 7
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuarios/{id}": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "get_usuarios_id",
+        "summary": "Obtener usuario",
+        "description": "Devuelve el perfil; 404 si no existe.",
+        "responses": {
+          "200": {
+            "description": "Consulta o actualización exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                },
+                "example": {
+                  "id": 42,
+                  "nombre": "Ana Pérez",
+                  "email": "ana.prueba@example.com",
+                  "dni": "PRUEBA-001",
+                  "ciudad": "Tandil",
+                  "idRol": 7
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/usuarios/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/usuarios/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "put_usuarios_id",
+        "summary": "Actualizar usuario",
+        "description": "Reemplaza todos los campos editables; requiere el mismo cuerpo completo que creación. El rol debe existir.",
+        "responses": {
+          "200": {
+            "description": "Consulta o actualización exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                },
+                "example": {
+                  "id": 42,
+                  "nombre": "Ana Pérez",
+                  "email": "ana.prueba@example.com",
+                  "dni": "PRUEBA-001",
+                  "ciudad": "Tandil",
+                  "idRol": 7
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/usuarios/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/usuarios/42"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Datos duplicados o recurso con relaciones que impiden la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/usuarios/42"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/usuarios/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioRequest"
+              },
+              "example": {
+                "nombre": "Ana Pérez",
+                "email": "ana.prueba@example.com",
+                "dni": "PRUEBA-001",
+                "ciudad": "Tandil",
+                "idRol": 7
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "delete_usuarios_id",
+        "summary": "Eliminar usuario",
+        "description": "Elimina también sus favoritos y conserva los otros usuarios y el rol compartido.",
+        "responses": {
+          "204": {
+            "description": "Operación exitosa, sin cuerpo."
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/usuarios/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/usuarios/42"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Datos duplicados o recurso con relaciones que impiden la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/usuarios/42"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/usuarios/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          }
+        ]
+      }
+    },
+    "/roles": {
+      "get": {
+        "tags": [
+          "Roles"
+        ],
+        "operationId": "get_roles",
+        "summary": "Listar roles",
+        "description": "Se inicializan los cuatro tipos al arrancar. Sus IDs dependen de la base; consultarlos antes de crear usuarios.",
+        "responses": {
+          "200": {
+            "description": "Consulta o actualización exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RolResponse"
+                  }
+                },
+                "example": [
+                  {
+                    "id": 7,
+                    "name": "CLIENTE"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Roles"
+        ],
+        "operationId": "post_roles",
+        "summary": "Crear rol",
+        "description": "El nombre debe pertenecer al enum y ser único. Como los cuatro tipos ya se inicializan, normalmente un nombre válido existente devuelve 409; 201 solo si ese tipo está ausente.",
+        "responses": {
+          "201": {
+            "description": "Recurso creado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolResponse"
+                },
+                "example": {
+                  "id": 7,
+                  "name": "CLIENTE"
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "description": "Ruta relativa del recurso creado.",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "/roles/7"
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/roles"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Datos duplicados o recurso con relaciones que impiden la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/roles"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/roles"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolRequest"
+              },
+              "example": {
+                "name": "CLIENTE"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles/{id}": {
+      "get": {
+        "tags": [
+          "Roles"
+        ],
+        "operationId": "get_roles_id",
+        "summary": "Obtener rol",
+        "description": "Devuelve ID y nombre del rol.",
+        "responses": {
+          "200": {
+            "description": "Consulta o actualización exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolResponse"
+                },
+                "example": {
+                  "id": 7,
+                  "name": "CLIENTE"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/roles/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/roles/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Roles"
+        ],
+        "operationId": "put_roles_id",
+        "summary": "Actualizar rol",
+        "description": "Reemplaza el nombre. Mantener el mismo nombre es válido; usar uno ocupado por otro rol devuelve 409.",
+        "responses": {
+          "200": {
+            "description": "Consulta o actualización exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RolResponse"
+                },
+                "example": {
+                  "id": 7,
+                  "name": "CLIENTE"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/roles/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/roles/42"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Datos duplicados o recurso con relaciones que impiden la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/roles/42"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/roles/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolRequest"
+              },
+              "example": {
+                "name": "CLIENTE"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Roles"
+        ],
+        "operationId": "delete_roles_id",
+        "summary": "Eliminar rol",
+        "description": "204 solo si existe y no está asociado a usuarios. Con usuarios asociados devuelve 409. No eliminar roles compartidos para ejecutar la colección normal.",
+        "responses": {
+          "204": {
+            "description": "Operación exitosa, sin cuerpo."
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/roles/42"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/roles/42"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Datos duplicados o recurso con relaciones que impiden la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/roles/42"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/roles/42"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          }
+        ]
+      }
+    },
+    "/usuarios/{id}/artistas-favoritos": {
+      "get": {
+        "tags": [
+          "Favoritos"
+        ],
+        "operationId": "get_usuarios_id_artistas-favoritos",
+        "summary": "Listar artistas favoritos",
+        "description": "Devuelve idArtista, nombre y genero consultando Eventos. Sin favoritos devuelve []. No se garantiza el orden. Responde 502 si un artista ya no existe o devuelve datos incompletos y 503 si Eventos no esta disponible.",
+        "responses": {
+          "200": {
+            "description": "Consulta o actualización exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "nombre": {
+                        "type": "string"
+                      },
+                      "idArtista": {
+                        "format": "int64",
+                        "type": "integer"
+                      },
+                      "genero": {
+                        "nullable": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "idArtista",
+                      "nombre",
+                      "genero"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "example": [
+                  {
+                    "nombre": "Soda Stereo",
+                    "idArtista": 123,
+                    "genero": "Rock"
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/usuarios/42/artistas-favoritos"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/usuarios/42/artistas-favoritos"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Artista inexistente en Eventos o respuesta incompleta."
+          },
+          "503": {
+            "description": "Servicio de Eventos no disponible."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          }
+        ]
+      }
+    },
+    "/usuarios/{id}/artistas-favoritos/{idArtista}": {
+      "put": {
+        "tags": [
+          "Favoritos"
+        ],
+        "operationId": "put_usuarios_id_artistas-favoritos_idArtista",
+        "summary": "Agregar favorito",
+        "description": "Sin body. El usuario debe existir y el artista debe ser un ID positivo. No valida su existencia en Eventos. Repetir la misma relación no la duplica.",
+        "responses": {
+          "204": {
+            "description": "Operación exitosa, sin cuerpo."
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/usuarios/42/artistas-favoritos/{idArtista}"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/usuarios/42/artistas-favoritos/{idArtista}"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Datos duplicados o recurso con relaciones que impiden la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/usuarios/42/artistas-favoritos/{idArtista}"
+                }
+              },
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "La operacion viola una restriccion: datos duplicados o relaciones existentes",
+                  "instance": "/usuarios/42/artistas-favoritos/{idArtista}"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          },
+          {
+            "name": "idArtista",
+            "in": "path",
+            "required": true,
+            "description": "ID externo de artista positivo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "example": 900
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Favoritos"
+        ],
+        "operationId": "delete_usuarios_id_artistas-favoritos_idArtista",
+        "summary": "Quitar favorito",
+        "description": "Sin body. Si el usuario existe y la relación ya no está, devuelve 204. Usuario inexistente: 404; artista no positivo: 400.",
+        "responses": {
+          "204": {
+            "description": "Operación exitosa, sin cuerpo."
+          },
+          "400": {
+            "description": "JSON, tipo o datos inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 400,
+                  "error": "Bad Request",
+                  "path": "/usuarios/42/artistas-favoritos/{idArtista}"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario o rol inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T12:00:00Z",
+                  "status": 404,
+                  "error": "Not Found",
+                  "path": "/usuarios/42/artistas-favoritos/{idArtista}"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Identificador persistido; no asumir un valor fijo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 42
+          },
+          {
+            "name": "idArtista",
+            "in": "path",
+            "required": true,
+            "description": "ID externo de artista positivo.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "example": 900
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UsuarioRequest": {
+        "type": "object",
+        "required": [
+          "nombre",
+          "email",
+          "dni",
+          "ciudad",
+          "idRol"
+        ],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Obligatorio; se recortan espacios externos."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "description": "Único según la restricción de la base. Se recortan espacios."
+          },
+          "dni": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "description": "Único; no se exige que sea numérico."
+          },
+          "ciudad": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "idRol": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "ID real de un rol existente; consultar GET /roles."
+          }
+        },
+        "example": {
+          "nombre": "Ana Pérez",
+          "email": "ana.prueba@example.com",
+          "dni": "PRUEBA-001",
+          "ciudad": "Tandil",
+          "idRol": 7
+        }
+      },
+      "UsuarioResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "email",
+          "dni",
+          "ciudad",
+          "idRol"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Obligatorio; se recortan espacios externos."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "description": "Único según la restricción de la base. Se recortan espacios."
+          },
+          "dni": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "description": "Único; no se exige que sea numérico."
+          },
+          "ciudad": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "idRol": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "ID real de un rol existente; consultar GET /roles."
+          }
+        },
+        "example": {
+          "id": 42,
+          "nombre": "Ana Pérez",
+          "email": "ana.prueba@example.com",
+          "dni": "PRUEBA-001",
+          "ciudad": "Tandil",
+          "idRol": 7
+        }
+      },
+      "RolRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "CLIENTE",
+              "ORGANIZADOR",
+              "ADMINISTRADOR",
+              "PERSONAL_ACCESO"
+            ]
+          }
+        },
+        "example": {
+          "name": "CLIENTE"
+        }
+      },
+      "RolResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "enum": [
+              "CLIENTE",
+              "ORGANIZADOR",
+              "ADMINISTRADOR",
+              "PERSONAL_ACCESO"
+            ]
+          }
+        },
+        "example": {
+          "id": 7,
+          "name": "CLIENTE"
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -51,12 +51,23 @@ En la base se guarda el nombre del enum, no su posicion numerica.
 
 | Metodo | Ruta | Resultado |
 | --- | --- | --- |
-| GET | /usuarios/{id}/artistas-favoritos | Lista de IDs de artistas |
+| GET | /usuarios/{id}/artistas-favoritos | Lista de artistas con ID, nombre y genero |
 | PUT | /usuarios/{id}/artistas-favoritos/{idArtista} | Agrega un favorito (204, sin body) |
 | DELETE | /usuarios/{id}/artistas-favoritos/{idArtista} | Quita un favorito (204) |
 
-El ID del artista debe ser positivo. Este servicio guarda la referencia externa;
-no consulta ni valida su existencia en el microservicio de artistas.
+El ID del artista debe ser positivo. Al guardar, este servicio persiste solo la
+referencia externa. Al listar consulta `GET /api/artistas/{id}` en el servicio
+de eventos, configurado mediante `MSV_EVENTO_URL` (por defecto localhost:8005).
+
+Ejemplo de respuesta del listado:
+
+```json
+[{"idArtista":123,"nombre":"Soda Stereo","genero":"Rock"}]
+```
+
+Sin favoritos devuelve `[]` y no consulta Eventos. Si Eventos no responde devuelve
+503; si un artista ya no existe o devuelve datos incompletos devuelve 502.
+Los favoritos guardados no se eliminan ante fallos del servicio externo.
 
 ## Errores
 
@@ -64,43 +75,18 @@ no consulta ni valida su existencia en el microservicio de artistas.
 - 404: usuario o rol inexistente.
 - 409: email, DNI o nombre de rol duplicado; rol en uso; otra restriccion de integridad.
 
-## Autenticacion JWT
+## Autenticacion diferida
 
-`POST /auth/registro` es publico. Crea un CLIENTE y devuelve su perfil (201),
-sin password ni hash. No acepta la asignacion de roles desde el registro.
+La version activa no requiere token ni contrasena. Crear cuentas con POST /usuarios e idRol obtenido de GET /roles. Las rutas /auth/login y /auth/registro estan retiradas y devuelven 404. El codigo JWT original, sus pruebas y configuracion estan en ../futura jwt, fuera de las fuentes que compila Maven.
 
-```json
-{"nombre":"Ana","email":"ana@example.com","dni":"12345678","ciudad":"Tandil","password":"1234"}
-```
-
-`POST /auth/login` es publico:
-
-```json
-{"email":"ana@example.com","password":"1234"}
-```
-
-Devuelve un access token firmado, valido por 1800 segundos:
-
-```json
-{"accessToken":"<JWT>","tokenType":"Bearer","expiresIn":1800}
-```
-
-Usar `Authorization: Bearer <JWT>` en las rutas protegidas. Credenciales invalidas
-o token invalido/vencido devuelven 401; permisos insuficientes devuelven 403.
-No se implementa refresh token: al vencer, iniciar sesion nuevamente.
-
-Solo ADMINISTRADOR lista todos los usuarios, crea cuentas por el CRUD y administra
-roles. Cada usuario puede consultar, actualizar o eliminar su propia cuenta y
-gestionar sus favoritos; no puede cambiar su rol. ADMINISTRADOR puede gestionar
-cualquier cuenta. Las cuentas creadas mediante el CRUD anterior no reciben password
-y no pueden iniciar sesion; usar `/auth/registro` para cuentas con credenciales.
-
-Los roles se inicializan automaticamente. El perfil local `dev` (predeterminado)
-crea `admin@admin.com` con password `1234`, guardada como hash BCrypt. No se cambia
-la password si esa cuenta ya existe. Otros perfiles no crean ese administrador
-salvo que se active explicitamente `app.seed-admin=true`.
+Los roles siguen siendo datos del dominio; en esta etapa no restringen acceso a los endpoints. La autenticacion y autorizacion se incorporaran cuando se restaure y adapte el modulo JWT.
 
 ## Verificacion
 
-`mvnw.cmd -Dtest=UsuarioServiceTests test` ejecuta pruebas unitarias sin MySQL.
-Los tests usan el perfil test con una base H2 aislada; no requieren MySQL ni Docker.
+`mvnw.cmd test` ejecuta pruebas unitarias, persistencia H2 y CRUD HTTP sin token. No requiere MySQL ni Docker.
+
+## Contrato OpenAPI y colección de pruebas
+
+El contrato OpenAPI 3.0.3 está en [src/main/resources/static/openapi.json](src/main/resources/static/openapi.json) y se sirve directamente en http://localhost:8004/openapi.json cuando Usuarios está iniciado.
+
+Importar [TicketYa-Usuarios.postman_collection.json](TicketYa-Usuarios.postman_collection.json) en Postman. Incluye 32 solicitudes ordenadas, captura de IDs, casos normales/errores y limpieza de los perfiles creados. [datos-prueba.postman.json](datos-prueba.postman.json) permite ejecutar dos iteraciones con datos diferentes. Las instrucciones y los límites de las pruebas de roles están en [docs/PRUEBAS-POSTMAN.md](docs/PRUEBAS-POSTMAN.md).

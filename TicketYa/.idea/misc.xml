@@ -6,6 +6,9 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/msv-usuario/pom.xml" />
+        <option value="$PROJECT_DIR$/api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/msv-evento/pom.xml" />
+        <option value="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" />
       </list>
     </option>
   </component>

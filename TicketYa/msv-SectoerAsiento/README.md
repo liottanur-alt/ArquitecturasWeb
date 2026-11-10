@@ -12,7 +12,7 @@ $env:MSVC_EVENTOS_URL='http://localhost:8005'
 .\mvnw.cmd spring-boot:run
 ```
 
-El servicio escucha en 8002. MySQL se publica en 3310 y utiliza un volumen propio. La URL, usuario, password y puerto del servicio pueden cambiarse con DB_URL, DB_USERNAME, DB_PASSWORD y SERVER_PORT. `DDL_AUTO=update` crea el esquema de desarrollo sin borrar datos; no migra de forma segura instalaciones con las entidades antiguas. Antes de reutilizar una base anterior se requiere respaldo y una migracion revisada; usar una base nueva para este modelo.
+El servicio escucha en 8002. MySQL se publica en 3306 y comparte el volumen ticketya_mysql_data con las bases de Usuarios y Eventos; cada servicio mantiene su propio esquema y usuario. La URL, usuario, password y puerto del servicio pueden cambiarse con DB_URL, DB_USERNAME, SECTOR_DB_PASSWORD (o DB_PASSWORD) y SERVER_PORT. `DDL_AUTO=update` crea el esquema de desarrollo sin borrar datos; no migra de forma segura instalaciones con las entidades antiguas. Antes de reutilizar una base anterior se requiere respaldo y una migracion revisada; usar una base nueva para este modelo.
 
 El proveedor Eventos debe exponer `GET /api/eventos/{id}` con `id`, `lugar.id`, `fechaHora`, `estado` y `estadoPublicacion`. `fechaHora` es hora local en America/Argentina/Buenos_Aires; configurar inventario.zona-eventos si el contrato cambia. Solo se reservan/confirman lugares de eventos PUBLICADO, no cancelados, agotados, finalizados o iniciados. El cliente se adapto al contrato de Eventos incorporado desde main; probar ambos servicios reales con MySQL usando la guia de pruebas de la raiz. Las pruebas levantan un servidor HTTP local que responde ese contrato y ejercitan Feign realmente.
 
@@ -77,3 +77,7 @@ Se ejecutaron 37 pruebas del microservicio y 6 del gateway, todas correctas. Las
 ## Limites del entregable
 
 Esta implementacion completa el circuito de inventario del microservicio para la entrega 1. La compra completa, pasarela mock, QR, aprobacion administrativa y reintegros monetarios pertenecen a otros microservicios. Queda pendiente conectar los proveedores reales y ejecutar la suite MySQL cuando Docker este disponible. JWT, fila virtual, NoSQL, reportes, recomendaciones, log centralizado y el despliegue Docker del sistema completo corresponden a la entrega 2 y al equipo, no a este CRUD.
+
+## MySQL compartido
+
+Desde la raíz del repositorio, `docker compose up -d --wait` levanta las tres bases en un solo contenedor. El Compose de esta carpeta incluye el mismo proyecto por compatibilidad. La migración de datos anteriores y la verificación de permisos están en [../docker/mysql/README.md](../docker/mysql/README.md).
