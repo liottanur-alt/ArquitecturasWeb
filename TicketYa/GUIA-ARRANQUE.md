@@ -1,21 +1,21 @@
 # Guía de arranque y prueba de TicketYa
 
-Actualizada al 9 de noviembre de 2026. Instrucciones portables para Windows, Linux y macOS, con MySQL compartido y JWT apartado en `futura jwt`.
+Actualizada al 10 de noviembre de 2026. Instrucciones portables para Windows, Linux y macOS, con MySQL compartido, una base propia para Compras y JWT apartado en `futura jwt`.
 
-Usuarios, Eventos, SectorAsiento y Gateway tienen un proyecto Spring Boot ejecutable. Las tres bases se levantan juntas en un contenedor mediante el Compose de la raíz; las aplicaciones Java se ejecutan desde una terminal o IntelliJ. Ese Compose levanta MySQL, no los microservicios Java. Compras todavía no está operativo: para probar inventario se simulan sus llamadas desde Postman o PowerShell.
+Usuarios, Eventos, SectorAsiento, Compras y Gateway tienen un proyecto Spring Boot ejecutable. Las bases de Usuarios, Eventos y SectorAsiento se levantan juntas en un contenedor mediante el Compose de la raíz; Compras usa su propio Compose en 3311. Las aplicaciones Java se ejecutan desde una terminal o IntelliJ. Esos Compose levantan MySQL, no los microservicios Java.
 
 ## 1. Requisitos y carpeta de trabajo
 
 Esta guía sirve para **Windows, Linux y macOS**, independientemente del nombre de usuario, disco o ubicación del proyecto.
 
 - JDK 21 o superior, con `java` y `javac` disponibles en la terminal.
-- Docker Desktop en Windows/macOS, o Docker Engine en Linux, con contenedores Linux y Docker Compose v2 o superior. Los Compose de compatibilidad dentro de cada microservicio requieren Compose 2.20 o superior; se recomienda usar siempre el de la raíz.
+- Docker Desktop en Windows/macOS, o Docker Engine en Linux, con contenedores Linux y Docker Compose v2 o superior. Los Compose de compatibilidad dentro de cada microservicio requieren Compose 2.20 o superior; se recomienda usar siempre el de la raíz. La excepción es Compras, que usa su propio `compose.mysql.yml` porque su base no está en el contenedor compartido.
 - Conexión a internet en la primera ejecución para descargar MySQL y las dependencias de Maven.
 - Una terminal para Docker/pruebas y otra por cada aplicación Java.
 - Postman, si se prefiere probar sin comandos HTTP.
 - PowerShell 7.3 o superior **solo para los scripts `.ps1` de migración/verificación y el ejemplo automatizado de la sección 9**. También está disponible en Linux y macOS. No hace falta para el arranque normal con Bash/Zsh.
 
-Clonar o descargar el proyecto donde se prefiera. Abrir en el editor o explorador la carpeta que contiene `docker-compose.yml`, `msv-usuario`, `msv-evento`, `msv-SectoerAsiento` y `api-gateway`; esa es la **raíz del repositorio**.
+Clonar o descargar el proyecto donde se prefiera. Abrir en el editor o explorador la carpeta que contiene `docker-compose.yml`, `msv-usuario`, `msv-evento`, `msv-SectoerAsiento`, `msv-compraEntardaSol` y `api-gateway`; esa es la **raíz del repositorio**.
 
 Todos los comandos Docker de esta guía parten de esa raíz. Cada bloque de arranque Java parte de una **terminal nueva abierta en la raíz**. Los nombres de carpeta son relativos al repositorio; no se necesita ninguna ruta personal.
 
@@ -66,10 +66,11 @@ Los archivos Maven Wrapper ya vienen en cada módulo. En Windows se usa `mvnw.cm
 | Usuarios | 8004 | MySQL en 3306 |
 | Eventos | 8005 | MySQL en 3306 |
 | SectorAsiento | 8002 | MySQL en 3306; Feign a Eventos en 8005 |
-| Gateway | 8080 | Usuarios en 8004 y SectorAsiento en 8002 |
-| Compras | 8003 provisional | Todavía pendiente |
+| Gateway | 8080 | Usuarios en 8004, SectorAsiento en 8002 y Compras en 8003 |
+| Compras | 8003 | MySQL propio en 3311; Feign a Eventos en 8005 y SectorAsiento en 8002 |
+| MySQL propio de Compras | 3311 | compra_entrada_sol |
 
-Orden recomendado: **Docker → las tres bases → Usuarios y Eventos → SectorAsiento → Gateway → pruebas**.
+Orden recomendado: **Docker → bases compartidas → Usuarios y Eventos → SectorAsiento → Compras → Gateway → pruebas**.
 
 No se requiere JWT. `/auth/login` y `/auth/registro` están retirados; los perfiles se crean con `POST /usuarios`. La carpeta `futura jwt` conserva la implementación para otra etapa.
 
@@ -91,6 +92,21 @@ Debe aparecer un único servicio mysql saludable. Dentro están usuarios, evento
 | sectores_asientos | sector_app | sector_dev |
 
 Cada cuenta tiene permisos solo sobre su esquema. Los application.properties ya están actualizados. No hace falta crear las bases a mano: se inicializan al crear el volumen; las tablas las crea Hibernate al iniciar cada microservicio.
+
+### Base propia de Compras
+
+Compras no comparte el contenedor anterior: usa su propio Compose, publicado en 3311, para no tocar las bases de los demás servicios.
+
+```sh
+docker compose -f ./msv-compraEntardaSol/compose.mysql.yml up -d --wait
+docker compose -f ./msv-compraEntardaSol/compose.mysql.yml ps
+```
+
+| Base | Usuario local | Contraseña local |
+| --- | --- | --- |
+| compra_entrada_sol | compra_app | compra_dev |
+
+El esquema `compra_entrada_sol` se crea al iniciar el contenedor y las tablas las crea Hibernate con `DDL_AUTO=update`. El compose raíz no crea esta base; por eso el módulo trae el suyo.
 
 **Si ya tenías datos en los contenedores anteriores, migrar antes de iniciar las aplicaciones Java contra el nuevo contenedor:**
 
@@ -161,7 +177,9 @@ Endpoints principales:
 
 El contrato de consulta devuelve `lugar` como objeto anidado. El cliente Feign de SectorAsiento ya está adaptado a ese formato y a `/api/eventos/{id}`.
 
-## 6. Iniciar SectorAsiento
+## 6. Iniciar SectorAsiento y Compras
+
+### SectorAsiento
 
 **Windows con PowerShell**, desde una terminal nueva en la raíz:
 
@@ -181,9 +199,29 @@ Si se usa PowerShell en Linux/macOS, ejecutar `sh ./mvnw spring-boot:run` en lug
 
 Esperar `Started MsvSectoerAsientoApplication`. Dirección: http://localhost:8002.
 
-Puede arrancar sin Eventos, pero configurar inventario, reservar, confirmar y devolver requieren consultar Eventos. Para esas operaciones debe estar iniciado. Compras no hace falta para ejecutar las llamadas manuales de esta guía.
+Puede arrancar sin Eventos, pero configurar inventario, reservar, confirmar y devolver requieren consultar Eventos. Para esas operaciones debe estar iniciado. Compras usa estos endpoints para reservar, confirmar, devolver y cancelar inventario; si se prueba el flujo de compra, también debe estar iniciado.
 
 OpenAPI: http://localhost:8002/openapi.json.
+
+### Compras
+
+Compras usa su base propia en 3311 y necesita Eventos y SectorAsiento iniciados para operar. Si se levantó el Compose de la sección 3, también hay que levantar el de Compras.
+
+**Windows con PowerShell**, desde una terminal nueva en la raíz:
+
+```powershell
+cd ./msv-compraEntardaSol
+.\mvnw.cmd spring-boot:run
+```
+
+**Linux/macOS con Bash/Zsh**, desde una terminal nueva en la raíz:
+
+```bash
+cd ./msv-compraEntardaSol
+sh ./mvnw spring-boot:run
+```
+
+Esperar `Started MsvCompraEntradaSolApplication`. Dirección: http://localhost:8003. OpenAPI: http://localhost:8003/openapi.json.
 
 ## 7. Iniciar Gateway
 
@@ -210,6 +248,9 @@ El Gateway actualmente enruta:
 - `/usuarios`, `/roles` y sus subrutas a Usuarios.
 - `/sectores`, `/asientos`, `/reservas` y sus subrutas a SectorAsiento.
 - `/eventos/{id}/inventario` y `/eventos/{id}/sectores`, con sus subrutas, a SectorAsiento.
+- `/compras`, `/entradas` y `/solicitudes` y sus subrutas, incluida `/compras/eventos/{id}/cancelacion`, a Compras.
+
+Compras se configura con `MSVC_COMPRAS_URL` (por defecto `http://localhost:8003`).
 
 **El catálogo de Eventos todavía no está en el Gateway.** Para `/api/eventos`, `/api/lugares` y `/api/artistas`, usar directamente http://localhost:8005. Agregar MSVC_EVENTOS_URL al Gateway no crea una ruta por sí mismo: falta configurarla en su application.yml.
 
@@ -221,6 +262,8 @@ En una terminal libre, elegir una alternativa. **PowerShell:**
 (Invoke-WebRequest -Uri 'http://localhost:8004/roles' -TimeoutSec 10).StatusCode
 (Invoke-WebRequest -Uri 'http://localhost:8005/api/eventos' -TimeoutSec 10).StatusCode
 (Invoke-WebRequest -Uri 'http://localhost:8002/sectores' -TimeoutSec 10).StatusCode
+(Invoke-WebRequest -Uri 'http://localhost:8003/openapi.json' -TimeoutSec 10).StatusCode
+(Invoke-WebRequest -Uri 'http://localhost:8080/compras/cliente/1' -TimeoutSec 10).StatusCode
 (Invoke-WebRequest -Uri 'http://localhost:8080/sectores' -TimeoutSec 10).StatusCode
 ```
 
@@ -230,14 +273,18 @@ En una terminal libre, elegir una alternativa. **PowerShell:**
 curl --fail --silent --show-error --output /dev/null --write-out 'Usuarios: %{http_code}\n' http://localhost:8004/roles
 curl --fail --silent --show-error --output /dev/null --write-out 'Eventos: %{http_code}\n' http://localhost:8005/api/eventos
 curl --fail --silent --show-error --output /dev/null --write-out 'Sectores: %{http_code}\n' http://localhost:8002/sectores
+curl --fail --silent --show-error --output /dev/null --write-out 'Compras: %{http_code}\n' http://localhost:8003/openapi.json
+curl --fail --silent --show-error --output /dev/null --write-out 'Gateway Compras: %{http_code}\n' http://localhost:8080/compras/cliente/1
 curl --fail --silent --show-error --output /dev/null --write-out 'Gateway: %{http_code}\n' http://localhost:8080/sectores
 ```
 
 Cada consulta debe devolver 200. Una lista vacía es válida. Si no responden, revisar las terminales de Spring y el estado de las bases antes de seguir.
 
-## 9. Probar un flujo completo de inventario
+## 9. Probar los flujos completos
 
-Esta sección utiliza **PowerShell 7.3 o superior**, tanto en Windows como en Linux/macOS. Si se estaba usando Bash/Zsh, abrir `pwsh` antes de empezar. Alternativamente, usar Postman como indica la sección 10. Ejecutar los bloques siguientes en **la misma terminal de pruebas** para conservar los IDs en variables. Se crean datos nuevos; no se presupone que los IDs sean 1. Los comandos usan Usuarios e inventario por Gateway, y el catálogo de Eventos directamente porque falta su ruta en el Gateway.
+Esta sección utiliza **PowerShell 7.3 o superior**, tanto en Windows como en Linux/macOS. Si se estaba usando Bash/Zsh, abrir `pwsh` antes de empezar. Alternativamente, usar Postman como indica la sección 10. Ejecutar los bloques siguientes en **la misma terminal de pruebas** para conservar los IDs en variables. Se crean datos nuevos; no se presupone que los IDs sean 1. Los comandos usan Usuarios, inventario y Compras por Gateway, y el catálogo de Eventos directamente porque falta su ruta en el Gateway.
+
+Los bloques 9.1 a 9.10 prueban el inventario de SectorAsiento. Los bloques 9.11 a 9.13 prueban Compras sobre el mismo evento: compra, pago, QR, devolución con reintegro y cancelación. La cancelación manual de 9.10 debe quedar para el final.
 
 ### 9.1 Preparar una función para enviar JSON
 
@@ -379,7 +426,7 @@ Invoke-RestMethod $urlDisponibilidadPrueba
 
 El estado debe ser CONFIRMADA y la disponibilidad debe mostrar vendidos=1, reservados=0 y disponibles=0. Repetir la confirmación no vende una segunda vez.
 
-Si pasó el plazo, la confirmación puede devolver 200 con estado VENCIDA: no equivale a una venta. Compras debería compensar un pago tardío. Esta prueba manual no cobra dinero ni emite QR.
+Si pasó el plazo, la confirmación puede devolver 200 con estado VENCIDA: no equivale a una venta. En el flujo de Compras, un pago sobre una reserva vencida deja la compra `EXPIRADA` y reintegra el importe simulado. Esta prueba manual no cobra dinero ni emite QR.
 
 ### 9.8 Probar una devolución aprobada
 
@@ -406,7 +453,9 @@ La reserva debe quedar DEVUELTA y el lugar disponible. El reintento utiliza exac
 
 No reutilizar una clave de idempotencia para una solicitud diferente: devuelve 409.
 
-### 9.10 Cancelación: todavía requiere dos llamadas
+### 9.10 Cancelación del inventario: requiere dos llamadas
+
+**No ejecutar este bloque si se van a probar 9.11 a 9.13**: el evento deja de admitir compras y reservas. Si se usa Compras, la cancelación de 9.13 ya invoca el inventario y este bloque manual solo hace falta para cerrar el estado del evento en el catálogo.
 
 ```powershell
 Invoke-RestMethod -Uri "$eventosPrueba/api/eventos/$($eventoPrueba.id)/cancelar" -Method Patch
@@ -414,11 +463,114 @@ Invoke-RestMethod -Uri "$gatewayPrueba/eventos/$($eventoPrueba.id)/inventario/ca
 Invoke-RestMethod $urlDisponibilidadPrueba
 ```
 
-Hacer esto al terminar la prueba: el evento ya no admitirá nuevas reservas. La primera llamada cancela el estado de Eventos; la segunda libera inventario y marca cancelado=true. **Eventos todavía no invoca automáticamente la segunda operación.** La cancelación del inventario se puede repetir; el endpoint de cancelación de Eventos devuelve 409 si ya estaba cancelado.
+La primera llamada cancela el estado de Eventos; la segunda libera inventario y marca cancelado=true. **Eventos todavía no invoca automáticamente la segunda operación.** La cancelación del inventario se puede repetir; el endpoint de cancelación de Eventos devuelve 409 si ya estaba cancelado o si el evento está finalizado.
+
+### 9.11 Compra, pago y uso del QR
+
+```powershell
+$comprasPrueba = 'http://localhost:8003'
+
+$pedidoCompraPrueba = @{
+    claveIdempotencia = "compra-$marcaPrueba"
+    idCliente = $clientePrueba.id
+    idEvento = $eventoPrueba.id
+    idSector = $sectorPrueba.id
+    idsAsientos = @($asientoPrueba.id)
+    medioDePago = 'TARJETA'
+}
+
+$compraPrueba = Enviar-Json 'POST' "$comprasPrueba/compras" $pedidoCompraPrueba
+$compraRepetidaPrueba = Enviar-Json 'POST' "$comprasPrueba/compras" $pedidoCompraPrueba
+$compraPrueba
+$compraRepetidaPrueba
+
+$compraPagadaPrueba = Invoke-RestMethod -Uri "$comprasPrueba/compras/$($compraPrueba.id)/pago?aprobado=true" -Method Put
+$compraPagadaPrueba
+
+$entradasPrueba = Invoke-RestMethod "$comprasPrueba/entradas/compra/$($compraPrueba.id)"
+$entradaPrueba = $entradasPrueba | Select-Object -First 1
+$entradaPrueba
+
+Invoke-RestMethod "$comprasPrueba/entradas/qr/$($entradaPrueba.qr)"
+Invoke-RestMethod -Uri "$comprasPrueba/entradas/$($entradaPrueba.id)/uso" -Method Patch
+Invoke-RestMethod $urlDisponibilidadPrueba
+```
+
+Las dos compras devuelven 201, el mismo `id` y estado `PENDIENTE`: la clave de idempotencia evita duplicados. El pago deja la compra `APROBADA` con `referenciaPago` con prefijo `SIM-`. La entrada nace `NO_ESCANEADO` y el `PATCH` la pasa a `ESCANEADO`; repetir ese `PATCH` devuelve 409. La disponibilidad debe mostrar vendidos=1, reservados=0 y disponibles=0.
+
+Una entrada ya escaneada no se puede devolver. Por eso 9.12 crea otro sector y otra compra en lugar de reutilizar esta entrada.
+
+### 9.12 Devolución con reintegro
+
+```powershell
+$sectorDevolucionPrueba = Enviar-Json 'POST' "$gatewayPrueba/sectores" @{
+    idLugar = $lugarPrueba.id
+    nombre = "Platea devolucion $marcaPrueba"
+    tipo = 'NUMERADO'
+    capacidadTotal = 1
+}
+
+$asientoDevolucionPrueba = Enviar-Json 'POST' "$gatewayPrueba/asientos" @{
+    idSector = $sectorDevolucionPrueba.id
+    fila = 'B'
+    columna = '1'
+}
+
+Enviar-Json 'PUT' "$gatewayPrueba/eventos/$($eventoPrueba.id)/sectores" @{
+    idSector = $sectorDevolucionPrueba.id
+    precio = 1500
+    capacidadHabilitada = 1
+}
+
+$compraDevolucionPrueba = Enviar-Json 'POST' "$comprasPrueba/compras" @{
+    claveIdempotencia = "compra-devolucion-$marcaPrueba"
+    idCliente = $clientePrueba.id
+    idEvento = $eventoPrueba.id
+    idSector = $sectorDevolucionPrueba.id
+    idsAsientos = @($asientoDevolucionPrueba.id)
+    medioDePago = 'EFECTIVO'
+}
+
+$compraDevolucionPrueba = Invoke-RestMethod -Uri "$comprasPrueba/compras/$($compraDevolucionPrueba.id)/pago?aprobado=true" -Method Put
+$entradaDevolucionPrueba = (Invoke-RestMethod "$comprasPrueba/entradas/compra/$($compraDevolucionPrueba.id)") | Select-Object -First 1
+
+$solicitudPrueba = Enviar-Json 'POST' "$comprasPrueba/solicitudes" @{
+    idEntrada = $entradaDevolucionPrueba.id
+    idCliente = $clientePrueba.id
+    descripcion = 'No puedo asistir'
+}
+
+$solicitudPrueba
+Invoke-RestMethod "$comprasPrueba/solicitudes/pendientes"
+
+$solicitudResueltaPrueba = Enviar-Json 'PUT' "$comprasPrueba/solicitudes/$($solicitudPrueba.id)/resolver" @{
+    idAdministrador = 1
+    estadoSolicitud = 'ACEPTADA'
+}
+$solicitudResueltaPrueba
+
+Invoke-RestMethod "$comprasPrueba/entradas/$($entradaDevolucionPrueba.id)"
+```
+
+La solicitud nace `PENDIENTE` y aparece en el listado de pendientes. Al resolverla como `ACEPTADA`, la respuesta trae `estadoReintegro = COMPLETADO` y `referenciaReintegro` con prefijo `SIM-REF-`; la entrada queda `DEVOLUCION_ACEPTADA` y el asiento se libera en SectorAsiento. Repetir la resolución con el mismo estado no genera un segundo reintegro; resolverla con otro estado devuelve 409. Si faltan menos de 72 horas para el evento, el `POST /solicitudes` devuelve 409.
+
+### 9.13 Cancelación del evento desde Compras
+
+```powershell
+$cancelacionPrueba = Invoke-RestMethod -Uri "$comprasPrueba/compras/eventos/$($eventoPrueba.id)/cancelacion" -Method Post
+$cancelacionPrueba
+$cancelacionRepetidaPrueba = Invoke-RestMethod -Uri "$comprasPrueba/compras/eventos/$($eventoPrueba.id)/cancelacion" -Method Post
+$cancelacionRepetidaPrueba
+Invoke-RestMethod "$comprasPrueba/compras/$($compraPrueba.id)"
+```
+
+La primera llamada debe devolver `comprasCanceladas` y `entradasReintegradas` mayores o iguales a 1 e `inventarioCancelado = true`. La compra de 9.11 queda `CANCELADA` con `estadoReintegro = COMPLETADO` y su entrada `EVENTO_CANCELADO`. La segunda llamada es idempotente: los contadores vuelven a cero y no cambia la referencia de reintegro. Si SectorAsiento responde 404 porque el evento no tenía inventario, `inventarioCancelado` es `false` y la operación igual termina bien.
+
+Esta llamada cancela las compras y el inventario, pero **no cambia el estado del evento en el catálogo de Eventos**. Para eso sigue siendo necesaria la llamada de 9.10 contra el puerto 8005. Orden sugerido: 9.11, 9.12, 9.13 y por último 9.10.
 
 ## 10. Alternativa con Postman e IntelliJ
 
-Para Postman, importar `msv-SectoerAsiento/TicketYa-SectorAsiento.postman_collection.json`. Crear antes el evento/lugar en Eventos, configurar idEvento y usar los IDs reales. La colección captura IDs de sector, asiento y reserva. Cambiar las claves para nuevas ejecuciones y limpiar solicitadaEn antes de iniciar una nueva devolución.
+Para Postman hay dos colecciones. La de SectorAsiento, `msv-SectoerAsiento/TicketYa-SectorAsiento.postman_collection.json`, cubre lugar, evento, inventario, reservas y devoluciones: crear antes el evento/lugar en Eventos, configurar idEvento y usar los IDs reales. La de Compras, `msv-compraEntardaSol/TicketYa-Compras.postman_collection.json`, cubre compras, entradas y solicitudes; el detalle paso a paso está en `msv-compraEntardaSol/docs/PRUEBAS-POSTMAN.md`. Ambas colecciones capturan IDs en variables. Cambiar las claves para nuevas ejecuciones y limpiar solicitadaEn antes de iniciar una nueva devolución.
 
 Para IntelliJ, importar cada proyecto desde su pom.xml, sincronizar Maven y seleccionar un SDK Java 21 o superior. Iniciar las bases y después ejecutar:
 
@@ -427,6 +579,7 @@ Para IntelliJ, importar cada proyecto desde su pom.xml, sincronizar Maven y sele
 | msv-usuario | com.msvusuario.MsvUsuarioApplication |
 | msv-evento | msvevento.MsvEventoApplication |
 | msv-SectoerAsiento | com.universidad.msvsectoerasiento.MsvSectoerAsientoApplication |
+| msv-compraEntardaSol | org.msvcompraentradasol.MsvCompraEntradaSolApplication |
 | api-gateway | com.apigateway.ApiGatewayApplication |
 
 Usar la carpeta del microservicio como Working directory. Definir las mismas variables de entorno que muestran los comandos de arranque cuando se quieran personalizar valores. Iniciar cada aplicación una sola vez: no ejecutar a la vez la misma desde IntelliJ y PowerShell.
@@ -450,6 +603,9 @@ Pop-Location
 Push-Location ./msv-evento
 .\mvnw.cmd test
 Pop-Location
+Push-Location ./msv-compraEntardaSol
+.\mvnw.cmd test
+Pop-Location
 ```
 
 **Linux/macOS con Bash/Zsh:**
@@ -459,15 +615,16 @@ Pop-Location
 (cd ./msv-SectoerAsiento && sh ./mvnw test)
 (cd ./api-gateway && sh ./mvnw test)
 (cd ./msv-evento && sh ./mvnw test)
+(cd ./msv-compraEntardaSol && sh ./mvnw test)
 ```
 
 No ejecutar simultáneamente las pruebas de Eventos y la aplicación Eventos sobre la misma base de desarrollo.
 
-Usuarios, SectorAsiento y Gateway utilizan H2 o proveedores HTTP de prueba y no necesitan servicios externos para sus suites. **Eventos actualmente solo tiene una prueba de arranque y usa el esquema eventos del MySQL compartido en 3306**, por lo que esa base debe estar iniciada. Sus pruebas no están aisladas con un perfil H2; con ddl-auto=update, el arranque puede actualizar el esquema configurado.
+Usuarios, SectorAsiento, Compras y Gateway utilizan H2 o proveedores HTTP de prueba y no necesitan servicios externos para sus suites. **Eventos actualmente solo tiene una prueba de arranque y usa el esquema eventos del MySQL compartido en 3306**, por lo que esa base debe estar iniciada. Sus pruebas no están aisladas con un perfil H2; con ddl-auto=update, el arranque puede actualizar el esquema configurado.
 
-Última verificación: 15 pruebas de Usuarios y 37 de SectorAsiento pasaron. Eventos compiló, pero su prueba de arranque falló por conexión a MySQL: en esa revisión solo estaba levantada la base de Usuarios. Eso no prueba un error de compilación ni permite certificar el flujo integrado real. El Gateway tenía seis pruebas correctas de la verificación anterior.
+Última verificación: 15 pruebas de Usuarios, 37 de SectorAsiento, 61 de Compras y 10 de Gateway pasaron. Eventos compiló, pero su prueba de arranque falló por conexión a MySQL: en esa revisión solo estaba levantada la base de Usuarios. Eso no prueba un error de compilación ni permite certificar el flujo integrado real.
 
-Pendientes conocidos: rutas del catálogo de Eventos en Gateway, coordinación automática de cancelación e inventario, y validaciones/pruebas de negocio de Eventos. El escenario de la sección 9 es la comprobación manual que debe realizarse con los servicios y bases reales. No se ejecutó ese escenario como parte de la actualización de esta guía.
+Pendientes conocidos: rutas del catálogo de Eventos en Gateway, coordinación automática entre la cancelación de Eventos y Compras, notificaciones a compradores afectados y validaciones/pruebas de negocio de Eventos. El escenario de la sección 9 se ejecutó completo el 10 de noviembre de 2026 contra MySQL real (Compras en 3311, Eventos en 8005 y SectorAsiento en 8002): compra, pago, uso de QR, devolución con reintegro, cancelación desde Compras y consulta por Gateway, sin fallos.
 
 Para pruebas específicas con MySQL descartable, consultar README.md de SectorAsiento. Su compose.mysql-test.yml usa 3309 y no es la base de desarrollo de esta guía.
 
@@ -485,12 +642,20 @@ Para pruebas específicas con MySQL descartable, consultar README.md de SectorAs
 | /api/eventos devuelve 404 por Gateway | Falta la ruta del catálogo; usar directamente 8005 por ahora. |
 | Reserva devuelve 409 | Publicación/fecha del evento, cupos, asientos, límite por cliente y clave de idempotencia. |
 | Inventario devuelve 502 | Revisar el contrato del proveedor: evento con lugar.id y fechaHora. |
-| Ya se canceló el evento, pero el inventario sigue abierto | Ejecutar la segunda llamada de cancelación indicada en 9.10. |
+| Compras devuelve 503 | Eventos en 8005 y SectorAsiento en 8002 iniciados; MSVC_EVENTOS_URL y MSVC_SECTORES_URL correctas. |
+| Compra devuelve 409 | Evento publicado y futuro, clave de idempotencia reutilizada con otro contenido o asiento ya ocupado. |
+| Pago devuelve 409 | La compra ya se procesó con otro resultado (aprobado/rechazado). |
+| Devolución devuelve 409 | Faltan menos de 72 horas, ya existe una solicitud pendiente/aceptada o la entrada no está PAGA. |
+| No se puede devolver una entrada | El QR ya está ESCANEADO; usar otra compra para probar la devolución. |
+| Reventa falla por índice único | Ejecutar una vez `ALTER TABLE entrada DROP INDEX uk_entrada_evento_asiento;` sobre `compra_entrada_sol`. |
+| Compras no conecta a su base | Levantar `docker compose -f ./msv-compraEntardaSol/compose.mysql.yml up -d --wait` y revisar el puerto 3311. |
+| Ya se canceló el evento, pero el inventario sigue abierto | Ejecutar la segunda llamada de 9.10 o `POST /compras/eventos/{id}/cancelacion` (9.13). |
 
 Ver logs de bases desde la raíz:
 
 ```sh
 docker compose logs --tail 50 mysql
+docker compose -f ./msv-compraEntardaSol/compose.mysql.yml logs --tail 50
 ```
 
 ### Ajustar variables sin rutas personales
@@ -511,7 +676,7 @@ export DB_URL='jdbc:mysql://localhost:3306/usuarios'
 export MSV_EVENTO_URL='http://localhost:8005'
 ```
 
-Para otras aplicaciones cambiar el esquema de DB_URL. Las variables de URLs son MSV_EVENTO_URL en Usuarios; MSVC_EVENTOS_URL y MSVC_COMPRAS_URL en SectorAsiento; MSVC_USUARIOS_URL y MSVC_SECTORES_URL en Gateway. Los puertos HTTP por defecto siguen siendo 8004, 8005, 8002 y 8080. Si una variable vieja apunta a otro puerto, corregirla o quitarla.
+Para otras aplicaciones cambiar el esquema de DB_URL. Las variables de URLs son MSV_EVENTO_URL en Usuarios; MSVC_EVENTOS_URL y MSVC_COMPRAS_URL en SectorAsiento; MSVC_EVENTOS_URL y MSVC_SECTORES_URL en Compras; MSVC_USUARIOS_URL y MSVC_SECTORES_URL en Gateway. Compras usa además DB_URL, DB_USERNAME y DB_PASSWORD sobre el puerto 3311. Los puertos HTTP por defecto siguen siendo 8004, 8005, 8002, 8003 y 8080. Si una variable vieja apunta a otro puerto, corregirla o quitarla.
 
 Si los microservicios también se ejecutan en contenedores, localhost representa a cada contenedor: se requieren URLs con los nombres de servicio de su red Docker. Esta guía describe Java ejecutándose en el equipo y solo MySQL en Docker, no un despliegue completo de las aplicaciones en contenedores.
 
@@ -521,13 +686,14 @@ Detener las aplicaciones con Ctrl+C en sus terminales o Stop en IntelliJ, en cua
 
 ```sh
 docker compose stop
+docker compose -f ./msv-compraEntardaSol/compose.mysql.yml stop
 ```
 
-Estos comandos conservan los datos de los volúmenes. Para volver a iniciar las bases, repetir los comandos up de la sección 3.
+Estos comandos conservan los datos de los volúmenes. Para volver a iniciar las bases, repetir los comandos up de la sección 3 y el de la base propia de Compras.
 
 ## Nota de verificación del cambio de bases
 
-Se validaron la configuración Compose y la sintaxis de los scripts. No se ejecutó el arranque ni la migración contra MySQL durante este cambio porque Docker Desktop no estaba iniciado. Los volúmenes y datos anteriores no fueron modificados.
+Se validaron la configuración Compose, la compilación y las suites automáticas (61 pruebas de Compras y 10 del Gateway, entre otras). También se ejecutó el flujo E2E de Compras contra MySQL 3311, Eventos 8005 y SectorAsiento 8002, y se comprobó el enrutamiento de `/compras` por el Gateway. La migración de volúmenes anteriores no se ejecutó durante este cambio; los datos previos no fueron modificados.
 
 ## Portabilidad de la guía
 
