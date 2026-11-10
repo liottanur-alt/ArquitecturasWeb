@@ -1,7 +1,8 @@
-package msv-comprarEntradaSol.enum;
+package org.msvcompraentradasol.enums;
 public enum EstadoEntrada {
     PAGA,
     SOLICITUD_DEVOLUCION,
     DEVOLUCION_ACEPTADA,
-    DEVOLUCION_RECHAZADA
+    DEVOLUCION_RECHAZADA,
+    EVENTO_CANCELADO
 }

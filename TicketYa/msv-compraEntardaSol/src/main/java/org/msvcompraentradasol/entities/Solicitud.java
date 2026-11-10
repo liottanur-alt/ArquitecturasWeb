@@ -1,9 +1,8 @@
-package msv-compraEntradaSol.entities;
+package org.msvcompraentradasol.entities;
 
+import java.time.Instant;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
-import java.util.ArrayList;
-import java.util.List;
+import org.msvcompraentradasol.enums.EstadoSolicitud;
 
 @Entity
 @Table(name = "solicitud")
@@ -13,34 +12,98 @@ public class Solicitud {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "id_entrada")
+    @ManyToOne
+    @JoinColumn(name = "id_entrada", nullable = false)
     private Entrada entrada;
 
-    @ManyToOne
-    @JoinColumn(name = "id_organizador")
-    private Organizador organizador;
-    //bidireccion, org mappedBy id_org
+    @Column(name = "id_cliente", nullable = false)
+    private Long idCliente;
+
+    // Se asigna cuando un administrador resuelve la solicitud.
+    @Column(name = "id_administrador")
+    private Long idAdministrador;
+
+    @Column(name = "fecha_solicitud", nullable = false)
+    private Instant fechaSolicitud;
+
+    @Column(name = "fecha_resolucion")
+    private Instant fechaResolucion;
+
+    @Column(name = "referencia_reintegro")
+    private String referenciaReintegro;
 
     @Column(nullable = false)
     private String descripcion;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "estado_solicitud", nullable = false)
     private EstadoSolicitud estadoSolicitud;
 
-    public Long getId() { return id; }
-
-    public Entrada getEntrada() { return entrada; }
-    public void setEntrada(Entrada entrada) { this.entrada = entrada; }
-
-    public Organizador getOrganizador() { return organizador; }
-    public void setOrganizador(Organizador organizador) { this.organizador = organizador; }
-
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-
-    public EstadoSolicitud getEstadoSolicitud() { return estadoSolicitud; }
-    public void setEstadoSolicitud(EstadoSolicitud estadoSolicitud) { this.estadoSolicitud = estadoSolicitud; }
-
+    public Long getId() {
+        return id;
     }
+
+    public Entrada getEntrada() {
+        return entrada;
+    }
+
+    public void setEntrada(Entrada entrada) {
+        this.entrada = entrada;
+    }
+
+    public Long getIdCliente() {
+        return idCliente;
+    }
+
+    public void setIdCliente(Long idCliente) {
+        this.idCliente = idCliente;
+    }
+
+    public Long getIdAdministrador() {
+        return idAdministrador;
+    }
+
+    public void setIdAdministrador(Long idAdministrador) {
+        this.idAdministrador = idAdministrador;
+    }
+
+    public Instant getFechaSolicitud() {
+        return fechaSolicitud;
+    }
+
+    public void setFechaSolicitud(Instant fechaSolicitud) {
+        this.fechaSolicitud = fechaSolicitud;
+    }
+
+    public Instant getFechaResolucion() {
+        return fechaResolucion;
+    }
+
+    public void setFechaResolucion(Instant fechaResolucion) {
+        this.fechaResolucion = fechaResolucion;
+    }
+
+    public String getReferenciaReintegro() {
+        return referenciaReintegro;
+    }
+
+    public void setReferenciaReintegro(String referenciaReintegro) {
+        this.referenciaReintegro = referenciaReintegro;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public EstadoSolicitud getEstadoSolicitud() {
+        return estadoSolicitud;
+    }
+
+    public void setEstadoSolicitud(EstadoSolicitud estadoSolicitud) {
+        this.estadoSolicitud = estadoSolicitud;
+    }
+}

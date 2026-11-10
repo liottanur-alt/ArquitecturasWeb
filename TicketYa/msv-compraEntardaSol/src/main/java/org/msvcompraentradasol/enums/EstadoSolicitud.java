@@ -1,7 +1,7 @@
-package msv-comprarEntradaSol.enum;
+package org.msvcompraentradasol.enums;
 
 public enum EstadoSolicitud {
-    ACTIVA,
+    PENDIENTE,
     ACEPTADA,
     RECHAZADA
 }

@@ -18,8 +18,20 @@ Proyecto Spring Boot con Java 21 o superior y una base MySQL exclusiva del servi
    ```
 
 Docker crea la base `usuarios`. Cuando arranca Spring Boot, Hibernate crea las
-tablas `roles`, `usuarios` y `artistas_favoritos`. No se insertan datos iniciales;
-crear primero un rol mediante `POST /roles` antes de crear usuarios.
+tablas `roles`, `usuarios` y `artistas_favoritos`. Se inicializan los cuatro roles.
+El perfil predeterminado `dev` crea un administrador de prueba con email
+`admin@admin.com` y password `1234` (hash BCrypt en la base), solo si no existe.
+Para registrar clientes, usar `POST /auth/registro`; para obtener un JWT, usar
+`POST /auth/login`. Ver ejemplos en [REST.md](REST.md).
+
+El JWT dura 30 minutos. `JWT_SECRET` permite configurar la clave de firma;
+el valor por defecto es exclusivo de desarrollo local. Para otro entorno,
+configurar una clave privada al entorno de al menos 32 bytes y un perfil distinto
+de `dev`. No se implementa refresh token todavia.
+
+Las cuentas anteriores sin password se conservan y no pueden iniciar sesion.
+No se les asigna una password comun automaticamente. El registro permite passwords
+de al menos 4 caracteres para este ejemplo de prueba, con un maximo de 72 bytes.
 
 El microservicio HTTP escucha en `http://localhost:8004`. Si el API Gateway se
 ejecuta en el mismo equipo, su destino para las rutas `/usuarios/**` y `/roles/**`
@@ -88,6 +100,9 @@ usuarios con sus favoritos y eliminacion individual de favoritos.
 El perfil `test` usa una base en memoria aislada y revierte los cambios de cada
 prueba de persistencia. No requiere Docker ni modifica la base de desarrollo.
 Estas pruebas no reemplazan una verificacion contra MySQL real.
+
+Tambien se prueban por HTTP registro, login, hashes de password, tokens vencidos,
+emisores incorrectos, permisos de administrador y acceso al perfil propio.
 
 ## Cliente Feign de artistas
 

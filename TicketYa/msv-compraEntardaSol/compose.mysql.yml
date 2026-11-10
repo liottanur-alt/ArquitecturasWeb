@@ -1,0 +1,20 @@
+services:
+  mysql-compra:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: compra_entrada_sol
+      MYSQL_USER: compra_app
+      MYSQL_PASSWORD: ${DB_PASSWORD:-compra_dev}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_compra_dev}
+    ports:
+      - "127.0.0.1:3311:3306"
+    volumes:
+      - compra-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  compra-data:
