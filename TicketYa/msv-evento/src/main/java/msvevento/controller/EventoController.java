@@ -26,8 +26,13 @@ public class EventoController {
     // Listar todos los eventos
     @GetMapping
     public ResponseEntity<List<EventoResponseDTO>> listarEventos() {
+        return ResponseEntity.ok(eventoService.listarEventosPublicos());
+    }
 
-        return ResponseEntity.ok(eventoService.listarEventos());
+    @GetMapping("/mis-eventos")
+    public ResponseEntity<List<EventoResponseDTO>> listarMisEventos(
+            @RequestHeader("X-Organizador-Id") Long idOrganizador) {
+        return ResponseEntity.ok(eventoService.listarEventosDelOrganizador(idOrganizador));
     }
 
     // Buscar un evento por ID
@@ -35,7 +40,12 @@ public class EventoController {
     public ResponseEntity<EventoResponseDTO> buscarEventoPorId(
             @PathVariable Long id
     ) {
+        return ResponseEntity.ok(eventoService.buscarEventoPublicado(id));
+    }
 
+    /** Consulta interna usada por SectorAsiento para configurar inventario antes de publicar. */
+    @GetMapping("/interno/{id}")
+    public ResponseEntity<EventoResponseDTO> buscarEventoInterno(@PathVariable Long id) {
         return ResponseEntity.ok(eventoService.buscarEventoPorId(id));
     }
 
@@ -54,18 +64,35 @@ public class EventoController {
     @PutMapping("/{id}")
     public ResponseEntity<EventoResponseDTO> actualizarEvento(
             @PathVariable Long id,
+            @RequestHeader("X-Organizador-Id") Long idOrganizador,
             @RequestBody EventoRequestDTO dto
     ) {
 
-        return ResponseEntity.ok(eventoService.actualizarEvento(id, dto));
+        return ResponseEntity.ok(eventoService.actualizarEvento(id, idOrganizador, dto));
     }
     // Publicar un evento
     @PatchMapping("/{id}/publicar")
     public ResponseEntity<EventoResponseDTO> publicarEvento(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @RequestHeader("X-Organizador-Id") Long idOrganizador
     ) {
 
-        return ResponseEntity.ok(eventoService.publicarEvento(id));
+        return ResponseEntity.ok(eventoService.publicarEvento(id, idOrganizador));
+    }
+
+    @PatchMapping("/interno/{id}/disponibilidad")
+    public ResponseEntity<Void> actualizarDisponibilidad(
+            @PathVariable Long id,
+            @RequestParam boolean agotado) {
+        eventoService.actualizarAgotamiento(id, agotado);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/finalizar")
+    public ResponseEntity<EventoResponseDTO> finalizarEvento(
+            @PathVariable Long id,
+            @RequestHeader("X-Organizador-Id") Long idOrganizador) {
+        return ResponseEntity.ok(eventoService.finalizarEvento(id, idOrganizador));
     }
 
 

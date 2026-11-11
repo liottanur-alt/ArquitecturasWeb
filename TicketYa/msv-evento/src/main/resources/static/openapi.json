@@ -31,7 +31,7 @@
         ],
         "operationId": "get_api_artistas",
         "summary": "Listar artistas",
-        "description": "Devuelve todos los registros, incluidos eventos no publicados. Para buscar solo publicados usar /api/eventos/buscar.",
+        "description": "Devuelve todos los registros.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -753,7 +753,7 @@
         ],
         "operationId": "get_api_eventos",
         "summary": "Listar eventos",
-        "description": "Devuelve todos los registros, incluidos eventos no publicados. Para buscar solo publicados usar /api/eventos/buscar.",
+        "description": "Consulta pública. Devuelve únicamente eventos con estadoPublicacion PUBLICADO.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -923,7 +923,7 @@
           "Eventos"
         ],
         "operationId": "get_api_eventos_id",
-        "summary": "Consultar evento",
+        "summary": "Consultar evento publicado",
         "description": "Devuelve el registro o 404 si no existe.",
         "responses": {
           "200": {
@@ -1016,7 +1016,7 @@
         ],
         "operationId": "put_api_eventos_id",
         "summary": "Actualizar evento",
-        "description": "Reemplaza los campos editables. En eventos, estado y estadoPublicacion se conservan; se resuelven nuevamente lugar y artistas. No es una actualización parcial.",
+        "description": "Edita únicamente borradores del organizador indicado en X-Organizador-Id. El estado y estadoPublicacion se conservan; lugar y participantes se actualizan con sus IDs. No es parcial.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1222,7 +1222,7 @@
         ],
         "operationId": "patch_api_eventos_id_publicar",
         "summary": "Publicar evento",
-        "description": "Solo admite BORRADOR y lo cambia a PUBLICADO cuando están completos nombre, descripción, tipo, organizador válido, fecha futura, lugar con nombre/dirección/coordenadas y al menos un participante. También requiere al menos un sector con precio no negativo y capacidad positiva en SectorAsiento. Si falta información, devuelve 400 (datos del evento) o 409 (sectores) y conserva BORRADOR; si SectorAsiento no está disponible devuelve 503. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
+        "description": "Solo admite borradores del organizador indicado en X-Organizador-Id y los cambia a PUBLICADO tras validar datos y sectores. Si otro organizador lo intenta, devuelve 403. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1562,6 +1562,44 @@
             "description": "ID real devuelto por la creación; no asumir ID 1."
           }
         ]
+      }
+    },
+    "/api/eventos/mis-eventos": {
+      "get": {
+        "tags": ["Eventos"],
+        "operationId": "get_api_eventos_mis_eventos",
+        "summary": "Listar eventos propios",
+        "parameters": [{"name": "X-Organizador-Id", "in": "header", "required": true, "schema": {"type": "integer", "format": "int64"}}],
+        "responses": {"200": {"description": "Eventos del organizador, incluidos sus borradores.", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/EventoResponse"}}}}}}
+      }
+    },
+    "/api/eventos/interno/{id}": {
+      "get": {
+        "tags": ["Eventos"],
+        "operationId": "get_api_eventos_interno_id",
+        "summary": "Consulta interna de evento",
+        "description": "Ruta para que SectorAsiento consulte el evento antes de publicar y configurar inventario.",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer", "format": "int64"}}],
+        "responses": {"200": {"description": "Evento consultado.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EventoResponse"}}}}, "404": {"description": "Evento inexistente."}}
+      }
+    },
+    "/api/eventos/interno/{id}/disponibilidad": {
+      "patch": {
+        "tags": ["Eventos"],
+        "operationId": "patch_api_eventos_interno_id_disponibilidad",
+        "summary": "Sincronizar agotamiento",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer", "format": "int64"}}, {"name": "agotado", "in": "query", "required": true, "schema": {"type": "boolean"}}],
+        "responses": {"204": {"description": "Estado de disponibilidad actualizado."}}
+      }
+    },
+    "/api/eventos/{id}/finalizar": {
+      "patch": {
+        "tags": ["Eventos"],
+        "operationId": "patch_api_eventos_id_finalizar",
+        "summary": "Finalizar evento",
+        "description": "El organizador dueño puede finalizar el evento una vez alcanzada su fecha y hora.",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer", "format": "int64"}}, {"name": "X-Organizador-Id", "in": "header", "required": true, "schema": {"type": "integer", "format": "int64"}}],
+        "responses": {"200": {"description": "Evento finalizado.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EventoResponse"}}}}, "403": {"description": "El organizador no es dueño del evento."}, "409": {"description": "No se alcanzó la fecha del evento o el evento fue cancelado."}}
       }
     },
     "/api/eventos/buscar": {

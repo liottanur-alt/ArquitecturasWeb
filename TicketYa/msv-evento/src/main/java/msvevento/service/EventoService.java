@@ -50,10 +50,16 @@ public class EventoService {
 
     // Listar todos los eventos
     @Transactional(readOnly = true)
-    public List<EventoResponseDTO> listarEventos() {
-
-        return eventoRepository.findAll()
+    public List<EventoResponseDTO> listarEventosPublicos() {
+        return eventoRepository.findByEstadoPublicacion(EstadoPublicacion.PUBLICADO)
                 .stream()
+                .map(this::convertirAResponseDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventoResponseDTO> listarEventosDelOrganizador(Long idOrganizador) {
+        return eventoRepository.findByIdOrganizador(idOrganizador).stream()
                 .map(this::convertirAResponseDTO)
                 .toList();
     }
@@ -68,6 +74,13 @@ public class EventoService {
                         "No se encontro el evento con ID: " + id
                 ));
 
+        return convertirAResponseDTO(evento);
+    }
+
+    @Transactional(readOnly = true)
+    public EventoResponseDTO buscarEventoPublicado(Long id) {
+        Evento evento = eventoRepository.findByIdAndEstadoPublicacion(id, EstadoPublicacion.PUBLICADO)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento publicado no encontrado"));
         return convertirAResponseDTO(evento);
     }
 
@@ -119,7 +132,7 @@ public class EventoService {
     }
 
     // Actualizar un evento
-    public EventoResponseDTO actualizarEvento(Long id, EventoRequestDTO dto) {
+    public EventoResponseDTO actualizarEvento(Long id, Long idOrganizador, EventoRequestDTO dto) {
 
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -127,10 +140,14 @@ public class EventoService {
                         "No se encontro el evento con ID: " + id
                 ));
 
+        validarOrganizador(evento, idOrganizador);
+        if (evento.getEstadoPublicacion() != EstadoPublicacion.BORRADOR) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solo se pueden editar borradores");
+        }
+
         evento.setNombre(dto.getNombre());
         evento.setDescripcion(dto.getDescripcion());
         evento.setTipo(dto.getTipo());
-        evento.setIdOrganizador(dto.getIdOrganizador());
         evento.setFechaHora(dto.getFechaHora());
         evento.setDemanda(dto.isDemanda());
 
@@ -168,13 +185,15 @@ public class EventoService {
     }
     // Publicar un evento
     @Transactional
-    public EventoResponseDTO publicarEvento(Long id) {
+    public EventoResponseDTO publicarEvento(Long id, Long idOrganizador) {
 
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No se encontro el evento con ID: " + id
                 ));
+
+        validarOrganizador(evento, idOrganizador);
 
         if (evento.getEstadoPublicacion() != EstadoPublicacion.BORRADOR) {
             throw new ResponseStatusException(
@@ -191,6 +210,45 @@ public class EventoService {
         Evento eventoGuardado = eventoRepository.save(evento);
 
         return convertirAResponseDTO(eventoGuardado);
+    }
+
+    private void validarOrganizador(Evento evento, Long idOrganizador) {
+        if (idOrganizador == null || !idOrganizador.equals(evento.getIdOrganizador())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No sos el organizador de este evento");
+        }
+    }
+
+    public void actualizarAgotamiento(Long id, boolean agotado) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+        if (evento.getEstado() == EstadoEvento.CANCELADO || evento.getEstado() == EstadoEvento.FINALIZADO) return;
+        if (agotado) {
+            evento.setEstado(EstadoEvento.AGOTADO);
+        } else if (evento.getEstado() == EstadoEvento.AGOTADO
+                && evento.getEstadoPublicacion() == EstadoPublicacion.PUBLICADO
+                && evento.getFechaHora() != null
+                && evento.getFechaHora().isAfter(LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")))) {
+            evento.setEstado(EstadoEvento.EN_CURSO);
+        }
+        eventoRepository.save(evento);
+    }
+
+    public EventoResponseDTO finalizarEvento(Long id, Long idOrganizador) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+        validarOrganizador(evento, idOrganizador);
+        if (evento.getFechaHora() == null || evento.getFechaHora().isAfter(
+                LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El evento todavía no llegó a su fecha y hora");
+        }
+        if (evento.getEstadoPublicacion() != EstadoPublicacion.PUBLICADO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solo se pueden finalizar eventos publicados");
+        }
+        if (evento.getEstado() == EstadoEvento.CANCELADO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "No se puede finalizar un evento cancelado");
+        }
+        evento.setEstado(EstadoEvento.FINALIZADO);
+        return convertirAResponseDTO(eventoRepository.save(evento));
     }
 
     private void validarDatosParaPublicar(Evento evento) {

@@ -139,7 +139,10 @@ public class InventarioService {
     /** Confirma una sola vez. Si ya vencio, devuelve VENCIDA y conserva la liberacion en la base. */
     public ReservaResponse confirmar(@NotNull @Positive Long id) {
         var e = bloquearEventoReserva(id); vencer(e.getId()); var r = reserva(id);
-        if (r.getEstado() == EstadoReserva.CONFIRMADA) return ReservaResponse.from(r);
+        if (r.getEstado() == EstadoReserva.CONFIRMADA) {
+            sincronizarAgotamiento(e.getId());
+            return ReservaResponse.from(r);
+        }
         if (r.getEstado() == EstadoReserva.VENCIDA) return ReservaResponse.from(r);
         if (r.getEstado() != EstadoReserva.ACTIVA || e.isCancelado()) throw conflicto("La reserva no se puede confirmar");
         validarVentaRemota(e);
@@ -147,6 +150,7 @@ public class InventarioService {
         c.setLugaresReservados(c.getLugaresReservados() - r.getCantidad());
         c.setLugaresVendidos(c.getLugaresVendidos() + r.getCantidad());
         r.getAsientos().forEach(p -> p.setEstado(EstadoAsiento.VENDIDO)); r.setEstado(EstadoReserva.CONFIRMADA);
+        sincronizarAgotamiento(e.getId());
         return ReservaResponse.from(r);
     }
 
@@ -168,6 +172,7 @@ public class InventarioService {
             var d = previa.get();
             if (!d.getReserva().getId().equals(id) || !d.getCantidad().equals(request.cantidad()) || !d.getPosiciones().equals(firma) || !d.getSolicitadaEn().equals(request.solicitadaEn().truncatedTo(java.time.temporal.ChronoUnit.MICROS)))
                 throw conflicto("La clave de devolucion ya identifica otra solicitud");
+            sincronizarAgotamiento(e.getId());
             return ReservaResponse.from(r);
         }
         if (r.getEstado() != EstadoReserva.CONFIRMADA || e.isCancelado()) throw conflicto("La reserva no es una venta vigente");
@@ -178,6 +183,7 @@ public class InventarioService {
         devolverLugares(r, request.cantidad(), ids);
         var d = new Devolucion(); d.setClave(request.claveIdempotencia()); d.setReserva(r);
         d.setCantidad(request.cantidad()); d.setSolicitadaEn(request.solicitadaEn().truncatedTo(java.time.temporal.ChronoUnit.MICROS)); d.setPosiciones(firma); devoluciones.saveAndFlush(d);
+        sincronizarAgotamiento(e.getId());
         return ReservaResponse.from(r);
     }
 
@@ -254,6 +260,14 @@ public class InventarioService {
         var c = r.getSectorEvento(); c.setLugaresVendidos(c.getLugaresVendidos() - cantidad);
         r.setCantidadDevuelta(r.getCantidadDevuelta() + cantidad);
         if (r.getCantidadDevuelta().equals(r.getCantidad())) r.setEstado(EstadoReserva.DEVUELTA);
+    }
+
+    /** Un evento se agota solo cuando todos los cupos están vendidos y no quedan reservas temporales. */
+    private void sincronizarAgotamiento(Long evento) {
+        var sectoresEvento = configuraciones.findByIdEvento(evento);
+        boolean agotado = !sectoresEvento.isEmpty() && sectoresEvento.stream().allMatch(c ->
+            c.getLugaresVendidos() >= c.getCapacidadHabilitada() && c.getLugaresReservados() == 0);
+        eventos.actualizarDisponibilidad(evento, agotado);
     }
 
     /** Compara el contenido original: una clave repetida no permite cambiar cliente ni lugares. */

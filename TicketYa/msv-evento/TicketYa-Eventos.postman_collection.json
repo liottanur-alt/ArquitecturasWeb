@@ -309,11 +309,16 @@
       ]
     },
     {
-      "name": "10 Consultar evento",
+      "name": "10 Consultar borradores propios",
       "request": {
         "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/api/eventos/{{idEvento}}",
+        "header": [
+          {
+            "key": "X-Organizador-Id",
+            "value": "{{idOrganizadorPrueba}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/mis-eventos",
         "description": ""
       },
       "event": [
@@ -337,6 +342,10 @@
           {
             "key": "Content-Type",
             "value": "application/json"
+          },
+          {
+            "key": "X-Organizador-Id",
+            "value": "{{idOrganizadorPrueba}}"
           }
         ],
         "url": "{{baseUrl}}/api/eventos/{{idEvento}}",
@@ -366,7 +375,7 @@
       ]
     },
     {
-      "name": "12 Listar eventos incluye borradores",
+      "name": "12 Listar eventos públicos excluye borradores",
       "request": {
         "method": "GET",
         "header": [],
@@ -381,7 +390,7 @@
             "exec": [
               "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
               "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
-              "pm.test(\"Incluye borrador propio\", () => pm.expect(pm.response.json().map(e=>e.id)).to.include(Number(pm.collectionVariables.get(\"idEvento\"))));"
+              "pm.test(\"Excluye borrador propio\", () => pm.expect(pm.response.json().map(e=>e.id)).not.to.include(Number(pm.collectionVariables.get(\"idEvento\"))));"
             ]
           }
         }
@@ -413,7 +422,12 @@
       "name": "14 Publicar evento",
       "request": {
         "method": "PATCH",
-        "header": [],
+        "header": [
+          {
+            "key": "X-Organizador-Id",
+            "value": "{{idOrganizadorPrueba}}"
+          }
+        ],
         "url": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
         "description": ""
       },
@@ -435,7 +449,12 @@
       "name": "15 Repetir publicación devuelve conflicto",
       "request": {
         "method": "PATCH",
-        "header": [],
+        "header": [
+          {
+            "key": "X-Organizador-Id",
+            "value": "{{idOrganizadorPrueba}}"
+          }
+        ],
         "url": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
         "description": ""
       },
@@ -772,7 +791,12 @@
       "name": "29 Republicar suspendido no está implementado",
       "request": {
         "method": "PATCH",
-        "header": [],
+        "header": [
+          {
+            "key": "X-Organizador-Id",
+            "value": "{{idOrganizadorPrueba}}"
+          }
+        ],
         "url": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
         "description": ""
       },
@@ -882,7 +906,12 @@
       "name": "34 Publicar evento inexistente",
       "request": {
         "method": "PATCH",
-        "header": [],
+        "header": [
+          {
+            "key": "X-Organizador-Id",
+            "value": "{{idOrganizadorPrueba}}"
+          }
+        ],
         "url": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
         "description": ""
       },
@@ -908,6 +937,10 @@
           {
             "key": "Content-Type",
             "value": "application/json"
+          },
+          {
+            "key": "X-Organizador-Id",
+            "value": "{{idOrganizadorPrueba}}"
           }
         ],
         "url": "{{baseUrl}}/api/eventos/{{idEvento}}",

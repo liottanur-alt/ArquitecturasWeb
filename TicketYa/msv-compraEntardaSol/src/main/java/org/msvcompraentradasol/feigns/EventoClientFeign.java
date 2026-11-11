@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "msvc-eventos", url = "${msvc.eventos.url}")
 public interface EventoClientFeign {
 
-    @GetMapping("/api/eventos/{id}")
+    @GetMapping("/api/eventos/interno/{id}")
     EventoFechaResponseDTO obtenerEvento(@PathVariable("id") Long idEvento);
 
     @PatchMapping("/api/eventos/{id}/cancelar")

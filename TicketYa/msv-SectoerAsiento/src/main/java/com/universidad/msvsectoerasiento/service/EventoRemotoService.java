@@ -25,4 +25,13 @@ public class EventoRemotoService {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Eventos no esta disponible");
         }
     }
+
+    /** Mantiene el estado AGOTADO sincronizado al vender o devolver cupos. */
+    public void actualizarDisponibilidad(Long id, boolean agotado) {
+        try {
+            eventos.actualizarDisponibilidad(id, agotado);
+        } catch (FeignException e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "No se pudo actualizar el estado del evento");
+        }
+    }
 }

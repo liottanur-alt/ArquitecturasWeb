@@ -389,7 +389,7 @@ Enviar-Json 'PUT' "$gatewayPrueba/eventos/$($eventoPrueba.id)/sectores" @{
     capacidadHabilitada = 1
 }
 
-Invoke-RestMethod -Uri "$eventosPrueba/api/eventos/$($eventoPrueba.id)/publicar" -Method Patch
+Invoke-RestMethod -Uri "$eventosPrueba/api/eventos/$($eventoPrueba.id)/publicar" -Method Patch -Headers @{ 'X-Organizador-Id' = "$($eventoPrueba.idOrganizador)" }
 
 $urlDisponibilidadPrueba = "$gatewayPrueba/eventos/$($eventoPrueba.id)/sectores/$($sectorPrueba.id)/disponibilidad"
 Invoke-RestMethod $urlDisponibilidadPrueba

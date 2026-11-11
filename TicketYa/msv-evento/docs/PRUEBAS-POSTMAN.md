@@ -6,6 +6,8 @@
 - `TicketYa-Eventos.postman_collection.json`: 41 solicitudes ordenadas con aserciones automáticas y captura de IDs.
 - `datos-prueba.postman.json`: dos iteraciones de ejemplo, para Tandil y Azul.
 
+La colección usa `X-Organizador-Id` al editar y publicar; para consultar borradores propios usa `GET /api/eventos/mis-eventos`. `GET /api/eventos` y `GET /api/eventos/{id}` son consultas públicas y solo muestran eventos publicados.
+
 La documentación se sirve en http://localhost:8005/openapi.json cuando Eventos está iniciado. Puede importarse en Swagger Editor/Swagger UI o en Postman. La especificación es estática y debe actualizarse si cambia el código.
 
 ## Arranque y configuración
