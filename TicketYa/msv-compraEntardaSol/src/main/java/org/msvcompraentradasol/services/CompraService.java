@@ -238,6 +238,9 @@ public class CompraService {
 
     @Transactional
     public CancelacionEventoResponseDTO cancelarEvento(Long idEvento) {
+        // Bloquea primero nuevas compras; Eventos permite repetir esta transicion de forma segura.
+        eventoClient.cancelarEvento(idEvento);
+
         List<Compra> compras = compraRepository.buscarPorEventoParaActualizar(
                 idEvento,
                 List.of(EstadoCompra.APROBADA, EstadoCompra.PENDIENTE)

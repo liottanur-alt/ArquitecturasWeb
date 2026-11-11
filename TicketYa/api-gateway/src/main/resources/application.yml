@@ -8,6 +8,8 @@ msvc:
     url: ${MSVC_USUARIOS_URL:http://localhost:8004}
   compras:
     url: ${MSVC_COMPRAS_URL:http://localhost:8003}
+  eventos:
+    url: ${MSVC_EVENTOS_URL:http://localhost:8005}
 
 spring:
   application:
@@ -21,6 +23,10 @@ spring:
               uri: ${msvc.usuarios.url}
               predicates:
                 - Path=/usuarios,/usuarios/**,/roles,/roles/**
+            - id: msvc-eventos
+              uri: ${msvc.eventos.url}
+              predicates:
+                - Path=/api/eventos,/api/eventos/**,/api/lugares,/api/lugares/**,/api/artistas,/api/artistas/**
             - id: msvc-sectores-asientos
               uri: ${msvc.sectores.url}
               predicates:

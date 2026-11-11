@@ -54,13 +54,14 @@ Todas las operaciones son idempotentes por `claveIdempotencia` o por estado fina
 
 `POST /compras/eventos/{idEvento}/cancelacion`:
 
+- marca primero el evento como `CANCELADO` en Eventos para bloquear nuevas ventas;
 - cancela compras `PENDIENTE` liberando su reserva;
 - reintegra las entradas vigentes de compras `APROBADA` sin generar un segundo reintegro para entradas ya devueltas;
 - cancela solicitudes pendientes asociadas;
 - invoca `POST /eventos/{idEvento}/inventario/cancelacion` de SectorAsiento (una sola llamada desde Compras);
-- es idempotente: repetirla no vuelve a reintegrar.
+- es idempotente: repetirla completa cualquier paso pendiente sin duplicar reintegros.
 
-La cancelacion del estado del evento en el catalogo de Eventos sigue siendo una llamada administrativa aparte.
+Esta es la operacion que se debe usar para cancelar un evento completo. Si un servicio falla despues de marcar el evento, se puede repetir la misma solicitud; el evento, los reintegros y el inventario toleran el reintento.
 
 ## API y errores
 

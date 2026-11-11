@@ -49,9 +49,9 @@ Response: id, nombre y genero. El campo de identificación se llama id, no idArt
 | GET | /api/eventos/{id} | Consulta, 200 o 404 |
 | PUT | /api/eventos/{id} | Reemplaza datos editables, conserva estados, 200 o 404 |
 | DELETE | /api/eventos/{id} | Elimina, 204 o 404 |
-| PATCH | /api/eventos/{id}/publicar | BORRADOR a PUBLICADO, 200; conflicto 409 |
+| PATCH | /api/eventos/{id}/publicar | BORRADOR a PUBLICADO si los datos obligatorios están completos y existe al menos un sector válido, 200; validación 400/409 |
 | PATCH | /api/eventos/{id}/suspender | PUBLICADO a SUSPENDIDO, 200; conflicto 409 |
-| PATCH | /api/eventos/{id}/cancelar | Estado CANCELADO y publicación SUSPENDIDO, 200; conflicto 409 |
+| PATCH | /api/eventos/{id}/cancelar | Estado CANCELADO y publicación SUSPENDIDO, 200; repetir devuelve el estado actual; conflicto 409 si FINALIZADO |
 | GET | /api/eventos/buscar | Array de eventos publicados filtrados, 200 |
 
 Ejemplo de creación/actualización (IDs ilustrativos; usar los obtenidos al crear registros):
@@ -69,9 +69,9 @@ Ejemplo de creación/actualización (IDs ilustrativos; usar los obtenidos al cre
 }
 ```
 
-Tipos: RECITAL, TEATRO, DEPORTE, CONFERENCIA, FESTIVAL y OTRO. El lugar y los artistas deben existir en la base de Eventos. idOrganizador es una referencia externa que no se valida contra Usuarios. fechaHora es una fecha y hora local sin Z ni offset; actualmente no se valida que sea futura.
+Tipos: RECITAL, TEATRO, DEPORTE, CONFERENCIA, FESTIVAL y OTRO. El lugar y los artistas deben existir en la base de Eventos. idOrganizador es una referencia externa que no se valida contra Usuarios. fechaHora es una fecha y hora local sin Z ni offset.
 
-Aunque el DTO acepta estado y estadoPublicacion, el servicio ignora esos campos al crear/actualizar. Al crear fija EN_CURSO/BORRADOR. Para publicar, suspender o cancelar se usan los PATCH sin body. No existe una transición para republicar SUSPENDIDO: publicar exige BORRADOR. Cancelar exige que el estado no sea CANCELADO ni FINALIZADO; repetir cancelación devuelve 409.
+Aunque el DTO acepta estado y estadoPublicacion, el servicio ignora esos campos al crear/actualizar. Al crear fija EN_CURSO/BORRADOR. Para publicar, suspender o cancelar se usan los PATCH sin body. No existe una transición para republicar SUSPENDIDO: publicar exige BORRADOR. Antes de publicar se requieren nombre, descripción, tipo, organizador con ID positivo, fecha futura, lugar con nombre/dirección/coordenadas y al menos un participante. También debe existir al menos un sector de inventario con precio no negativo y capacidad positiva. Si falta información, responde 400 (datos del evento) o 409 (sectores); el estado queda BORRADOR. Si SectorAsiento no responde, devuelve 503 y no publica. Cancelar exige que el estado no sea FINALIZADO; repetir una cancelación devuelve el estado actual para permitir reintentos seguros.
 
 Ejemplo abreviado de respuesta:
 
@@ -107,13 +107,14 @@ GET /api/eventos/buscar?tipo=RECITAL&ciudad=Tandil&idParticipante=17&fechaDesde=
 
 ## Errores y límites actuales
 
-- 400: JSON o enums mal formados, tipos de parámetros inválidos, fecha no convertible y ordenamiento inválido.
+- 400: JSON o enums mal formados, tipos de parámetros inválidos, fecha no convertible, ordenamiento inválido o datos obligatorios incompletos al publicar.
 - 404: artista, lugar o evento no encontrado; referencias inexistentes al guardar eventos.
-- 409: publicar/suspender/cancelar desde un estado no admitido.
+- 409: publicación sin sectores válidos o suspender/cancelar desde un estado no admitido.
+- 503: SectorAsiento no disponible para validar sectores al publicar.
 - 500: casos aún sin manejo de negocio, como omitir idLugar, restricciones al borrar entidades usadas por eventos o valores de paginación inválidos.
 
-Los DTOs/controladores todavía no tienen Bean Validation. No se documenta como garantizado un 400 para nombre vacío, fecha pasada u otros campos obligatorios del enunciado: esa validación sigue pendiente. Los mensajes y campos opcionales del error dependen de la configuración de Spring; status identifica su código HTTP.
+Los DTOs/controladores todavía no tienen Bean Validation general para todas las operaciones; la validación de publicación se realiza en el servicio.
 
-Cancelar Eventos solo cambia su base local. No cancela inventario ni pide reintegros/notificaciones automáticamente. La coordinación con SectorAsiento y Compras sigue pendiente. La colección de este módulo no crea reservas.
+El PATCH de Eventos cambia el estado del catálogo. Para completar la cancelación de compras, reintegros e inventario, usar `POST /compras/eventos/{idEvento}/cancelacion` en Compras; ese flujo llama a este PATCH antes de cerrar ventas y reintegrar entradas. La colección de este módulo no crea reservas.
 
 Colección y datos: [TicketYa-Eventos.postman_collection.json](TicketYa-Eventos.postman_collection.json), [datos-prueba.postman.json](datos-prueba.postman.json). Instrucciones: [docs/PRUEBAS-POSTMAN.md](docs/PRUEBAS-POSTMAN.md).

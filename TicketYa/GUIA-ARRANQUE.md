@@ -395,7 +395,7 @@ $urlDisponibilidadPrueba = "$gatewayPrueba/eventos/$($eventoPrueba.id)/sectores/
 Invoke-RestMethod $urlDisponibilidadPrueba
 ```
 
-Se esperan 204 al inicializar el inventario y 200 al configurar, publicar y consultar. La disponibilidad debe indicar un lugar disponible.
+Se esperan 204 al inicializar el inventario y 200 al configurar, publicar y consultar. Antes de publicar, Eventos comprueba que el nombre, descripción, tipo, organizador, fecha futura, lugar, coordenadas y participantes estén completos y que SectorAsiento tenga al menos un sector con precio no negativo y capacidad positiva. Si falta algo, la solicitud falla con un mensaje indicando qué completar y el evento permanece en BORRADOR. La disponibilidad debe indicar un lugar disponible.
 
 ### 9.6 Reservar y repetir la misma solicitud
 
@@ -453,17 +453,9 @@ La reserva debe quedar DEVUELTA y el lugar disponible. El reintento utiliza exac
 
 No reutilizar una clave de idempotencia para una solicitud diferente: devuelve 409.
 
-### 9.10 Cancelación del inventario: requiere dos llamadas
+### 9.10 Cancelación del evento completo
 
-**No ejecutar este bloque si se van a probar 9.11 a 9.13**: el evento deja de admitir compras y reservas. Si se usa Compras, la cancelación de 9.13 ya invoca el inventario y este bloque manual solo hace falta para cerrar el estado del evento en el catálogo.
-
-```powershell
-Invoke-RestMethod -Uri "$eventosPrueba/api/eventos/$($eventoPrueba.id)/cancelar" -Method Patch
-Invoke-RestMethod -Uri "$gatewayPrueba/eventos/$($eventoPrueba.id)/inventario/cancelacion" -Method Post
-Invoke-RestMethod $urlDisponibilidadPrueba
-```
-
-La primera llamada cancela el estado de Eventos; la segunda libera inventario y marca cancelado=true. **Eventos todavía no invoca automáticamente la segunda operación.** La cancelación del inventario se puede repetir; el endpoint de cancelación de Eventos devuelve 409 si ya estaba cancelado o si el evento está finalizado.
+La cancelación completa se realiza con una sola llamada al endpoint de Compras, documentado en 9.13. Ejecutarla al final de las pruebas porque bloquea nuevas ventas, cancela las compras pendientes, reintegra las entradas y cierra el inventario. No hace falta llamar por separado a Eventos y SectorAsiento.
 
 ### 9.11 Compra, pago y uso del QR
 
@@ -564,9 +556,7 @@ $cancelacionRepetidaPrueba
 Invoke-RestMethod "$comprasPrueba/compras/$($compraPrueba.id)"
 ```
 
-La primera llamada debe devolver `comprasCanceladas` y `entradasReintegradas` mayores o iguales a 1 e `inventarioCancelado = true`. La compra de 9.11 queda `CANCELADA` con `estadoReintegro = COMPLETADO` y su entrada `EVENTO_CANCELADO`. La segunda llamada es idempotente: los contadores vuelven a cero y no cambia la referencia de reintegro. Si SectorAsiento responde 404 porque el evento no tenía inventario, `inventarioCancelado` es `false` y la operación igual termina bien.
-
-Esta llamada cancela las compras y el inventario, pero **no cambia el estado del evento en el catálogo de Eventos**. Para eso sigue siendo necesaria la llamada de 9.10 contra el puerto 8005. Orden sugerido: 9.11, 9.12, 9.13 y por último 9.10.
+La primera llamada debe devolver `comprasCanceladas` y `entradasReintegradas` mayores o iguales a 1 e `inventarioCancelado = true`. También deja el evento `CANCELADO` en el catálogo. La compra de 9.11 queda `CANCELADA` con `estadoReintegro = COMPLETADO` y su entrada `EVENTO_CANCELADO`. La segunda llamada es idempotente: los contadores vuelven a cero y no cambia la referencia de reintegro. Si SectorAsiento responde 404 porque el evento no tenía inventario, `inventarioCancelado` es `false` y la operación igual termina bien.
 
 ## 10. Alternativa con Postman e IntelliJ
 

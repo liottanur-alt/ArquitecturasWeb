@@ -91,7 +91,7 @@ Procesa el pago simulado.
 
 ### POST /compras/eventos/{idEvento}/cancelacion
 
-Cancela las compras del evento y reintegra las entradas vigentes. Tambien cancela el inventario en SectorAsiento.
+Cancela el evento en el catalogo, las compras y el inventario en una sola operacion. Primero marca el evento como `CANCELADO` para bloquear nuevas ventas; luego libera compras pendientes, reintegra las entradas vigentes y cierra el inventario en SectorAsiento. Repetir la solicitud es seguro y no duplica reintegros.
 
 ```json
 {
@@ -215,6 +215,7 @@ Respuesta:
 | Servicio | Metodo y ruta | Uso |
 | --- | --- | --- |
 | Eventos | `GET /api/eventos/{id}` | Validar publicacion, estado y fecha |
+| Eventos | `PATCH /api/eventos/{id}/cancelar` | Marcar primero el evento como cancelado |
 | SectorAsiento | `POST /reservas` | Crear reserva temporal |
 | SectorAsiento | `POST /reservas/{id}/confirmacion` | Confirmar venta |
 | SectorAsiento | `POST /reservas/{id}/liberacion` | Liberar por rechazo o cancelacion |

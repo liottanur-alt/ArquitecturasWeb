@@ -122,14 +122,14 @@
     "/compras/eventos/{idEvento}/cancelacion": {
       "post": {
         "tags": ["Compras"],
-        "summary": "Cancelar un evento y reintegrar las entradas vendidas",
+        "summary": "Cancelar un evento, cerrar inventario y reintegrar las entradas vendidas",
         "operationId": "cancelarEvento",
         "parameters": [
           { "$ref": "#/components/parameters/IdEvento" }
         ],
         "responses": {
           "200": {
-            "description": "Resumen de la cancelacion",
+            "description": "Resumen de la cancelacion completa: catalogo, compras, reintegros e inventario",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CancelacionEventoResponse" }

@@ -823,7 +823,7 @@
                   "demanda": false,
                   "id": 42,
                   "estado": "EN_CURSO",
-                  "estadoPublicacion": "BORRADOR",
+                  "estadoPublicacion": "PUBLICADO",
                   "lugar": {
                     "id": 23,
                     "nombre": "Teatro de prueba",
@@ -1222,7 +1222,7 @@
         ],
         "operationId": "patch_api_eventos_id_publicar",
         "summary": "Publicar evento",
-        "description": "Solo admite BORRADOR y lo cambia a PUBLICADO. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
+        "description": "Solo admite BORRADOR y lo cambia a PUBLICADO cuando están completos nombre, descripción, tipo, organizador válido, fecha futura, lugar con nombre/dirección/coordenadas y al menos un participante. También requiere al menos un sector con precio no negativo y capacidad positiva en SectorAsiento. Si falta información, devuelve 400 (datos del evento) o 409 (sectores) y conserva BORRADOR; si SectorAsiento no está disponible devuelve 503. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1240,7 +1240,7 @@
                   "demanda": false,
                   "id": 42,
                   "estado": "EN_CURSO",
-                  "estadoPublicacion": "BORRADOR",
+                  "estadoPublicacion": "PUBLICADO",
                   "lugar": {
                     "id": 23,
                     "nombre": "Teatro de prueba",
@@ -1262,7 +1262,7 @@
             }
           },
           "400": {
-            "description": "JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
+            "description": "Datos obligatorios del evento incompletos o inválidos al publicar; también JSON, enum, ID de ruta, fecha u ordenamiento inválido.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1272,6 +1272,7 @@
                   "timestamp": "2026-11-09T15:00:00Z",
                   "status": 400,
                   "error": "Bad Request",
+                  "message": "No se puede publicar. Completá: descripción, fecha y hora futuras",
                   "path": "/api/eventos/42/publicar"
                 }
               }
@@ -1294,7 +1295,7 @@
             }
           },
           "409": {
-            "description": "Transición incompatible con el estado actual.",
+            "description": "Transición incompatible con el estado actual o no hay ningún sector con precio no negativo y capacidad positiva.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1304,6 +1305,24 @@
                   "timestamp": "2026-11-09T15:00:00Z",
                   "status": 409,
                   "error": "Conflict",
+                  "message": "Configurá al menos un sector con precio no negativo y capacidad positiva antes de publicar",
+                  "path": "/api/eventos/42/publicar"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SectorAsiento no está disponible para verificar los sectores.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "timestamp": "2026-11-09T15:00:00Z",
+                  "status": 503,
+                  "error": "Service Unavailable",
+                  "message": "No se pudo validar la configuración de sectores. Verificá que SectorAsiento esté disponible",
                   "path": "/api/eventos/42/publicar"
                 }
               }
