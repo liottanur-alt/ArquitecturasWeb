@@ -1,49 +1,55 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env.mysql.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.mysql.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" afterPath="$PROJECT_DIR$/.gitattributes" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GUIA-ARRANQUE.md" beforeDir="false" afterPath="$PROJECT_DIR$/GUIA-ARRANQUE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/mysql/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docker/mysql/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/compose.mysql.yml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/compose.mysql.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Asiento.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Asiento.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Sector.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/Entities/Sector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/TipoSector.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/enums/TipoSector.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/MsvSectoerAsientoApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/MsvSectoerAsientoApplicationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/TicketYa-Usuarios.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/TicketYa-Usuarios.postman_collection.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/docs/PRUEBAS-POSTMAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/docs/PRUEBAS-POSTMAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/UsuarioService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/UsuarioService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioPersistenceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioPersistenceTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioSinAuthIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioSinAuthIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/service/UsuarioServiceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/service/UsuarioServiceTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/FeignClientsTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/FeignClientsTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/InventarioIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/InventarioIntegrationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/docker-compose.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/test/java/msvevento/MsvEventoApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/test/java/msvevento/MsvEventoApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="DatabaseLocalColorSettings">
+    <colors>
+      <entry key="b4ecb129-abfb-4687-9b2d-cadf215bbe38" value="" />
+    </colors>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-    "lastFilter": {
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
     "state": "OPEN",
     "assignee": "cocirio17"
-    }
-    }</component>
-  <component name="GithubPullRequestsUISettings">{
-    "selectedUrlAndAccountId": {
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
     "url": "https://github.com/liottanur-alt/ArquitecturasWeb.git",
     "accountId": "f845ae37-2b44-44c3-8aef-a0f5d06932f3"
-    }
-    }</component>
+  }
+}]]></component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -57,66 +63,66 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="2.2431952914131504E-34" />
-      <entry key="MS500" value="1.8662810930705322E-7" />
-      <entry key="S2" value="0.027657221798034873" />
-      <entry key="S5" value="0.41824711719044344" />
-      <entry key="S10" value="1.1020330126457836" />
-      <entry key="S30" value="2.1410127475460214" />
-      <entry key="S60" value="2.533641878200572" />
-      <entry key="M2" value="2.783261101041477" />
-      <entry key="M5" value="3.2562379080294677" />
-      <entry key="M10" value="3.793618297631599" />
-      <entry key="M15" value="4.091544138256954" />
-      <entry key="M30" value="4.483264983706595" />
-      <entry key="H1" value="4.723683979150745" />
-      <entry key="H2" value="4.857026835960275" />
-      <entry key="H4" value="4.927266001012817" />
-      <entry key="D1" value="4.987700582420613" />
-      <entry key="W1" value="4.998238552722183" />
+      <entry key="MS100" value="1.0852344451828482" />
+      <entry key="MS500" value="2.646999406678419" />
+      <entry key="S2" value="4.695519977035085" />
+      <entry key="S5" value="5.4585767531875495" />
+      <entry key="S10" value="6.111145082502378" />
+      <entry key="S30" value="8.351956970356007" />
+      <entry key="S60" value="10.02190918684683" />
+      <entry key="M2" value="11.30883849459468" />
+      <entry key="M5" value="12.567252090686658" />
+      <entry key="M10" value="13.40821625481301" />
+      <entry key="M15" value="13.820393155819302" />
+      <entry key="M30" value="14.3385358153869" />
+      <entry key="H1" value="14.64854183182383" />
+      <entry key="H2" value="14.818688934097793" />
+      <entry key="H4" value="14.907895478992844" />
+      <entry key="D1" value="14.984443288435656" />
+      <entry key="W1" value="14.997772506173488" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0000036745525132" />
-      <entry key="S2" value="1.0437825562763166" />
-      <entry key="S5" value="1.2861017049159342" />
-      <entry key="S10" value="1.5348847585377006" />
-      <entry key="S30" value="1.8117458449616717" />
-      <entry key="S60" value="1.9009693918006714" />
-      <entry key="M2" value="1.949194074887044" />
-      <entry key="M5" value="1.9793592000750704" />
-      <entry key="M10" value="1.9896257878991788" />
-      <entry key="M15" value="1.9930718448738474" />
-      <entry key="M30" value="1.996529901645629" />
-      <entry key="H1" value="1.9982634430077209" />
-      <entry key="H2" value="1.9991313442224306" />
-      <entry key="H4" value="1.9995655777498695" />
-      <entry key="D1" value="1.9999275831824221" />
-      <entry key="W1" value="1.9999896544192586" />
+      <entry key="MS100" value="1.9324395392401703E-161" />
+      <entry key="MS500" value="7.198181263928572E-33" />
+      <entry key="S2" value="9.614248216936299E-9" />
+      <entry key="S5" value="7.852309919469232E-4" />
+      <entry key="S10" value="0.0379259818349714" />
+      <entry key="S30" value="0.5276965972255068" />
+      <entry key="S60" value="1.0259321367167806" />
+      <entry key="M2" value="1.4319466490364006" />
+      <entry key="M5" value="1.749658600975072" />
+      <entry key="M10" value="1.8706207705602138" />
+      <entry key="M15" value="1.9127836671968887" />
+      <entry key="M30" value="1.9559028037941717" />
+      <entry key="H1" value="1.9778277612883222" />
+      <entry key="H2" value="1.988882795875737" />
+      <entry key="H4" value="1.9944336048102151" />
+      <entry key="D1" value="1.9990711832226487" />
+      <entry key="W1" value="1.9998672853116148" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.8631093859381825E-4" />
-      <entry key="MS500" value="0.17949339075379378" />
-      <entry key="S2" value="0.6959743405551077" />
-      <entry key="S5" value="1.445249320863913" />
-      <entry key="S10" value="2.4407827600913414" />
-      <entry key="S30" value="3.8579713146464716" />
-      <entry key="S60" value="4.381978600368266" />
-      <entry key="M2" value="4.704657549127682" />
-      <entry key="M5" value="5.224021776219119" />
-      <entry key="M10" value="5.777330856404231" />
-      <entry key="M15" value="6.080635821172693" />
-      <entry key="M30" value="6.47778182772965" />
-      <entry key="H1" value="6.720934207196573" />
-      <entry key="H2" value="6.8556497624653865" />
-      <entry key="H4" value="6.926576898513303" />
-      <entry key="D1" value="6.987585651751034" />
-      <entry key="W1" value="6.998222132067345" />
+      <entry key="MS100" value="0.9994148451820754" />
+      <entry key="MS500" value="2.569038186886308" />
+      <entry key="S2" value="4.662517609460557" />
+      <entry key="S5" value="5.444273294544102" />
+      <entry key="S10" value="6.136041781390401" />
+      <entry key="S30" value="8.848684560247687" />
+      <entry key="S60" value="11.01757835475172" />
+      <entry key="M2" value="12.71937701805874" />
+      <entry key="M5" value="14.306267670499457" />
+      <entry key="M10" value="15.273069087411127" />
+      <entry key="M15" value="15.729217404616788" />
+      <entry key="M30" value="16.29239639413709" />
+      <entry key="H1" value="16.625331590079956" />
+      <entry key="H2" value="16.807048322463604" />
+      <entry key="H4" value="16.902066253784056" />
+      <entry key="D1" value="16.983470508035243" />
+      <entry key="W1" value="16.997633507053703" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
-    "associatedIndex": 8,
-    "fromUser": false
+    &quot;associatedIndex&quot;: 8,
+    &quot;fromUser&quot;: false
     }</component>
   <component name="ProjectId" id="3LWbdCPXuKdJckDGAx1iZVwSp5z" />
   <component name="ProjectViewState">
@@ -124,40 +130,73 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">{
-    "keyToString": {
-    "Docker.msv-usuario: Compose Deployment.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Spring Boot.MsvUsuarioApplication.executor": "Run",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.general",
-    "RunOnceActivity.git.unshallow": "true",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "run.configurations.included.in.services": "true"
+    &quot;keyToString&quot;: {
+    &quot;Docker.msv-usuario: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.MsvUsuarioApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.general&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;
     },
-    "keyToStringList": {
-    "DatabaseDriversLRU": [
-    "mysql"
+    &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+    &quot;mysql&quot;
     ]
     }
     }</component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="KtorApplicationConfigurationType" />
+        <option value="MicronautRunConfigurationType" />
+        <option value="QuarkusRunConfigurationType" />
+        <option value="SpringBootApplicationConfigurationType" />
+      </set>
+    </option>
+  </component>
   <component name="RunManager" selected="Spring Boot.MsvUsuarioApplication">
+    <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="api-gateway" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.apigateway.ApiGatewayApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MsvEventoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="msv-evento" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="msvevento.MsvEventoApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="MsvSectoerAsientoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="msv-SectoerAsiento" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.universidad.msvsectoerasiento.MsvSectoerAsientoApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="MsvUsuarioApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
       <module name="msv-usuario" />
@@ -192,29 +231,6 @@
         <item itemvalue="Docker.msv-usuario: Compose Deployment" />
       </list>
     </recent_temporary>
-    <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <module name="api-gateway" />
-      <option name="SPRING_BOOT_MAIN_CLASS" value="com.apigateway.ApiGatewayApplication" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="MsvEventoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
-      <module name="msv-evento" />
-      <option name="SPRING_BOOT_MAIN_CLASS" value="msvevento.MsvEventoApplication" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="MsvSectoerAsientoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
-      <module name="msv-SectoerAsiento" />
-      <option name="SPRING_BOOT_MAIN_CLASS" value="com.universidad.msvsectoerasiento.MsvSectoerAsientoApplication" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -236,20 +252,5 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="DatabaseLocalColorSettings">
-    <colors>
-      <entry key="b4ecb129-abfb-4687-9b2d-cadf215bbe38" value="" />
-    </colors>
-  </component>
-  <component name="RunDashboard">
-    <option name="configurationTypes">
-      <set>
-        <option value="KtorApplicationConfigurationType" />
-        <option value="MicronautRunConfigurationType" />
-        <option value="QuarkusRunConfigurationType" />
-        <option value="SpringBootApplicationConfigurationType" />
-      </set>
-    </option>
   </component>
 </project>

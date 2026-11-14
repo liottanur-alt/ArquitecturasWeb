@@ -1,8 +1,12 @@
 # Guía de arranque y prueba de TicketYa
 
+## Sistema completo en contenedores
+
+Para ejecutar las cinco aplicaciones y las dos bases sin IntelliJ: `docker compose up --build -d --wait --wait-timeout 300` desde la raíz. Consultar [DOCKER.md](DOCKER.md) para puertos, datos existentes, configuración y comandos. Las secciones siguientes describen la alternativa manual con Java en el equipo; en ese caso levantar únicamente `docker compose up -d --wait mysql` y la base de Compras según la sección 3.
+
 Actualizada al 10 de noviembre de 2026. Instrucciones portables para Windows, Linux y macOS, con MySQL compartido, una base propia para Compras y JWT apartado en `futura jwt`.
 
-Usuarios, Eventos, SectorAsiento, Compras y Gateway tienen un proyecto Spring Boot ejecutable. Las bases de Usuarios, Eventos y SectorAsiento se levantan juntas en un contenedor mediante el Compose de la raíz; Compras usa su propio Compose en 3311. Las aplicaciones Java se ejecutan desde una terminal o IntelliJ. Esos Compose levantan MySQL, no los microservicios Java.
+Usuarios, Eventos, SectorAsiento, Compras y Gateway tienen un proyecto Spring Boot ejecutable. El Compose raíz ahora incluye las cinco aplicaciones y las dos bases. Para la alternativa manual de esta guía se selecciona únicamente el servicio `mysql` y se usa el Compose separado de Compras en 3311; las aplicaciones Java se ejecutan desde una terminal o IntelliJ.
 
 ## 1. Requisitos y carpeta de trabajo
 
@@ -79,7 +83,7 @@ No se requiere JWT. `/auth/login` y `/auth/registro` están retirados; los perfi
 En una terminal abierta en la raíz del repositorio (mismos comandos en todos los sistemas):
 
 ```sh
-docker compose up -d --wait
+docker compose up -d --wait mysql
 docker compose ps
 ```
 

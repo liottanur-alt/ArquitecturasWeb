@@ -50,6 +50,8 @@ OpenAPI 3.0 en `src/main/resources/static/openapi.json`, servido en http://local
 
 ## Pruebas
 
+La comunicación con Eventos usa Feign con Apache HttpClient 5 (`feign-hc5`), que permite las llamadas PATCH de sincronización del agotamiento. El proveedor HTTP de pruebas contempla las rutas internas actuales de Eventos. Verificación del 14/11/2026: 37 pruebas correctas con H2 y proveedor HTTP local; la prueba conjunta con MySQL sigue pendiente.
+
 ```powershell
 .\mvnw.cmd test
 ```
@@ -80,4 +82,4 @@ Esta implementacion completa el circuito de inventario del microservicio para la
 
 ## MySQL compartido
 
-Desde la raíz del repositorio, `docker compose up -d --wait` levanta las tres bases en un solo contenedor. El Compose de esta carpeta incluye el mismo proyecto por compatibilidad. La migración de datos anteriores y la verificación de permisos están en [../docker/mysql/README.md](../docker/mysql/README.md).
+Desde la raíz del repositorio, `docker compose up -d --wait mysql` levanta las tres bases en un solo contenedor. El Compose de esta carpeta incluye el mismo proyecto por compatibilidad. La migración de datos anteriores y la verificación de permisos están en [../docker/mysql/README.md](../docker/mysql/README.md).

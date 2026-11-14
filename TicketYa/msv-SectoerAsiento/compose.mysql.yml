@@ -1,5 +1,5 @@
-# Compatibilidad: todos los comandos levantan el mismo proyecto y un unico MySQL.
-# Se recomienda ejecutar docker compose up -d --wait desde la raiz TicketYa.
+# Compatibilidad: incluye el sistema completo del Compose raiz.
+# Para solo la base compartida: docker compose up -d --wait mysql.
 name: ticketya-db
 include:
   - path: ../docker-compose.yml

@@ -1,3 +1,5 @@
 
 # Scripts ejecutados dentro del contenedor Linux.
 docker/mysql/**/*.sh text eol=lf
+**/mvnw text eol=lf
+**/Dockerfile text eol=lf

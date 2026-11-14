@@ -5,7 +5,7 @@
 Con Docker Desktop iniciado, desde la raiz TicketYa:
 
 ```powershell
-docker compose up -d --wait
+docker compose up -d --wait mysql
 docker compose ps
 .\scripts\Verificar-Bases.ps1
 ```
@@ -34,7 +34,7 @@ MYSQL_PORT cambia el puerto publicado. Si 3306 esta ocupado, por ejemplo:
 
 ```powershell
 $env:MYSQL_PORT='3311'
-docker compose up -d --wait
+docker compose up -d --wait mysql
 ```
 
 En ese caso, establecer DB_URL en cada aplicacion, cambiando solo el esquema:

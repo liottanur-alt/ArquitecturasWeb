@@ -8,7 +8,7 @@ Proyecto Spring Boot con Java 21 o superior y una base MySQL exclusiva del servi
 2. Desde esta carpeta, levantar MySQL:
 
    ```powershell
-   docker compose up -d --wait
+   docker compose up -d --wait mysql
    ```
 
 3. Ejecutar `MsvUsuarioApplication` desde IntelliJ o usar:
@@ -39,7 +39,7 @@ Si el Gateway se ejecuta en Docker Desktop y Spring Boot en el equipo, usar
 | Usuario | usuario_app |
 | Clave de desarrollo | usuario_dev |
 
-El contenedor compartido publica 3306. Cada microservicio conserva su base y cuenta propia. Desde la raíz basta `docker compose up -d --wait`; el Compose de esta carpeta incluye el de la raíz por compatibilidad.
+El contenedor compartido publica 3306. Cada microservicio conserva su base y cuenta propia. Desde la raíz basta `docker compose up -d --wait mysql`; el Compose de esta carpeta incluye el de la raíz por compatibilidad.
 
 Para cambiar la clave de esta aplicación, usar USUARIO_DB_PASSWORD en Compose y en la terminal/configuración de Spring; DB_PASSWORD se mantiene como alternativa común. Si Java se ejecuta en la red del Compose, usar DB_URL=jdbc:mysql://mysql:3306/usuarios.
 
