@@ -7,7 +7,7 @@ Gestiona sectores/asientos fisicos y su inventario por evento: precio, capacidad
 Requiere Java 21 o superior, Maven y Docker Desktop para MySQL. Desde esta carpeta:
 
 ```powershell
-docker compose -f compose.mysql.yml up -d --wait
+docker compose -f ../docker-compose.yml up -d --wait mysql
 $env:MSVC_EVENTOS_URL='http://localhost:8005'
 .\mvnw.cmd spring-boot:run
 ```
@@ -50,7 +50,7 @@ OpenAPI 3.0 en `src/main/resources/static/openapi.json`, servido en http://local
 
 ## Pruebas
 
-La comunicación con Eventos usa Feign con Apache HttpClient 5 (`feign-hc5`), que permite las llamadas PATCH de sincronización del agotamiento. El proveedor HTTP de pruebas contempla las rutas internas actuales de Eventos. Verificación del 14/11/2026: 37 pruebas correctas con H2 y proveedor HTTP local; la prueba conjunta con MySQL sigue pendiente.
+La comunicación con Eventos usa Feign con Apache HttpClient 5 (`feign-hc5`), que permite las llamadas PATCH de sincronización del agotamiento. El proveedor HTTP de pruebas contempla las rutas internas actuales de Eventos. Verificación del 14/11/2026: 37 pruebas correctas con H2 y proveedor HTTP local; la integración con servicios reales y MySQL compartido pasó; ver ../tests/system/RESULTADOS.md.
 
 ```powershell
 .\mvnw.cmd test
@@ -72,14 +72,8 @@ Nunca apuntar esta suite a una base con datos a conservar. Las pruebas H2 verifi
 
 `docs/arquitectura.md` contiene el diagrama de modulos, las relaciones locales y la secuencia de compra con rechazo/vencimiento. `MODELO.md` conserva el historial de decisiones; este README describe el contrato actual.
 
-## Verificacion ejecutada
+## Estado actual
 
-Se ejecutaron 37 pruebas del microservicio y 6 del gateway, todas correctas. Las pruebas de persistencia y concurrencia utilizaron H2 y un proveedor HTTP de Eventos local. No se pudo ejecutar MySQL: Docker Desktop no estaba iniciado. OpenAPI y la coleccion Postman se verificaron como JSON y se revisaron sus referencias internas.
+La integración con servicios reales y MySQL compartido pasó. Las pruebas de concurrencia Java y la suite MySQL descartable son comprobaciones distintas de la carga local de lectura. Ver [resultados y límites](../tests/system/RESULTADOS.md).
 
-## Limites del entregable
-
-Esta implementacion completa el circuito de inventario del microservicio para la entrega 1. La compra completa, pasarela mock, QR, aprobacion administrativa y reintegros monetarios pertenecen a otros microservicios. Queda pendiente conectar los proveedores reales y ejecutar la suite MySQL cuando Docker este disponible. JWT, fila virtual, NoSQL, reportes, recomendaciones, log centralizado y el despliegue Docker del sistema completo corresponden a la entrega 2 y al equipo, no a este CRUD.
-
-## MySQL compartido
-
-Desde la raíz del repositorio, `docker compose up -d --wait mysql` levanta las tres bases en un solo contenedor. El Compose de esta carpeta incluye el mismo proyecto por compatibilidad. La migración de datos anteriores y la verificación de permisos están en [../docker/mysql/README.md](../docker/mysql/README.md).
+Desde la raíz, `docker compose up -d --wait mysql` levanta los cuatro esquemas. Este servicio usa sectores_asientos. Ver [configuración y migración](../docker/mysql/README.md).

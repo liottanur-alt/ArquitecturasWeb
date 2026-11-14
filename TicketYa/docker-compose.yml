@@ -66,7 +66,7 @@ services:
     build: ./msv-compraEntardaSol
     restart: unless-stopped
     environment:
-      DB_URL: jdbc:mysql://mysql-compra:3306/compra_entrada_sol
+      DB_URL: jdbc:mysql://mysql:3306/compra_entrada_sol
       DB_USERNAME: compra_app
       DB_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
       MSVC_EVENTOS_URL: http://eventos:8005
@@ -74,7 +74,7 @@ services:
     ports:
       - "127.0.0.1:8003:8003"
     depends_on:
-      mysql-compra:
+      mysql:
         condition: service_healthy
       eventos:
         condition: service_healthy
@@ -113,25 +113,6 @@ services:
       retries: 18
       start_period: 60s
 
-  mysql-compra:
-    image: mysql:8.4
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: compra_entrada_sol
-      MYSQL_USER: compra_app
-      MYSQL_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
-      MYSQL_ROOT_PASSWORD: ${COMPRA_MYSQL_ROOT_PASSWORD:-root_compra_dev}
-    ports:
-      - "127.0.0.1:${COMPRA_MYSQL_PORT:-3311}:3306"
-    volumes:
-      - compra-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql --protocol=TCP -h127.0.0.1 -ucompra_app -Dcompra_entrada_sol -Nse 'SELECT 1'"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 30s
-
   mysql:
     image: mysql:8.4
     restart: unless-stopped
@@ -139,6 +120,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_ticketya_dev}
       MYSQL_USUARIO_PASSWORD: ${USUARIO_DB_PASSWORD:-${DB_PASSWORD:-usuario_dev}}
       MYSQL_EVENTO_PASSWORD: ${EVENTO_DB_PASSWORD:-${DB_PASSWORD:-evento_dev}}
+      MYSQL_COMPRA_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
       MYSQL_SECTOR_PASSWORD: ${SECTOR_DB_PASSWORD:-${DB_PASSWORD:-sector_dev}}
     ports:
       - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
@@ -154,7 +136,5 @@ services:
       start_period: 30s
 
 volumes:
-  compra-data:
-    name: msv-compraentardasol_compra-data
   mysql_data:
     name: ticketya_mysql_data

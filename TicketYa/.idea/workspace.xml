@@ -4,7 +4,36 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="" />
+    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env.mysql.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.mysql.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOCKER.md" beforeDir="false" afterPath="$PROJECT_DIR$/DOCKER.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GUIA-ARRANQUE.md" beforeDir="false" afterPath="$PROJECT_DIR$/GUIA-ARRANQUE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Guia.md" beforeDir="false" afterPath="$PROJECT_DIR$/Guia.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MEJORAS-PENDIENTES.md" beforeDir="false" afterPath="$PROJECT_DIR$/MEJORAS-PENDIENTES.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/mysql/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docker/mysql/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/mysql/check-health.sh" beforeDir="false" afterPath="$PROJECT_DIR$/docker/mysql/check-health.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/mysql/init/01-create-databases.sh" beforeDir="false" afterPath="$PROJECT_DIR$/docker/mysql/init/01-create-databases.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/mysql/legacy/eventos.compose.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/mysql/legacy/sectores.compose.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/mysql/legacy/usuarios.compose.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/MODELO.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/MODELO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/compose.mysql.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/compose.mysql.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/docs/PRUEBAS-POSTMAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/docs/PRUEBAS-POSTMAN.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/docker-compose.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/docker-compose.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/Migrar-Bases.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/Migrar-Bases.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/Verificar-Bases.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/Verificar-Bases.ps1" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -12,7 +41,7 @@
   </component>
   <component name="DatabaseLocalColorSettings">
     <colors>
-      <entry key="b4ecb129-abfb-4687-9b2d-cadf215bbe38" value="" />
+      <entry key="e22e94ba-c61f-4dc5-8432-801df71237a5" value="" />
     </colors>
   </component>
   <component name="Git.Settings">
@@ -111,6 +140,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Docker.docker-compose.yml: Compose Deployment.executor": "Run",
     "Docker.msv-usuario: Compose Deployment.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RequestMappingsPanelOrder0": "0",
@@ -125,15 +155,15 @@
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "implementacion-jwt",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/franc/OneDrive/Escritorio/RefactorArqui/ArquitecturasWeb/TicketYa",
+    "last_opened_file_path": "C:/Users/franc/IdeaProjects/ArquitecturasWeb/TicketYa",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.30689654",
     "run.configurations.included.in.services": "true",
     "settings.editor.selected.configurable": "preferences.general"
   },
@@ -153,7 +183,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Spring Boot.MsvUsuarioApplication">
+  <component name="RunManager" selected="Docker.docker-compose.yml: Compose Deployment">
     <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="api-gateway" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.apigateway.ApiGatewayApplication" />
@@ -197,6 +227,14 @@
       </deployment>
       <method v="2" />
     </configuration>
+    <configuration name="docker-compose.yml: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="sourceFilePath" value="docker-compose.yml" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
     <configuration name="msv-usuario: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
       <deployment type="docker-compose.yml">
         <settings>
@@ -207,6 +245,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Docker.docker-compose.yml: Compose Deployment" />
         <item itemvalue="Spring Boot.MsvUsuarioApplication" />
         <item itemvalue="Docker.msv-usuario: Compose Deployment" />
       </list>
@@ -215,8 +254,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-34e2839f716b-intellij.indexing.shared.core-IU-262.9437.185" />
-        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.9437.185" />
+        <option value="bundled-jdk-30f59d01ecdd-ac68fc9d2b05-intellij.indexing.shared.core-IU-263.7307.200" />
       </set>
     </attachedChunks>
   </component>

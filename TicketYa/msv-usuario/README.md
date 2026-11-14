@@ -1,6 +1,6 @@
 # Microservicio de usuarios
 
-Proyecto Spring Boot con Java 21 o superior y una base MySQL exclusiva del servicio.
+Proyecto Spring Boot con Java 21 o superior y un esquema propio en el MySQL compartido.
 
 ## Ejecutar en desarrollo
 
@@ -8,7 +8,7 @@ Proyecto Spring Boot con Java 21 o superior y una base MySQL exclusiva del servi
 2. Desde esta carpeta, levantar MySQL:
 
    ```powershell
-   docker compose up -d --wait mysql
+   docker compose -f ../docker-compose.yml up -d --wait mysql
    ```
 
 3. Ejecutar `MsvUsuarioApplication` desde IntelliJ o usar:
@@ -17,11 +17,11 @@ Proyecto Spring Boot con Java 21 o superior y una base MySQL exclusiva del servi
    .\mvnw.cmd spring-boot:run
    ```
 
-El MySQL compartido crea las bases `usuarios`, `eventos` y `sectores_asientos`. Cuando arranca Spring Boot, Hibernate crea las
+El MySQL compartido crea usuarios, eventos, sectores_asientos y compra_entrada_sol; este servicio usa solo usuarios. Cuando arranca Spring Boot, Hibernate crea las
 tablas `roles`, `usuarios` y `artistas_favoritos`. Se inicializan los cuatro roles.
 El perfil predeterminado `dev` crea, si no existe, un perfil administrador de prueba sin credenciales. Los roles se inicializan automaticamente.
 
-La version activa corresponde a la etapa sin autenticacion: todos los endpoints de usuarios, roles y favoritos funcionan sin token. Crear usuarios con `POST /usuarios`; consultar los IDs de rol con `GET /roles`. `/auth/login` y `/auth/registro` no estan activos. La implementacion JWT original se traslado a `../futura jwt`, con un manifiesto de archivos y notas de restauracion. No se borran usuarios ni datos existentes en MySQL.
+La version activa corresponde a la etapa sin autenticacion: todos los endpoints de usuarios, roles y favoritos funcionan sin token. Crear usuarios con `POST /usuarios`; consultar los IDs de rol con `GET /roles`. `/auth/login` y `/auth/registro` no estan activos. No se borran usuarios ni datos existentes en MySQL.
 
 El microservicio HTTP escucha en `http://localhost:8004`. Si el API Gateway se
 ejecuta en el mismo equipo, su destino para las rutas `/usuarios/**` y `/roles/**`
@@ -39,7 +39,7 @@ Si el Gateway se ejecuta en Docker Desktop y Spring Boot en el equipo, usar
 | Usuario | usuario_app |
 | Clave de desarrollo | usuario_dev |
 
-El contenedor compartido publica 3306. Cada microservicio conserva su base y cuenta propia. Desde la raíz basta `docker compose up -d --wait mysql`; el Compose de esta carpeta incluye el de la raíz por compatibilidad.
+El contenedor compartido publica 3306. Cada microservicio conserva su base y cuenta propia. Desde la raíz basta `docker compose up -d --wait mysql`; desde esta carpeta usar -f ../docker-compose.yml.
 
 Para cambiar la clave de esta aplicación, usar USUARIO_DB_PASSWORD en Compose y en la terminal/configuración de Spring; DB_PASSWORD se mantiene como alternativa común. Si Java se ejecuta en la red del Compose, usar DB_URL=jdbc:mysql://mysql:3306/usuarios.
 
@@ -85,7 +85,7 @@ El perfil `test` usa una base en memoria aislada y revierte los cambios de cada
 prueba de persistencia. No requiere Docker ni modifica la base de desarrollo.
 Estas pruebas no reemplazan una verificacion contra MySQL real.
 
-Tambien se prueban por HTTP las operaciones de usuarios, roles y favoritos sin token, y se verifica que las rutas /auth retiradas respondan 404. Las pruebas originales de JWT estan archivadas en futura jwt.
+Tambien se prueban por HTTP las operaciones de usuarios, roles y favoritos sin token, y se verifica que las rutas /auth retiradas respondan 404.
 
 ## Contrato OpenAPI y colección de pruebas
 

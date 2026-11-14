@@ -3,7 +3,7 @@
 Microservicio de compra de TicketYa. Orquesta la reserva de lugares en SectorAsiento, el pago simulado, la emisión de entradas con QR, las devoluciones/reintegros y la cancelación de eventos. Cubre las historias HU-08 a HU-14.
 
 - Puerto HTTP: **8003**
-- Base de datos: MySQL **3311**, esquema `compra_entrada_sol`
+- Base de datos: MySQL **3306**, esquema `compra_entrada_sol`
 - Dependencias: Eventos (`http://localhost:8005`) y SectorAsiento (`http://localhost:8002`)
 - No emite dinero real: el pago y los reintegros son simulados y siempre terminan en `COMPLETADO`.
 
@@ -12,18 +12,18 @@ Microservicio de compra de TicketYa. Orquesta la reserva de lugares en SectorAsi
 Requiere Java 21 o superior, Docker Desktop y conexion a internet la primera vez.
 
 ```powershell
-docker compose -f compose.mysql.yml up -d --wait
+docker compose -f ../docker-compose.yml up -d --wait mysql
 .\mvnw.cmd spring-boot:run
 ```
 
-La base propia se publica en `127.0.0.1:3311`. El compose raiz no crea `compra_entrada_sol`; por eso este modulo trae su propio `compose.mysql.yml`. Antes de iniciar el servicio deben estar arriba Eventos y SectorAsiento si se van a probar compras reales.
+El MySQL compartido se publica en `127.0.0.1:3306`. El Compose raiz usa un solo MySQL con cuatro esquemas y crea compra_entrada_sol; iniciarlo con docker compose -f ../docker-compose.yml up -d --wait mysql. Antes de iniciar el servicio deben estar arriba Eventos y SectorAsiento si se van a probar compras reales.
 
 Variables de entorno:
 
 | Variable | Valor por defecto |
 | --- | --- |
 | `SERVER_PORT` | `8003` |
-| `DB_URL` | `jdbc:mysql://localhost:3311/compra_entrada_sol` |
+| `DB_URL` | `jdbc:mysql://localhost:3306/compra_entrada_sol` |
 | `DB_USERNAME` | `compra_app` |
 | `DB_PASSWORD` | `compra_dev` |
 | `DDL_AUTO` | `update` |

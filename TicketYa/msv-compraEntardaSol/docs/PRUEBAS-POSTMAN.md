@@ -7,9 +7,9 @@ Esta guia prueba el circuito completo de compras contra los servicios reales. Lo
 Abrir cuatro terminales en la raiz del repositorio.
 
 ```powershell
-# Terminal 1 - base propia de Compras
+# Terminal 1 - MySQL compartido
 cd .\msv-compraEntardaSol
-docker compose -f compose.mysql.yml up -d --wait
+docker compose -f ../docker-compose.yml up -d --wait mysql
 
 # Terminal 2 - Eventos
 cd .\msv-evento
@@ -32,7 +32,7 @@ Esperar los mensajes `Started ...` de cada aplicacion. Comprobar:
 
 ## 2. Crear el evento y el inventario
 
-La forma mas rapida es reutilizar la guia de la raiz, seccion 9.2 a 9.5, o la coleccion de SectorAsiento. Se necesita:
+Para preparar datos, seguir la colección de SectorAsiento o ejecutar Test-System.ps1 desde la raíz según [pruebas de sistema](../../tests/system/README.md). Sus IDs quedan en .local/system-tests/integration-security.json. Para una compra numerada nueva se necesita:
 
 1. Un cliente (`POST /usuarios`).
 2. Un lugar y un evento futuro publicado (`POST /api/eventos` + `PATCH /api/eventos/{id}/publicar`).
@@ -94,7 +94,7 @@ Para probar el rechazo, crear otra compra y otra solicitud, y resolver con `esta
 
 Si SectorAsiento responde `404` porque el evento no tenia inventario, `inventarioCancelado` sera `false` y la operacion igual termina bien.
 
-La cancelacion del estado del evento en el catalogo de Eventos sigue siendo una llamada separada: `PATCH /api/eventos/{idEvento}/cancelar` contra el puerto 8005.
+POST /compras/eventos/{idEvento}/cancelacion también cancela el estado del evento en Eventos. No hace falta una segunda llamada al catálogo.
 
 ## 7. Casos de error utiles
 
@@ -133,7 +133,7 @@ Ajustar los IDs a los datos reales creados en el paso 2.
 
 ```powershell
 cd .\msv-compraEntardaSol
-docker compose -f compose.mysql.yml down
+docker compose -f ../docker-compose.yml stop mysql
 ```
 
-`down` conserva el volumen. Para borrar los datos de prueba, usar `down -v` solo si se esta seguro de que no hay informacion que conservar.
+`stop mysql` conserva los datos y detiene el MySQL de los cuatro servicios. El Compose raíz administra también la base compartida; no usar down -v para limpiar únicamente estas pruebas.

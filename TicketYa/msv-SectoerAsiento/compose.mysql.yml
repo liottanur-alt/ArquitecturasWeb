@@ -1,5 +1,0 @@
-# Compatibilidad: incluye el sistema completo del Compose raiz.
-# Para solo la base compartida: docker compose up -d --wait mysql.
-name: ticketya-db
-include:
-  - path: ../docker-compose.yml
