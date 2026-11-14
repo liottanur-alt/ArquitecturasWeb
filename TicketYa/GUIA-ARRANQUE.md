@@ -2,7 +2,7 @@
 
 ## Sistema completo en contenedores
 
-Para ejecutar las cinco aplicaciones y las dos bases sin IntelliJ: `docker compose up --build -d --wait --wait-timeout 300` desde la raíz. Consultar [DOCKER.md](DOCKER.md) para puertos, datos existentes, configuración y comandos. Las secciones siguientes describen la alternativa manual con Java en el equipo; en ese caso levantar únicamente `docker compose up -d --wait mysql` y la base de Compras según la sección 3.
+Para ejecutar las cinco aplicaciones y las dos bases sin IntelliJ: `docker compose up --build -d --wait --wait-timeout 600` desde la raíz. Consultar [DOCKER.md](DOCKER.md) para puertos, datos existentes, configuración y comandos. Las secciones siguientes describen la alternativa manual con Java en el equipo; en ese caso levantar únicamente `docker compose up -d --wait mysql` y la base de Compras según la sección 3.
 
 Actualizada al 10 de noviembre de 2026. Instrucciones portables para Windows, Linux y macOS, con MySQL compartido, una base propia para Compras y JWT apartado en `futura jwt`.
 

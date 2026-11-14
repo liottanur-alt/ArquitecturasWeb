@@ -4,6 +4,8 @@ Fecha: 14 de noviembre de 2026.
 
 ## Actualización: comunicación Feign de Eventos
 
+Actualización Docker: se agregaron cinco Dockerfile, archivos `.dockerignore` y los siete servicios al Compose raíz. Las cinco imágenes se construyeron y el sistema arrancó con siete contenedores saludables, conectados a MySQL. Esto verifica el despliegue y la disponibilidad; no equivale a repetir el circuito completo de compra, QR, devolución y cancelación de la sección 4. Ver [DOCKER.md](DOCKER.md).
+
 Los resultados de la revisión inicial que siguen se conservan como historial. Posteriormente se completaron `SectorEventoClient` y `SectorEventoResponseDTO`, y se configuraron tiempos máximos para Eventos → SectorAsiento. Eventos compila y sus 5 pruebas pasan, incluyendo comunicación HTTP real del cliente Feign con un proveedor local y rechazo de publicación ante falta de sectores o errores remotos. Su suite ahora usa H2 aislado, sin depender de MySQL de desarrollo. Se actualizaron también las rutas del proveedor de pruebas de inventario. La verificación con servicios reales y MySQL sigue pendiente.
 
 Se revisaron configuración, documentación, controladores, servicios y contratos entre los cinco módulos. Se ejecutó Maven `-B -o -f <modulo>/pom.xml test` con OpenJDK 26.0.2 y Maven 3.10.0, usando dependencias locales. No se modificó la implementación.

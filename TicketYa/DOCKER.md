@@ -5,7 +5,7 @@ Requiere Docker Desktop iniciado con contenedores Linux y Docker Compose v2.20 o
 Desde la raíz:
 
 ```powershell
-docker compose up --build -d --wait --wait-timeout 300
+docker compose up --build -d --wait --wait-timeout 600
 docker compose ps
 ```
 
@@ -68,4 +68,8 @@ docker compose up -d --wait mysql mysql-compra
 
 ## Verificación
 
+El 14/11/2026 se validó el Compose raíz y sus tres archivos de compatibilidad, se generaron los cinco JAR y se construyeron las cinco imágenes con Java 21. El sistema completo arrancó con los siete contenedores saludables y ambas bases MySQL disponibles. Por Gateway respondieron HTTP 200 `/actuator/health`, `/roles`, `/api/eventos`, `/sectores` y `/compras/cliente/1`. Esta comprobación verifica disponibilidad y enrutamiento, no el flujo completo de compra. Los registros locales están en `.local/revision-2026-11-14/docker-build.log` y `docker-up.log`.
+
 `docker compose config --quiet` valida la configuración sin requerir el motor Docker. La prueba de construcción y arranque requiere Docker activo. Las suites automatizadas se ejecutan con Maven según los README de cada módulo; la construcción de imágenes omite las pruebas y no reemplaza esa validación.
+
+Si Docker Desktop devuelve un error 500 mencionando la API `v1.55` al esperar contenedores, se puede reintentar en PowerShell con `$env:DOCKER_API_VERSION='1.51'` antes del comando de arranque. Esta alternativa se utilizó en la verificación local; afecta solo esa terminal. La primera inicialización de las bases y las aplicaciones puede demorar varios minutos.
