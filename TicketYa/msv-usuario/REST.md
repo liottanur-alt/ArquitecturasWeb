@@ -1,6 +1,6 @@
 # API de usuarios
 
-Las rutas son relativas a la URL del microservicio. Para levantar MySQL y ejecutar
+Las rutas son relativas a la URL del microservicio. Para levantar MongoDB y ejecutar
 la aplicacion, seguir las instrucciones de [README.md](README.md).
 
 ## Usuarios

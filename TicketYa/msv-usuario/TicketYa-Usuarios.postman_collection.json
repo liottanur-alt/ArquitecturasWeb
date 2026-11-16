@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "TicketYa Usuarios - Entrega 1",
-    "description": "Ejecutar completa en orden, comenzando por 01 Consultar roles e iniciar datos de la ejecución. Sin JWT. idRol se envia como numero, nunca como objeto. Los IDs se obtienen de GET /roles; las variables de entorno no reemplazan los IDs capturados en esta coleccion. Genera perfiles unicos y elimina solo los que crea. Una respuesta inesperada detiene el recorrido; si se interrumpe, limpiar los IDs creados siguiendo docs/PRUEBAS-POSTMAN.md. Eventos debe estar iniciado y idArtistaPrueba debe existir para listar favoritos con nombre y genero. CRUD de roles documentado en OpenAPI; la coleccion conserva los roles inicializados.",
+    "name": "TicketYa Usuarios - MongoDB y artistas reales",
+    "description": "Ejecutar completa en orden: 00 crea un artista temporal en Eventos real, 01 inicializa los usuarios y 33 elimina el artista. Sin JWT. baseUrl=http://localhost:8004 y eventosBaseUrl=http://localhost:8005. modoArtistas=real por defecto; usar simulador para compose.yml de msv-usuario (omite 00 y 33, usa artista 900001). Valida campos completos, tipos, persistencia de perfiles, roles, favoritos y errores. Genera datos unicos y elimina solo sus fixtures. Si se interrumpe, limpiar sus IDs siguiendo docs/PRUEBAS-POSTMAN.md. El CRUD positivo de roles requiere una base descartable: no borra roles compartidos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -13,6 +13,8 @@
       "script": {
         "type": "text/javascript",
         "exec": [
+          "if (![\"real\",\"simulador\"].includes(pm.variables.get(\"modoArtistas\"))) { pm.execution.skipRequest(); throw new Error(\"modoArtistas debe ser real o simulador\"); }",
+          "const favoritoId = pm.collectionVariables.get(\"idArtistaPrueba\"); if (favoritoId) pm.variables.set(\"idArtistaPrueba\", favoritoId);",
           "const raw = pm.request.body && pm.request.body.mode === 'raw' ? pm.request.body.raw : '';",
           "for (const key of ['idRolCliente', 'idRolOrganizador', 'idRolInexistente']) {",
           "  if (!raw.includes('{{' + key + '}}')) continue;",
@@ -28,19 +30,166 @@
           "}"
         ]
       }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const urlActual = pm.variables.replaceIn(pm.request.url.toString()).split('?')[0];",
+          "const metodo = pm.request.method;",
+          "const status = pm.response.code;",
+          "function idValido(id) { pm.expect(Number.isSafeInteger(id) && id > 0).to.eql(true); }",
+          "function usuarioValido(u) {",
+          " pm.expect(u).to.have.all.keys('id','nombre','email','dni','ciudad','idRol');",
+          " idValido(u.id); idValido(u.idRol);",
+          " for (const campo of ['nombre','email','dni','ciudad']) pm.expect(u[campo]).to.be.a('string').and.not.empty;",
+          "}",
+          "function rolValido(r) {",
+          " pm.expect(r).to.have.all.keys('id','name'); idValido(r.id);",
+          " pm.expect(['CLIENTE','ORGANIZADOR','ADMINISTRADOR','PERSONAL_ACCESO']).to.include(r.name);",
+          "}",
+          "if (status !== 204) {",
+          " pm.test('Respuesta JSON', () => pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/application\\/(?:problem\\+)?json/i));",
+          "}",
+          "if (status >= 400) {",
+          " pm.test('Error con estado correcto y sin traza interna', () => {",
+          "  const error = pm.response.json(); pm.expect(error.status).to.eql(status);",
+          "  pm.expect(error).not.to.have.property('trace'); pm.expect(error).not.to.have.property('stackTrace');",
+          " });",
+          "}",
+          "if (status === 200 && /\\/roles(?:\\/\\d+)?$/.test(urlActual)) {",
+          " const body = pm.response.json();",
+          " pm.test('Roles: estructura, IDs y tipos correctos', () => {",
+          "  if (Array.isArray(body)) {",
+          "   body.forEach(rolValido);",
+          "   pm.expect(new Set(body.map(r => r.id)).size).to.eql(body.length);",
+          "   pm.expect(body.map(r => r.name)).to.have.members(['CLIENTE','ORGANIZADOR','ADMINISTRADOR','PERSONAL_ACCESO']);",
+          "  } else {",
+          "   rolValido(body); pm.expect(body.id).to.eql(Number(urlActual.split('/').pop()));",
+          "  }",
+          " });",
+          "}",
+          "if ((status === 200 || status === 201) && /\\/usuarios(?:\\/\\d+)?$/.test(urlActual)) {",
+          " const body = pm.response.json();",
+          " pm.test('Usuarios: campos completos y tipos correctos', () => {",
+          "  if (Array.isArray(body)) {",
+          "   body.forEach(usuarioValido); pm.expect(new Set(body.map(u => u.id)).size).to.eql(body.length);",
+          "  } else usuarioValido(body);",
+          " });",
+          " if (metodo === 'POST' || metodo === 'PUT') {",
+          "  const enviado = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));",
+          "  pm.test('El perfil devuelve exactamente los datos enviados', () => {",
+          "   for (const campo of ['nombre','email','dni','ciudad','idRol']) pm.expect(body[campo]).to.eql(enviado[campo]);",
+          "   if (metodo === 'PUT') pm.expect(body.id).to.eql(Number(urlActual.split('/').pop()));",
+          "  });",
+          "  pm.collectionVariables.set('perfilEsperado_' + body.id, JSON.stringify(body));",
+          " } else {",
+          "  pm.test('Los perfiles consultados coinciden con lo guardado', () => {",
+          "   for (const usuario of (Array.isArray(body) ? body : [body])) {",
+          "    const esperado = pm.collectionVariables.get('perfilEsperado_' + usuario.id);",
+          "    if (esperado) pm.expect(usuario).to.deep.eql(JSON.parse(esperado));",
+          "   }",
+          "   if (!Array.isArray(body)) pm.expect(body.id).to.eql(Number(urlActual.split('/').pop()));",
+          "  });",
+          " }",
+          "}",
+          "if (status === 200 && /\\/artistas-favoritos$/.test(urlActual)) {",
+          " const favoritos = pm.response.json();",
+          " pm.test('Favoritos: IDs y datos exactos del catalogo, sin duplicados', () => {",
+          "  pm.expect(favoritos).to.be.an('array');",
+          "  pm.expect(new Set(favoritos.map(a => a.idArtista)).size).to.eql(favoritos.length);",
+          "  favoritos.forEach(a => {",
+          "   pm.expect(a).to.have.all.keys('idArtista','nombre','genero');",
+          "   pm.expect(a.idArtista).to.eql(Number(pm.collectionVariables.get('idArtistaPrueba')));",
+          "   pm.expect(a.nombre).to.eql(pm.collectionVariables.get('artistaNombreEsperado'));",
+          "   pm.expect(a.genero).to.eql(pm.collectionVariables.get('artistaGeneroEsperado'));",
+          "  });",
+          " });",
+          "}"
+        ]
+      }
     }
   ],
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8080"
+      "value": "http://localhost:8004"
+    },
+    {
+      "key": "eventosBaseUrl",
+      "value": "http://localhost:8005"
+    },
+    {
+      "key": "modoArtistas",
+      "value": "real"
     },
     {
       "key": "idArtistaPrueba",
-      "value": "900001"
+      "value": ""
     }
   ],
   "item": [
+    {
+      "name": "00 Crear artista temporal en Eventos real",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{eventosBaseUrl}}/api/artistas",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombre\":\"{{artistaNombreEsperado}}\",\"genero\":\"Rock\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "Crea solo el artista de esta ejecucion. En modo simulador se omite y se usa el artista 900001."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('modoArtistas') === 'simulador') {",
+              " pm.collectionVariables.set('idArtistaPrueba', 900001);",
+              " pm.collectionVariables.set('artistaNombreEsperado', 'Soda Stereo');",
+              " pm.collectionVariables.set('artistaGeneroEsperado', 'Rock');",
+              " pm.execution.skipRequest();",
+              "} else {",
+              " pm.collectionVariables.unset('idArtistaPrueba');",
+              " pm.collectionVariables.set('artistaNombreEsperado', 'Artista Postman ' + pm.variables.replaceIn('{{$guid}}'));",
+              " pm.collectionVariables.set('artistaGeneroEsperado', 'Rock');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201 artista real', () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error('No se pudo crear el artista temporal en Eventos'); }",
+              "const artista = pm.response.json();",
+              "pm.test('Artista creado con ID numerico y datos exactos', () => {",
+              " pm.expect(Number.isSafeInteger(artista.id) && artista.id > 0).to.eql(true);",
+              " pm.expect(artista.nombre).to.eql(pm.collectionVariables.get('artistaNombreEsperado'));",
+              " pm.expect(artista.genero).to.eql('Rock');",
+              "});",
+              "pm.collectionVariables.set('idArtistaPrueba', artista.id);"
+            ]
+          }
+        }
+      ]
+    },
     {
       "name": "01 Consultar roles e iniciar datos de la ejecución",
       "request": {
@@ -932,6 +1081,36 @@
               "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
               "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
               "const ids = pm.response.json().map(r => r.id); pm.test(\"Conserva ambos roles\", () => { pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idRolCliente\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idRolOrganizador\"))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "33 Eliminar artista temporal de Eventos",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{eventosBaseUrl}}/api/artistas/{{idArtistaPrueba}}",
+        "description": "Elimina exclusivamente el artista creado en 00; se omite en modo simulador."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('modoArtistas') === 'simulador') pm.execution.skipRequest();"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204 al eliminar artista temporal', () => pm.response.to.have.status(204));",
+              "pm.test('Artista eliminado sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));"
             ]
           }
         }

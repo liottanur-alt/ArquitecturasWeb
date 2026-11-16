@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -19,7 +18,6 @@ public class DatosIniciales implements ApplicationRunner {
     private boolean crearAdmin;
 
     @Override
-    @Transactional
     public void run(ApplicationArguments args) {
         for (TipoRol tipo : TipoRol.values()) {
             if (roles.findByName(tipo).isEmpty()) {

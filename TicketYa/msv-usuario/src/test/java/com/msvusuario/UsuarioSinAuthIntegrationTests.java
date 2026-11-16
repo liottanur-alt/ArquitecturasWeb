@@ -9,13 +9,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Comprueba que el CRUD sigue disponible al retirar autenticacion y permisos JWT. */
-@SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test") @Transactional
-class UsuarioSinAuthIntegrationTests {
+@SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test")
+class UsuarioSinAuthIntegrationTests extends MongoIntegrationSupport {
     @org.springframework.test.context.bean.override.mockito.MockitoBean
     com.msvusuario.client.ArtistaClientFeign artistas;
     @Autowired MockMvc mvc;
