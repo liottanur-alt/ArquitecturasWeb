@@ -49,8 +49,14 @@ class InventarioIntegrationTests {
     static HttpServer iniciarProveedor() {
         try {
             var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-            server.createContext("/api/eventos/", exchange -> {
-                long id = Long.parseLong(exchange.getRequestURI().getPath().substring("/api/eventos/".length()));
+            server.createContext("/api/eventos/interno/", exchange -> {
+                String ruta = exchange.getRequestURI().getPath().substring("/api/eventos/interno/".length());
+                if (exchange.getRequestMethod().equals("PATCH") && ruta.endsWith("/disponibilidad")) {
+                    exchange.sendResponseHeaders(204, -1);
+                    exchange.close();
+                    return;
+                }
+                long id = Long.parseLong(ruta);
                 String json = """
                     {"id":%d,"lugar":{"id":1,"nombre":"Teatro","ciudad":"Tandil"},"descripcion":"Contrato real","participantes":[],"nombre":"Prueba","idOrganizador":1,
                      "fechaHora":"2030-01-11T09:00:00","estado":"PUBLICADO","estadoPublicacion":"PUBLICADO"}

@@ -35,7 +35,7 @@ function Consulta-Root {
 }
 
 Invoke-DockerSeguro -Arguments @('info', '--format', '{{.ServerVersion}}') | Out-Null
-Invoke-DockerSeguro -Arguments @('compose', '-f', $composeMigracion, 'up', '-d', '--wait') | Out-Null
+Invoke-DockerSeguro -Arguments @('compose', '-f', $composeMigracion, 'up', '-d', '--wait', 'mysql') | Out-Null
 $destinoMigracion = ((Invoke-DockerSeguro -Arguments @('compose', '-f', $composeMigracion, 'ps', '-q', 'mysql')) -join '').Trim()
 if (-not $destinoMigracion) { throw 'No se encontro el MySQL compartido.' }
 $destinoMigracion = ((Invoke-DockerSeguro -Arguments @('inspect', '--format', '{{.Id}}', $destinoMigracion)) -join '').Trim()

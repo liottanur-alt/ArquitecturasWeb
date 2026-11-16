@@ -1,17 +1,22 @@
-# API Gateway TicketYa
+# API Gateway
 
-Ejecutar las bases y los servicios necesarios, y despues `ApiGatewayApplication` desde IntelliJ o `.\mvnw.cmd spring-boot:run` en esta carpeta. Escucha en http://localhost:8080.
+Recibe solicitudes en http://localhost:8080 y las reenvía al servicio correspondiente.
 
-La version activa no requiere JWT. Usuarios ya no valida tokens y las rutas /auth/login y /auth/registro fueron retiradas del gateway. La implementacion original se conserva en ../futura jwt.
+| Rutas, incluidas sus subrutas | Servicio local |
+| --- | --- |
+| /usuarios, /roles | Usuarios: 8004 |
+| /api/eventos, /api/lugares, /api/artistas | Eventos: 8005 |
+| /sectores, /asientos, /reservas, /eventos/{id}/inventario, /eventos/{id}/sectores | SectorAsiento: 8002 |
+| /compras, /entradas, /solicitudes | Compras: 8003 |
 
-Rutas activas:
+Para arrancar todo, seguir la [guía rápida](../GUIA-ARRANQUE.md). Desde esta carpeta, con los servicios ya disponibles:
 
-- /usuarios y /usuarios/**: CRUD y favoritos, destino MSVC_USUARIOS_URL (http://localhost:8004).
-- /roles y /roles/**: CRUD de roles, mismo destino Usuarios.
-- /sectores, /asientos, /reservas y sus subrutas: destino MSVC_SECTORES_URL (http://localhost:8002).
-- /eventos/{id}/inventario y /eventos/{id}/sectores con sus subrutas: destino SectorAsiento.
-- /compras, /entradas y /solicitudes con sus subrutas (incluida /compras/eventos/{id}/cancelacion): destino MSVC_COMPRAS_URL (http://localhost:8003).
+```powershell
+./mvnw.cmd spring-boot:run
+```
 
-Ejemplo: GET http://localhost:8080/roles no necesita Authorization. Para crear usuarios, POST /usuarios con nombre, email, dni, ciudad e idRol.
+En Linux/macOS usar `sh ./mvnw spring-boot:run`. Los destinos se configuran con MSVC_USUARIOS_URL, MSVC_EVENTOS_URL, MSVC_SECTORES_URL y MSVC_COMPRAS_URL; Compose los configura automáticamente para Docker.
 
-`.\mvnw.cmd test` verifica arranque, reenvio sin token, cuerpo JSON, query y propagacion de errores, usando proveedores HTTP locales de prueba. No requiere bases ni servicios externos. Incluye la ruta de Compras (`/compras`, `/entradas`, `/solicitudes`).
+No hay autenticación activa. /auth/login y /auth/registro están retirados. La exposición de rutas internas está documentada en la [auditoría](../tests/system/RESULTADOS.md).
+
+`./mvnw.cmd test` prueba arranque y enrutamiento con proveedores HTTP simulados, sin MySQL. Las [pruebas de sistema](../tests/system/README.md) usan los servicios reales.

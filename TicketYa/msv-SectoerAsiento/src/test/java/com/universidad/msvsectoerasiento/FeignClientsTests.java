@@ -27,10 +27,15 @@ class FeignClientsTests {
     @Test
     void contratosEventosUsanGetYParametroDeRuta() {
         var metodos = new SpringMvcContract().parseAndValidateMetadata(EventoClientFeign.class);
-        assertThat(metodos).hasSize(2);
+        assertThat(metodos).hasSize(3);
         assertThat(metodos).allSatisfy(metodo -> {
-            assertThat(metodo.template().method()).isEqualTo("GET");
-            assertThat(metodo.template().url()).isIn("/api/eventos/{id}", "/api/lugares/{id}");
+            if (metodo.template().method().equals("PATCH")) {
+                assertThat(metodo.template().url()).startsWith("/api/eventos/interno/{id}/disponibilidad?");
+                assertThat(metodo.indexToName().get(1)).contains("agotado");
+            } else {
+                assertThat(metodo.template().method()).isEqualTo("GET");
+                assertThat(metodo.template().url()).isIn("/api/eventos/interno/{id}", "/api/lugares/{id}");
+            }
             assertThat(metodo.indexToName().get(0)).contains("id");
         });
     }

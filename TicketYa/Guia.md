@@ -1,48 +1,19 @@
-# Arquitectura de Microservicios
+# Arquitectura de TicketYa
 
-En esta carpeta se desarrollarán los microservicios del sistema de gestión de eventos y venta de entradas.
+El cliente envía solicitudes al Gateway, que las dirige al microservicio correspondiente. Los servicios se comunican por HTTP mediante Feign.
 
-## Reglas generales
+| Carpeta real | Puerto | Responsabilidad | Esquema MySQL |
+| --- | --- | --- | --- |
+| api-gateway | 8080 | Recibir y dirigir solicitudes | No usa base propia |
+| msv-usuario | 8004 | Usuarios, roles y favoritos | usuarios |
+| msv-evento | 8005 | Eventos, lugares y artistas | eventos |
+| msv-SectoerAsiento | 8002 | Sectores, asientos, inventario y reservas | sectores_asientos |
+| msv-compraEntardaSol | 8003 | Compras, entradas y devoluciones | compra_entrada_sol |
 
-- Cada microservicio debe llamarse `msv-{nombre}`.
-- Cada microservicio debe tener sus propias entidades, repositorios, servicios y controladores REST.
-- Los microservicios deben ser independientes.
-- La comunicación entre microservicios debe realizarse mediante APIs.
-- El `api-gateway` será el punto de entrada al sistema.
+Hay un solo servidor MySQL en 3306. Cada servicio tiene su propio esquema y usuario, con permisos limitados a ese esquema. No comparten entidades JPA ni consultan tablas de otros servicios.
 
-## Estructura del proyecto
+Compras coordina la reserva con SectorAsiento, el pago simulado y la emisión de entradas. La devolución aceptada reintegra el importe simulado y devuelve el cupo al inventario.
 
-```text
-microservicios/
-├── api-gateway/
-├── msv-eventos/
-├── msv-sectores-asientos/
-├── msv-compras/
-└── msv-usuarios/
-```
+Cada aplicación tiene su Dockerfile. El Compose raíz levanta las cinco aplicaciones y MySQL: seis contenedores. La etapa actual funciona sin autenticación.
 
-## Responsabilidades
-
-### 1. msv-eventos Pureto:8001
-Gestionar los eventos, lugares y artistas.
-
-**Entidades:** `Evento`, `Lugar`, `Artista`
-
-### 2. msv-sectores-asientos Pureto:8002
-Gestionar los sectores, asientos y su disponibilidad.
-
-**Entidades:** `Sector`, `Asiento`
-
-### 3. msv-compras Pureto:8003
-Gestionar las solicitudes, compras y entradas.
-
-**Entidades:** `Compra`, `Entrada`, `Solicitud`
-
-### 4. msv-usuarios Pureto:8004
-Gestionar los usuarios y sus roles.
-
-**Entidades:** `Usuario`, `Rol`
-
-## API Gateway Pureto:8080
-
-Centralizar las peticiones HTTP y redirigirlas al microservicio correspondiente.
+[Arrancar el sistema](GUIA-ARRANQUE.md) · [Configurar MySQL](docker/mysql/README.md) · [Ejecutar pruebas](tests/system/README.md)

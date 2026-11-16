@@ -77,7 +77,7 @@ Los favoritos guardados no se eliminan ante fallos del servicio externo.
 
 ## Autenticacion diferida
 
-La version activa no requiere token ni contrasena. Crear cuentas con POST /usuarios e idRol obtenido de GET /roles. Las rutas /auth/login y /auth/registro estan retiradas y devuelven 404. El codigo JWT original, sus pruebas y configuracion estan en ../futura jwt, fuera de las fuentes que compila Maven.
+La version activa no requiere token ni contrasena. Crear cuentas con POST /usuarios e idRol obtenido de GET /roles. Las rutas /auth/login y /auth/registro estan retiradas y devuelven 404.
 
 Los roles siguen siendo datos del dominio; en esta etapa no restringen acceso a los endpoints. La autenticacion y autorizacion se incorporaran cuando se restaure y adapte el modulo JWT.
 
