@@ -1,7 +1,10 @@
 package com.msvusuario.controller;
 
 import com.msvusuario.dto.UsuarioRequest;
+import com.msvusuario.dto.PreferenciasRequest;
+import com.msvusuario.dto.PreferenciasResponse;
 import com.msvusuario.dto.UsuarioResponse;
+import com.msvusuario.dto.ArtistaResponse;
 import com.msvusuario.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -43,8 +46,18 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{id}/preferencias")
+    public PreferenciasResponse obtenerPreferencias(@PathVariable Long id) {
+        return service.obtenerPreferencias(id);
+    }
+
+    @PutMapping("/{id}/preferencias")
+    public UsuarioResponse actualizarPreferencias(@PathVariable Long id, @RequestBody PreferenciasRequest request) {
+        return service.actualizarPreferencias(id, request);
+    }
+
     @GetMapping("/{id}/artistas-favoritos")
-    public List<Long> listarFavoritos(@PathVariable Long id) {
+    public List<ArtistaResponse> listarFavoritos(@PathVariable Long id) {
         return service.listarFavoritos(id);
     }
 

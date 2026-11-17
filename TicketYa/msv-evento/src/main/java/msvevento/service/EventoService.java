@@ -1,10 +1,13 @@
 
 package msvevento.service;
 
+import feign.FeignException;
+import msvevento.client.SectorEventoClient;
 import msvevento.dto.ArtistaResponseDTO;
 import msvevento.dto.EventoRequestDTO;
 import msvevento.dto.EventoResponseDTO;
 import msvevento.dto.LugarResponseDTO;
+import msvevento.dto.SectorEventoResponseDTO;
 import msvevento.entity.*;
 import msvevento.repository.ArtistaRepository;
 import msvevento.repository.EventoRepository;
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,23 +34,32 @@ public class EventoService {
     private final EventoRepository eventoRepository;
     private final LugarRepository lugarRepository;
     private final ArtistaRepository artistaRepository;
+    private final SectorEventoClient sectorEventoClient;
 
     public EventoService(
             EventoRepository eventoRepository,
             LugarRepository lugarRepository,
-            ArtistaRepository artistaRepository
+            ArtistaRepository artistaRepository,
+            SectorEventoClient sectorEventoClient
     ) {
         this.eventoRepository = eventoRepository;
         this.lugarRepository = lugarRepository;
         this.artistaRepository = artistaRepository;
+        this.sectorEventoClient = sectorEventoClient;
     }
 
     // Listar todos los eventos
     @Transactional(readOnly = true)
-    public List<EventoResponseDTO> listarEventos() {
-
-        return eventoRepository.findAll()
+    public List<EventoResponseDTO> listarEventosPublicos() {
+        return eventoRepository.findByEstadoPublicacion(EstadoPublicacion.PUBLICADO)
                 .stream()
+                .map(this::convertirAResponseDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventoResponseDTO> listarEventosDelOrganizador(Long idOrganizador) {
+        return eventoRepository.findByIdOrganizador(idOrganizador).stream()
                 .map(this::convertirAResponseDTO)
                 .toList();
     }
@@ -61,6 +74,13 @@ public class EventoService {
                         "No se encontro el evento con ID: " + id
                 ));
 
+        return convertirAResponseDTO(evento);
+    }
+
+    @Transactional(readOnly = true)
+    public EventoResponseDTO buscarEventoPublicado(Long id) {
+        Evento evento = eventoRepository.findByIdAndEstadoPublicacion(id, EstadoPublicacion.PUBLICADO)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento publicado no encontrado"));
         return convertirAResponseDTO(evento);
     }
 
@@ -112,7 +132,7 @@ public class EventoService {
     }
 
     // Actualizar un evento
-    public EventoResponseDTO actualizarEvento(Long id, EventoRequestDTO dto) {
+    public EventoResponseDTO actualizarEvento(Long id, Long idOrganizador, EventoRequestDTO dto) {
 
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -120,10 +140,14 @@ public class EventoService {
                         "No se encontro el evento con ID: " + id
                 ));
 
+        validarOrganizador(evento, idOrganizador);
+        if (evento.getEstadoPublicacion() != EstadoPublicacion.BORRADOR) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solo se pueden editar borradores");
+        }
+
         evento.setNombre(dto.getNombre());
         evento.setDescripcion(dto.getDescripcion());
         evento.setTipo(dto.getTipo());
-        evento.setIdOrganizador(dto.getIdOrganizador());
         evento.setFechaHora(dto.getFechaHora());
         evento.setDemanda(dto.isDemanda());
 
@@ -160,13 +184,16 @@ public class EventoService {
         return convertirAResponseDTO(eventoActualizado);
     }
     // Publicar un evento
-    public EventoResponseDTO publicarEvento(Long id) {
+    @Transactional
+    public EventoResponseDTO publicarEvento(Long id, Long idOrganizador) {
 
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No se encontro el evento con ID: " + id
                 ));
+
+        validarOrganizador(evento, idOrganizador);
 
         if (evento.getEstadoPublicacion() != EstadoPublicacion.BORRADOR) {
             throw new ResponseStatusException(
@@ -175,13 +202,119 @@ public class EventoService {
             );
         }
 
-
+        validarDatosParaPublicar(evento);
+        validarSectoresParaPublicar(id);
 
         evento.setEstadoPublicacion(EstadoPublicacion.PUBLICADO);
 
         Evento eventoGuardado = eventoRepository.save(evento);
 
         return convertirAResponseDTO(eventoGuardado);
+    }
+
+    private void validarOrganizador(Evento evento, Long idOrganizador) {
+        if (idOrganizador == null || !idOrganizador.equals(evento.getIdOrganizador())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No sos el organizador de este evento");
+        }
+    }
+
+    public void actualizarAgotamiento(Long id, boolean agotado) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+        if (evento.getEstado() == EstadoEvento.CANCELADO || evento.getEstado() == EstadoEvento.FINALIZADO) return;
+        if (agotado) {
+            evento.setEstado(EstadoEvento.AGOTADO);
+        } else if (evento.getEstado() == EstadoEvento.AGOTADO
+                && evento.getEstadoPublicacion() == EstadoPublicacion.PUBLICADO
+                && evento.getFechaHora() != null
+                && evento.getFechaHora().isAfter(LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")))) {
+            evento.setEstado(EstadoEvento.EN_CURSO);
+        }
+        eventoRepository.save(evento);
+    }
+
+    public EventoResponseDTO finalizarEvento(Long id, Long idOrganizador) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+        validarOrganizador(evento, idOrganizador);
+        if (evento.getFechaHora() == null || evento.getFechaHora().isAfter(
+                LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El evento todavía no llegó a su fecha y hora");
+        }
+        if (evento.getEstadoPublicacion() != EstadoPublicacion.PUBLICADO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solo se pueden finalizar eventos publicados");
+        }
+        if (evento.getEstado() == EstadoEvento.CANCELADO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "No se puede finalizar un evento cancelado");
+        }
+        evento.setEstado(EstadoEvento.FINALIZADO);
+        return convertirAResponseDTO(eventoRepository.save(evento));
+    }
+
+    private void validarDatosParaPublicar(Evento evento) {
+        List<String> faltantes = new ArrayList<>();
+        if (evento.getNombre() == null || evento.getNombre().isBlank()) faltantes.add("nombre");
+        if (evento.getDescripcion() == null || evento.getDescripcion().isBlank()) faltantes.add("descripción");
+        if (evento.getTipo() == null) faltantes.add("tipo");
+        if (evento.getIdOrganizador() == null || evento.getIdOrganizador() <= 0) faltantes.add("organizador válido");
+        if (evento.getFechaHora() == null
+                || !evento.getFechaHora().isAfter(LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")))) {
+            faltantes.add("fecha y hora futuras");
+        }
+        if (evento.getLugar() == null) {
+            faltantes.add("lugar");
+        } else {
+            Lugar lugar = evento.getLugar();
+            if (lugar.getNombre() == null || lugar.getNombre().isBlank()) faltantes.add("nombre del lugar");
+            if (lugar.getDireccion() == null || lugar.getDireccion().isBlank()) faltantes.add("dirección del lugar");
+            if (lugar.getLatitud() == null || lugar.getLongitud() == null) faltantes.add("coordenadas del lugar");
+        }
+        if (evento.getParticipantes() == null || evento.getParticipantes().isEmpty()) {
+            faltantes.add("al menos un participante");
+        }
+
+        if (!faltantes.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "No se puede publicar. Completá: " + String.join(", ", faltantes)
+            );
+        }
+    }
+
+    private void validarSectoresParaPublicar(Long idEvento) {
+        List<SectorEventoResponseDTO> sectores;
+        try {
+            sectores = sectorEventoClient.listarConfigurados(idEvento);
+        } catch (FeignException.NotFound exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Configurá al menos un sector con precio no negativo y capacidad positiva antes de publicar"
+            );
+        } catch (FeignException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "No se pudo validar la configuración de sectores. Verificá que SectorAsiento esté disponible"
+            );
+        }
+
+        if (sectores == null || sectores.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Configurá al menos un sector con precio no negativo y capacidad positiva antes de publicar"
+            );
+        }
+
+        boolean haySectorValido = sectores.stream().anyMatch(sector ->
+                sector != null
+                        && sector.precio() != null && sector.precio().signum() >= 0
+                        && sector.capacidad() != null && sector.capacidad() > 0
+        );
+        if (!haySectorValido) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Ningún sector es válido. Configurá al menos uno con precio no negativo y capacidad positiva"
+            );
+        }
     }
 
 
@@ -219,10 +352,7 @@ public class EventoService {
                 ));
 
         if (evento.getEstado() == EstadoEvento.CANCELADO) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "El evento ya se encuentra cancelado"
-            );
+            return convertirAResponseDTO(evento);
         }
 
         if (evento.getEstado() == EstadoEvento.FINALIZADO) {

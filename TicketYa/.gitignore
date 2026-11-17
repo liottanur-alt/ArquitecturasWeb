@@ -1,0 +1,5 @@
+
+# Respaldos SQL locales de la migracion de bases.
+.local/
+
+.env

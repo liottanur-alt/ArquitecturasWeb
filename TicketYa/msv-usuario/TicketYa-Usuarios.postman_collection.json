@@ -1,0 +1,2142 @@
+{
+  "info": {
+    "name": "TicketYa Usuarios - MongoDB y artistas reales",
+    "description": "Ejecutar completa en orden: 00 crea un artista temporal en Eventos real, 01 inicializa los usuarios y 33 elimina el artista. Sin JWT. baseUrl=http://localhost:8004 y eventosBaseUrl=http://localhost:8005. modoArtistas=real por defecto; usar simulador para compose.yml de msv-usuario (omite 00 y 33, usa artista 900001). Valida campos completos, tipos, persistencia de perfiles, roles, favoritos y errores. Genera datos unicos y elimina solo sus fixtures. Si se interrumpe, limpiar sus IDs siguiendo docs/PRUEBAS-POSTMAN.md. El CRUD positivo de roles requiere una base descartable: no borra roles compartidos. Incluye guardar, modificar y vaciar preferencias con tipos reconocidos, rechazos 400/404, preservacion de perfil y favoritos, y consulta de datos persistidos. HU2: GET preferencias devuelve tipos, ciudad nullable e IDs de artistas, sin consultar Eventos. HU3: alta y baja idempotentes, IDs no positivos 400, usuario inexistente 404 y conservacion de las otras preferencias. HU4: recomendaciones con puntuacion y motivos, desempate estable, sin duplicados; usuario inexistente 404. HU5: recomendaciones anonimas por compras en comun; los casos positivos de pagos y reintegros se ejecutan con Test-ComprasEnComun.ps1. HU6: el endpoint principal devuelve recomendaciones, parcial y fuentesNoDisponibles. Limite predeterminado 10 (1-100). Las rutas por-preferencias y por-compras conservan las respuestas de fuente. HU8: excluye eventos del historial valido; historialVerificado indica si Compras pudo verificarlo. Las fuentes individuales informan X-Historial-Verificado y X-Respuesta-Parcial. HU9: filtro comun por inventario, disponibilidadVerificada en JSON y X-Disponibilidad-Verificada en fuentes individuales; no reserva entradas. HU10 conserva este contrato publico; Eventos se consulta por preferencias OR y por IDs, sin descargar el catalogo completo. La prueba de rendimiento acordada se ejecuta con tests/recomendaciones/Test-HU10-Rendimiento.ps1.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (![\"real\",\"simulador\"].includes(pm.variables.get(\"modoArtistas\"))) { pm.execution.skipRequest(); throw new Error(\"modoArtistas debe ser real o simulador\"); }",
+          "const favoritoId = pm.collectionVariables.get(\"idArtistaPrueba\"); if (favoritoId) pm.variables.set(\"idArtistaPrueba\", favoritoId);",
+          "const raw = pm.request.body && pm.request.body.mode === 'raw' ? pm.request.body.raw : '';",
+          "for (const key of ['idRolCliente', 'idRolOrganizador', 'idRolInexistente']) {",
+          "  if (!raw.includes('{{' + key + '}}')) continue;",
+          "  const saved = pm.collectionVariables.get(key);",
+          "  const id = Number(saved);",
+          "  if ((typeof saved !== 'number' && typeof saved !== 'string') || !Number.isSafeInteger(id) || id <= 0) { pm.execution.skipRequest(); throw new Error('Ejecuta primero 01 Consultar roles. ' + key + ' debe contener solo el ID numerico del rol, no el objeto de GET /roles.'); }",
+          "  pm.variables.set(key, id);",
+          "}",
+          "if (raw.includes('\"idRol\"')) {",
+          "  let body;",
+          "  try { body = JSON.parse(pm.variables.replaceIn(raw)); } catch (e) { pm.execution.skipRequest(); throw new Error('Body JSON incompleto: ejecuta primero la solicitud 01 para inicializar las variables.'); }",
+          "  if (typeof body.idRol !== 'number' || !Number.isSafeInteger(body.idRol) || body.idRol <= 0) { pm.execution.skipRequest(); throw new Error('idRol debe ser un numero, por ejemplo 1 para CLIENTE o 2 para ORGANIZADOR en la base actual. No enviar {id: 1} ni el objeto del rol.'); }",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const urlActual = pm.variables.replaceIn(pm.request.url.toString()).split('?')[0];",
+          "const metodo = pm.request.method;",
+          "const status = pm.response.code;",
+          "function idValido(id) { pm.expect(Number.isSafeInteger(id) && id > 0).to.eql(true); }",
+          "function usuarioValido(u) {",
+          " pm.expect(u).to.have.all.keys('id','nombre','email','dni','ciudad','idRol','tiposEventoPreferidos','ciudadPreferida');",
+          " idValido(u.id); idValido(u.idRol);",
+          " pm.expect(u.tiposEventoPreferidos).to.be.an('array'); pm.expect(new Set(u.tiposEventoPreferidos).size).to.eql(u.tiposEventoPreferidos.length);",
+          " u.tiposEventoPreferidos.forEach(t => pm.expect(['RECITAL','TEATRO','DEPORTE','CONFERENCIA','FESTIVAL','OTRO']).to.include(t));",
+          " pm.expect(u.ciudadPreferida).to.be.a('string');",
+          " for (const campo of ['nombre','email','dni','ciudad']) pm.expect(u[campo]).to.be.a('string').and.not.empty;",
+          "}",
+          "function rolValido(r) {",
+          " pm.expect(r).to.have.all.keys('id','name'); idValido(r.id);",
+          " pm.expect(['CLIENTE','ORGANIZADOR','ADMINISTRADOR','PERSONAL_ACCESO']).to.include(r.name);",
+          "}",
+          "if (status !== 204) {",
+          " pm.test('Respuesta JSON', () => pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/application\\/(?:problem\\+)?json/i));",
+          "}",
+          "if (status >= 400) {",
+          " pm.test('Error con estado correcto y sin traza interna', () => {",
+          "  const error = pm.response.json(); pm.expect(error.status).to.eql(status);",
+          "  pm.expect(error).not.to.have.property('trace'); pm.expect(error).not.to.have.property('stackTrace');",
+          " });",
+          "}",
+          "if (status === 200 && /\\/roles(?:\\/\\d+)?$/.test(urlActual)) {",
+          " const body = pm.response.json();",
+          " pm.test('Roles: estructura, IDs y tipos correctos', () => {",
+          "  if (Array.isArray(body)) {",
+          "   body.forEach(rolValido);",
+          "   pm.expect(new Set(body.map(r => r.id)).size).to.eql(body.length);",
+          "   pm.expect(body.map(r => r.name)).to.have.members(['CLIENTE','ORGANIZADOR','ADMINISTRADOR','PERSONAL_ACCESO']);",
+          "  } else {",
+          "   rolValido(body); pm.expect(body.id).to.eql(Number(urlActual.split('/').pop()));",
+          "  }",
+          " });",
+          "}",
+          "if ((status === 200 || status === 201) && /\\/usuarios(?:\\/\\d+)?$/.test(urlActual)) {",
+          " const body = pm.response.json();",
+          " pm.test('Usuarios: campos completos y tipos correctos', () => {",
+          "  if (Array.isArray(body)) {",
+          "   body.forEach(usuarioValido); pm.expect(new Set(body.map(u => u.id)).size).to.eql(body.length);",
+          "  } else usuarioValido(body);",
+          " });",
+          " if (metodo === 'POST' || metodo === 'PUT') {",
+          "  const enviado = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));",
+          "  pm.test('El perfil devuelve exactamente los datos enviados', () => {",
+          "   for (const campo of ['nombre','email','dni','ciudad','idRol']) pm.expect(body[campo]).to.eql(enviado[campo]);",
+          "   if (metodo === 'PUT') pm.expect(body.id).to.eql(Number(urlActual.split('/').pop()));",
+          "  });",
+          "  pm.collectionVariables.set('perfilEsperado_' + body.id, JSON.stringify(body));",
+          " } else {",
+          "  pm.test('Los perfiles consultados coinciden con lo guardado', () => {",
+          "   for (const usuario of (Array.isArray(body) ? body : [body])) {",
+          "    const esperado = pm.collectionVariables.get('perfilEsperado_' + usuario.id);",
+          "    if (esperado) pm.expect(usuario).to.deep.eql(JSON.parse(esperado));",
+          "   }",
+          "   if (!Array.isArray(body)) pm.expect(body.id).to.eql(Number(urlActual.split('/').pop()));",
+          "  });",
+          " }",
+          "}",
+          "if (status === 200 && /\\/artistas-favoritos$/.test(urlActual)) {",
+          " const favoritos = pm.response.json();",
+          " pm.test('Favoritos: IDs y datos exactos del catalogo, sin duplicados', () => {",
+          "  pm.expect(favoritos).to.be.an('array');",
+          "  pm.expect(new Set(favoritos.map(a => a.idArtista)).size).to.eql(favoritos.length);",
+          "  favoritos.forEach(a => {",
+          "   pm.expect(a).to.have.all.keys('idArtista','nombre','genero');",
+          "   pm.expect(a.idArtista).to.eql(Number(pm.collectionVariables.get('idArtistaPrueba')));",
+          "   pm.expect(a.nombre).to.eql(pm.collectionVariables.get('artistaNombreEsperado'));",
+          "   pm.expect(a.genero).to.eql(pm.collectionVariables.get('artistaGeneroEsperado'));",
+          "  });",
+          " });",
+          "}",
+          "if (status === 200 && metodo === 'PUT' && /\\/preferencias$/.test(urlActual)) {",
+          " const body = pm.response.json();",
+          " const enviado = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));",
+          " pm.test('Preferencias guardadas sin repetidos y con ciudad normalizada', () => {",
+          "  usuarioValido(body);",
+          "  pm.expect(body.tiposEventoPreferidos).to.have.members([...new Set(enviado.tiposEventoPreferidos || [])]);",
+          "  pm.expect(body.ciudadPreferida).to.eql((enviado.ciudadPreferida || '').trim());",
+          " });",
+          " pm.test('Preferencias conservan todos los datos del perfil', () => {",
+          "  const previo = JSON.parse(pm.collectionVariables.get('perfilEsperado_' + body.id));",
+          "  for (const campo of ['id','nombre','email','dni','ciudad','idRol']) pm.expect(body[campo]).to.eql(previo[campo]);",
+          " });",
+          " pm.collectionVariables.set('perfilEsperado_' + body.id, JSON.stringify(body));",
+          "}",
+          "if (status === 200 && metodo === 'GET' && /\\/preferencias$/.test(urlActual)) {",
+          " const body = pm.response.json();",
+          " const idUsuario = urlActual.match(/\\/usuarios\\/(\\d+)\\/preferencias$/)[1];",
+          " const perfil = JSON.parse(pm.collectionVariables.get('perfilEsperado_' + idUsuario));",
+          " pm.test('HU2: solo tipos, ciudad e IDs locales de artistas', () => {",
+          "  pm.expect(body).to.have.all.keys('tiposEventoPreferidos','ciudadPreferida','artistasFavoritos');",
+          "  pm.expect(body.tiposEventoPreferidos).to.have.members(perfil.tiposEventoPreferidos);",
+          "  pm.expect(body.ciudadPreferida).to.eql(perfil.ciudadPreferida || null);",
+          "  pm.expect(body.artistasFavoritos).to.be.an('array');",
+          "  pm.expect(new Set(body.artistasFavoritos).size).to.eql(body.artistasFavoritos.length);",
+          "  body.artistasFavoritos.forEach(idValido);",
+          " });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8004"
+    },
+    {
+      "key": "eventosBaseUrl",
+      "value": "http://localhost:8005"
+    },
+    {
+      "key": "modoArtistas",
+      "value": "real"
+    },
+    {
+      "key": "idArtistaPrueba",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Crear artista temporal en Eventos real",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{eventosBaseUrl}}/api/artistas",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nombre\":\"{{artistaNombreEsperado}}\",\"genero\":\"Rock\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "Crea solo el artista de esta ejecucion. En modo simulador se omite y se usa el artista 900001."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('modoArtistas') === 'simulador') {",
+              " pm.collectionVariables.set('idArtistaPrueba', 900001);",
+              " pm.collectionVariables.set('artistaNombreEsperado', 'Soda Stereo');",
+              " pm.collectionVariables.set('artistaGeneroEsperado', 'Rock');",
+              " pm.execution.skipRequest();",
+              "} else {",
+              " pm.collectionVariables.unset('idArtistaPrueba');",
+              " pm.collectionVariables.set('artistaNombreEsperado', 'Artista Postman ' + pm.variables.replaceIn('{{$guid}}'));",
+              " pm.collectionVariables.set('artistaGeneroEsperado', 'Rock');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201 artista real', () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error('No se pudo crear el artista temporal en Eventos'); }",
+              "const artista = pm.response.json();",
+              "pm.test('Artista creado con ID numerico y datos exactos', () => {",
+              " pm.expect(Number.isSafeInteger(artista.id) && artista.id > 0).to.eql(true);",
+              " pm.expect(artista.nombre).to.eql(pm.collectionVariables.get('artistaNombreEsperado'));",
+              " pm.expect(artista.genero).to.eql('Rock');",
+              "});",
+              "pm.collectionVariables.set('idArtistaPrueba', artista.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 Consultar roles e iniciar datos de la ejecución",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/roles",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runId = pm.variables.replaceIn(\"{{$guid}}\").replace(/-/g, \"\").slice(0, 12);",
+              "pm.collectionVariables.set(\"runId\", runId);",
+              "[\"idCliente\",\"idOrganizador\",\"idRolCliente\",\"idRolOrganizador\",\"idRolInexistente\"].forEach(k => pm.collectionVariables.unset(k));",
+              "const dato = (key, fallback) => pm.iterationData.get(key) || fallback;",
+              "pm.collectionVariables.set(\"clienteNombre\", dato(\"clienteNombre\", \"Ana de prueba\"));",
+              "pm.collectionVariables.set(\"organizadorNombre\", dato(\"organizadorNombre\", \"Productora de prueba\"));",
+              "pm.collectionVariables.set(\"ciudadPrueba\", dato(\"ciudad\", \"Tandil\"));",
+              "pm.collectionVariables.set(\"clienteEmail\", \"cliente-\" + runId + \"@example.com\");",
+              "pm.collectionVariables.set(\"organizadorEmail\", \"organizador-\" + runId + \"@example.com\");",
+              "pm.collectionVariables.set(\"clienteDni\", \"CLI-\" + runId);",
+              "pm.collectionVariables.set(\"organizadorDni\", \"ORG-\" + runId);",
+              "pm.collectionVariables.set(\"dniDuplicadoEmail\", \"DUP-\" + runId);",
+              "pm.collectionVariables.set(\"emailDuplicadoDni\", \"duplicado-\" + runId + \"@example.com\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const roles = pm.response.json();",
+              "for (const [tipo, variable] of [[\"CLIENTE\",\"idRolCliente\"],[\"ORGANIZADOR\",\"idRolOrganizador\"]]) { const rol = roles.find(r => r.name === tipo); pm.test(\"Rol \" + tipo + \" inicializado\", () => pm.expect(rol).to.exist); if (!rol) { pm.execution.setNextRequest(null); throw new Error(\"Falta el rol \" + tipo); } pm.collectionVariables.set(variable, rol.id); }",
+              "pm.collectionVariables.set(\"idRolInexistente\", Math.max(0, ...roles.map(r => Number(r.id))) + 1);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Consultar rol cliente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/roles/{{idRolCliente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Tipo CLIENTE\", () => pm.expect(pm.response.json().name).to.eql(\"CLIENTE\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Crear cliente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"{{clienteEmail}}\",\n  \"dni\": \"{{clienteDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.collectionVariables.set(\"idCliente\", pm.response.json().id);",
+              "pm.test(\"Rol real y Location\", () => { pm.expect(pm.response.json().idRol).to.eql(Number(pm.collectionVariables.get(\"idRolCliente\"))); pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/usuarios/\" + pm.response.json().id); });",
+              "pm.test(\"Sin datos de credenciales\", () => { pm.expect(pm.response.json()).not.to.have.property(\"password\"); pm.expect(pm.response.json()).not.to.have.property(\"passwordHash\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Crear organizador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{organizadorNombre}}\",\n  \"email\": \"{{organizadorEmail}}\",\n  \"dni\": \"{{organizadorDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolOrganizador}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code !== 201) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.collectionVariables.set(\"idOrganizador\", pm.response.json().id);",
+              "pm.test(\"Rol real y Location\", () => { pm.expect(pm.response.json().idRol).to.eql(Number(pm.collectionVariables.get(\"idRolOrganizador\"))); pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/usuarios/\" + pm.response.json().id); });",
+              "pm.test(\"Sin datos de credenciales\", () => { pm.expect(pm.response.json()).not.to.have.property(\"password\"); pm.expect(pm.response.json()).not.to.have.property(\"passwordHash\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04.01 HU2 Consultar preferencias vacias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04.02 HU4 Sin preferencias devuelve recomendaciones vacias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/recomendaciones/por-preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en recomendaciones HU4'); }",
+              "pm.test('Sin gustos registrados devuelve []', () => pm.expect(pm.response.json()).to.eql([]));",
+              "if(pm.response.code===200){pm.test('HU8/HU9: historial e inventario verificados',()=>{pm.expect(pm.response.headers.get('X-Disponibilidad-Verificada')).to.eql('true');pm.expect(pm.response.headers.get('X-Historial-Verificado')).to.eql('true');pm.expect(pm.response.headers.get('X-Respuesta-Parcial')).to.eql('false');});}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04.03 HU5 Sin historial devuelve lista vacia",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/recomendaciones/por-compras"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if(pm.response.code!==200){pm.execution.setNextRequest(null);throw new Error('Estado inesperado en compras en comun');}",
+              "pm.test('Sin historial confirmado devuelve []',()=>pm.expect(pm.response.json()).to.eql([]));",
+              "if(pm.response.code===200){pm.test('HU8/HU9: historial e inventario verificados',()=>{pm.expect(pm.response.headers.get('X-Disponibilidad-Verificada')).to.eql('true');pm.expect(pm.response.headers.get('X-Historial-Verificado')).to.eql('true');pm.expect(pm.response.headers.get('X-Respuesta-Parcial')).to.eql('false');});}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04.04 HU6 Ninguna fuente aporta resultados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/recomendaciones"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "if(pm.response.code!==200){pm.execution.setNextRequest(null);throw new Error('Estado inesperado en HU6');}",
+              "pm.test('HU6: lista unificada, motivos, fuentes y puntuacion explicable',()=>{",
+              " const body=pm.response.json();pm.expect(body).to.have.all.keys('recomendaciones','parcial','fuentesNoDisponibles','historialVerificado','disponibilidadVerificada');",
+              " pm.expect(body.disponibilidadVerificada).to.eql(true);pm.expect(body.historialVerificado).to.eql(true);pm.expect(body.parcial).to.eql(false);pm.expect(body.fuentesNoDisponibles).to.eql([]);",
+              " const rs=body.recomendaciones;pm.expect(rs).to.be.an('array');pm.expect(rs.length).to.be.at.most(10);",
+              " pm.expect(new Set(rs.map(r=>r.idEvento)).size).to.eql(rs.length);",
+              " rs.forEach((r,i)=>{",
+              "  pm.expect(r).to.have.all.keys('idEvento','nombre','tipo','fechaHora','ciudad','puntuacion','puntuacionPreferencias','compradoresEnComun','motivos','fuentes');",
+              "  pm.expect(Number.isSafeInteger(r.idEvento)&&r.idEvento>0).to.eql(true);",
+              "  pm.expect(r.puntuacionPreferencias).to.be.within(0,10);pm.expect(r.compradoresEnComun).to.be.at.least(0);",
+              "  pm.expect(r.puntuacion).to.eql(r.puntuacionPreferencias+2*Math.min(r.compradoresEnComun,5));",
+              "  pm.expect(r.puntuacion).to.be.within(1,20);pm.expect(r.motivos).to.be.an('array').and.not.empty;",
+              "  pm.expect(new Set(r.motivos).size).to.eql(r.motivos.length);pm.expect(r.fuentes).to.be.an('array').and.not.empty;",
+              "  pm.expect(new Set(r.fuentes).size).to.eql(r.fuentes.length);r.fuentes.forEach(f=>pm.expect(['PREFERENCIAS','COMPRAS_EN_COMUN']).to.include(f));",
+              "  if(i>0){const p=rs[i-1];pm.expect(p.puntuacion>r.puntuacion||(p.puntuacion===r.puntuacion&&(p.fechaHora<r.fechaHora||(p.fechaHora===r.fechaHora&&p.idEvento<r.idEvento)))).to.eql(true);}",
+              " });",
+              "});",
+              "pm.test('Fuentes vacias son exito completo',()=>pm.expect(pm.response.json().recomendaciones).to.eql([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Listar perfiles y comprobar los creados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const ids = pm.response.json().map(u => u.id); pm.test(\"Incluye cliente y organizador\", () => { pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idCliente\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idOrganizador\"))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Consultar cliente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Email del cliente\", () => pm.expect(pm.response.json().email).to.eql(pm.collectionVariables.get(\"clienteEmail\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Consultar organizador",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idOrganizador}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Actualizar cliente",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}} actualizado\",\n  \"email\": \"{{clienteEmail}}\",\n  \"dni\": \"{{clienteDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Nombre actualizado\", () => pm.expect(pm.response.json().nombre).to.eql(pm.collectionVariables.get(\"clienteNombre\") + \" actualizado\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Actualizar organizador",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idOrganizador}}",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{organizadorNombre}} actualizado\",\n  \"email\": \"{{organizadorEmail}}\",\n  \"dni\": \"{{organizadorDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolOrganizador}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Repetir el mismo tipo del rol (sin cambiar política)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/roles/{{idRolCliente}}",
+        "description": "Conserva el rol existente; no lo renombra ni elimina.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"CLIENTE\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Agregar favorito externo",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Agregar el mismo favorito otra vez",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Listar favoritos sin duplicados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const id = Number(pm.variables.get(\"idArtistaPrueba\")); pm.test(\"Una sola relación\", () => pm.expect(pm.response.json().filter(x => x.idArtista === id)).to.have.lengthOf(1));",
+              "pm.test(\"Incluye nombre y genero\", () => pm.response.json().forEach(x => { pm.expect(x.nombre).to.be.a('string').and.not.empty; pm.expect(x).to.have.property('genero'); }));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.01 Guardar preferencias distintas del perfil y deduplicar",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tiposEventoPreferidos\":[\"RECITAL\",\"TEATRO\",\"RECITAL\"],\"ciudadPreferida\":\"  Mar del Plata  \"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.02 Consultar perfil con preferencias persistidas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.02b HU2 Consultar preferencias y artistas guardados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([Number(pm.collectionVariables.get(\"idArtistaPrueba\"))]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.03 Preferencias conservan los artistas favoritos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const id = Number(pm.variables.get(\"idArtistaPrueba\")); pm.test(\"Una sola relación\", () => pm.expect(pm.response.json().filter(x => x.idArtista === id)).to.have.lengthOf(1));",
+              "pm.test(\"Incluye nombre y genero\", () => pm.response.json().forEach(x => { pm.expect(x.nombre).to.be.a('string').and.not.empty; pm.expect(x).to.have.property('genero'); }));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.04 Rechazar tipo de evento desconocido",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tiposEventoPreferidos\":[\"INVALIDO\"],\"ciudadPreferida\":\"Rosario\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.05 Rechazar tipo nulo",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tiposEventoPreferidos\":[null]}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.06 Rechazar ciudad demasiado larga",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ciudadPreferida\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.07 Usuario inexistente devuelve 404",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/9223372036854775807/preferencias",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.07b HU2 Consultar usuario inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/9223372036854775807/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.08 Los errores no modificaron las preferencias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.09 Vaciar todas las preferencias",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tiposEventoPreferidos\":[],\"ciudadPreferida\":\"\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.09b HU2 Tipos vacios y ciudad null conservan artistas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([Number(pm.collectionVariables.get(\"idArtistaPrueba\"))]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.10 Modificar preferencias nuevamente",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tiposEventoPreferidos\":[\"FESTIVAL\"],\"ciudadPreferida\":\"Rosario\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en preferencias'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.10b HU2 Consultar preferencias modificadas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([Number(pm.collectionVariables.get(\"idArtistaPrueba\"))]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.11 Modificar y vaciar preferencias conserva favoritos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const id = Number(pm.variables.get(\"idArtistaPrueba\")); pm.test(\"Una sola relación\", () => pm.expect(pm.response.json().filter(x => x.idArtista === id)).to.have.lengthOf(1));",
+              "pm.test(\"Incluye nombre y genero\", () => pm.response.json().forEach(x => { pm.expect(x.nombre).to.be.a('string').and.not.empty; pm.expect(x).to.have.property('genero'); }));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.12 HU3 Quitar un favorito ausente",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/9223372036854775806"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en favoritos HU3'); }",
+              "pm.test('Sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.13 HU3 Quitar ausente conserva preferencias y favorito registrado",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([Number(pm.collectionVariables.get(\"idArtistaPrueba\"))]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.14 HU3 Repetir alta con preferencias completas",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en favoritos HU3'); }",
+              "pm.test('Sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.15 HU3 Alta repetida conserva preferencias sin duplicados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([Number(pm.collectionVariables.get(\"idArtistaPrueba\"))]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.16 HU4 Consultar recomendaciones segun preferencias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/recomendaciones/por-preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en recomendaciones HU4'); }",
+              "pm.test('HU4: estructura, motivos, puntuacion y orden estables', () => {",
+              " const rs = pm.response.json(); pm.expect(rs).to.be.an('array');",
+              " pm.expect(new Set(rs.map(r=>r.idEvento)).size).to.eql(rs.length);",
+              " const puntos = {'Participa un artista favorito':5,'Coincide con un tipo de evento preferido':3,'Se realiza en tu ciudad de preferencia':2};",
+              " rs.forEach((r,i) => {",
+              "  pm.expect(r).to.have.all.keys('idEvento','nombre','tipo','fechaHora','ciudad','puntuacion','motivos');",
+              "  pm.expect(Number.isSafeInteger(r.idEvento) && r.idEvento>0).to.eql(true);",
+              "  pm.expect(r.nombre).to.be.a('string').and.not.empty;",
+              "  pm.expect(r.tipo).to.be.a('string').and.not.empty;",
+              "  pm.expect(r.fechaHora).to.be.a('string');",
+              "  pm.expect(r.ciudad===null || typeof r.ciudad==='string').to.eql(true);",
+              "  pm.expect(Number.isInteger(r.puntuacion)).to.eql(true); pm.expect(r.puntuacion).to.be.within(1,10);",
+              "  pm.expect(r.motivos).to.be.an('array').and.not.empty;",
+              "  pm.expect(new Set(r.motivos).size).to.eql(r.motivos.length);",
+              "  r.motivos.forEach(m=>pm.expect(Object.keys(puntos)).to.include(m));",
+              "  pm.expect(r.puntuacion).to.eql(r.motivos.reduce((s,m)=>s+puntos[m],0));",
+              "  if(i>0){const p=rs[i-1];pm.expect(p.puntuacion>r.puntuacion || (p.puntuacion===r.puntuacion && (p.fechaHora<r.fechaHora || (p.fechaHora===r.fechaHora && p.idEvento<r.idEvento)))).to.eql(true);}",
+              " });",
+              "});",
+              "if(pm.response.code===200){pm.test('HU8/HU9: historial e inventario verificados',()=>{pm.expect(pm.response.headers.get('X-Disponibilidad-Verificada')).to.eql('true');pm.expect(pm.response.headers.get('X-Historial-Verificado')).to.eql('true');pm.expect(pm.response.headers.get('X-Respuesta-Parcial')).to.eql('false');});}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.17 HU4 Recomendaciones de usuario inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/9223372036854775807/recomendaciones/por-preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en recomendaciones HU4'); }",
+              "if(pm.response.code===200){pm.test('HU8/HU9: historial e inventario verificados',()=>{pm.expect(pm.response.headers.get('X-Disponibilidad-Verificada')).to.eql('true');pm.expect(pm.response.headers.get('X-Historial-Verificado')).to.eql('true');pm.expect(pm.response.headers.get('X-Respuesta-Parcial')).to.eql('false');});}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.18 HU5 Usuario inexistente devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/9223372036854775807/recomendaciones/por-compras"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "if(pm.response.code!==404){pm.execution.setNextRequest(null);throw new Error('Estado inesperado en compras en comun');}",
+              "if(pm.response.code===200){pm.test('HU8/HU9: historial e inventario verificados',()=>{pm.expect(pm.response.headers.get('X-Disponibilidad-Verificada')).to.eql('true');pm.expect(pm.response.headers.get('X-Historial-Verificado')).to.eql('true');pm.expect(pm.response.headers.get('X-Respuesta-Parcial')).to.eql('false');});}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.19 HU6 Consultar lista unificada",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/recomendaciones"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "if(pm.response.code!==200){pm.execution.setNextRequest(null);throw new Error('Estado inesperado en HU6');}",
+              "pm.test('HU6: lista unificada, motivos, fuentes y puntuacion explicable',()=>{",
+              " const body=pm.response.json();pm.expect(body).to.have.all.keys('recomendaciones','parcial','fuentesNoDisponibles','historialVerificado','disponibilidadVerificada');",
+              " pm.expect(body.disponibilidadVerificada).to.eql(true);pm.expect(body.historialVerificado).to.eql(true);pm.expect(body.parcial).to.eql(false);pm.expect(body.fuentesNoDisponibles).to.eql([]);",
+              " const rs=body.recomendaciones;pm.expect(rs).to.be.an('array');pm.expect(rs.length).to.be.at.most(10);",
+              " pm.expect(new Set(rs.map(r=>r.idEvento)).size).to.eql(rs.length);",
+              " rs.forEach((r,i)=>{",
+              "  pm.expect(r).to.have.all.keys('idEvento','nombre','tipo','fechaHora','ciudad','puntuacion','puntuacionPreferencias','compradoresEnComun','motivos','fuentes');",
+              "  pm.expect(Number.isSafeInteger(r.idEvento)&&r.idEvento>0).to.eql(true);",
+              "  pm.expect(r.puntuacionPreferencias).to.be.within(0,10);pm.expect(r.compradoresEnComun).to.be.at.least(0);",
+              "  pm.expect(r.puntuacion).to.eql(r.puntuacionPreferencias+2*Math.min(r.compradoresEnComun,5));",
+              "  pm.expect(r.puntuacion).to.be.within(1,20);pm.expect(r.motivos).to.be.an('array').and.not.empty;",
+              "  pm.expect(new Set(r.motivos).size).to.eql(r.motivos.length);pm.expect(r.fuentes).to.be.an('array').and.not.empty;",
+              "  pm.expect(new Set(r.fuentes).size).to.eql(r.fuentes.length);r.fuentes.forEach(f=>pm.expect(['PREFERENCIAS','COMPRAS_EN_COMUN']).to.include(f));",
+              "  if(i>0){const p=rs[i-1];pm.expect(p.puntuacion>r.puntuacion||(p.puntuacion===r.puntuacion&&(p.fechaHora<r.fechaHora||(p.fechaHora===r.fechaHora&&p.idEvento<r.idEvento)))).to.eql(true);}",
+              " });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.20 HU6 Limitar resultados",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/recomendaciones?limite=1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "if(pm.response.code!==200){pm.execution.setNextRequest(null);throw new Error('Estado inesperado en HU6');}",
+              "pm.test('HU6: lista unificada, motivos, fuentes y puntuacion explicable',()=>{",
+              " const body=pm.response.json();pm.expect(body).to.have.all.keys('recomendaciones','parcial','fuentesNoDisponibles','historialVerificado','disponibilidadVerificada');",
+              " pm.expect(body.disponibilidadVerificada).to.eql(true);pm.expect(body.historialVerificado).to.eql(true);pm.expect(body.parcial).to.eql(false);pm.expect(body.fuentesNoDisponibles).to.eql([]);",
+              " const rs=body.recomendaciones;pm.expect(rs).to.be.an('array');pm.expect(rs.length).to.be.at.most(10);",
+              " pm.expect(new Set(rs.map(r=>r.idEvento)).size).to.eql(rs.length);",
+              " rs.forEach((r,i)=>{",
+              "  pm.expect(r).to.have.all.keys('idEvento','nombre','tipo','fechaHora','ciudad','puntuacion','puntuacionPreferencias','compradoresEnComun','motivos','fuentes');",
+              "  pm.expect(Number.isSafeInteger(r.idEvento)&&r.idEvento>0).to.eql(true);",
+              "  pm.expect(r.puntuacionPreferencias).to.be.within(0,10);pm.expect(r.compradoresEnComun).to.be.at.least(0);",
+              "  pm.expect(r.puntuacion).to.eql(r.puntuacionPreferencias+2*Math.min(r.compradoresEnComun,5));",
+              "  pm.expect(r.puntuacion).to.be.within(1,20);pm.expect(r.motivos).to.be.an('array').and.not.empty;",
+              "  pm.expect(new Set(r.motivos).size).to.eql(r.motivos.length);pm.expect(r.fuentes).to.be.an('array').and.not.empty;",
+              "  pm.expect(new Set(r.fuentes).size).to.eql(r.fuentes.length);r.fuentes.forEach(f=>pm.expect(['PREFERENCIAS','COMPRAS_EN_COMUN']).to.include(f));",
+              "  if(i>0){const p=rs[i-1];pm.expect(p.puntuacion>r.puntuacion||(p.puntuacion===r.puntuacion&&(p.fechaHora<r.fechaHora||(p.fechaHora===r.fechaHora&&p.idEvento<r.idEvento)))).to.eql(true);}",
+              " });",
+              "});",
+              "pm.test('Respeta limite 1',()=>pm.expect(pm.response.json().recomendaciones.length).to.be.at.most(1));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.21 HU6 Limite cero invalido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/recomendaciones?limite=0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400',()=>pm.response.to.have.status(400));",
+              "if(pm.response.code!==400){pm.execution.setNextRequest(null);throw new Error('Estado inesperado en HU6');}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.22 HU6 Limite excesivo invalido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/recomendaciones?limite=101"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400',()=>pm.response.to.have.status(400));",
+              "if(pm.response.code!==400){pm.execution.setNextRequest(null);throw new Error('Estado inesperado en HU6');}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13.23 HU6 Usuario inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/9223372036854775807/recomendaciones"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404',()=>pm.response.to.have.status(404));",
+              "if(pm.response.code!==404){pm.execution.setNextRequest(null);throw new Error('Estado inesperado en HU6');}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Quitar favorito",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Comprobar favoritos vacíos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Lista vacía\", () => pm.expect(pm.response.json()).to.eql([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15.01 HU2 Preferencias sin artistas favoritos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15.02 HU3 Repetir baja de favorito ya eliminado",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en favoritos HU3'); }",
+              "pm.test('Sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15.03 HU3 Baja idempotente conserva las otras preferencias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 Email duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"{{clienteEmail}}\",\n  \"dni\": \"{{dniDuplicadoEmail}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 DNI duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"{{emailDuplicadoDni}}\",\n  \"dni\": \"{{clienteDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 Rol inexistente al crear perfil",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"{{emailDuplicadoDni}}\",\n  \"dni\": \"{{dniDuplicadoEmail}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolInexistente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 Datos obligatorios ausentes",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 Email inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/usuarios",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{clienteNombre}}\",\n  \"email\": \"correo-invalido\",\n  \"dni\": \"{{clienteDni}}\",\n  \"ciudad\": \"{{ciudadPrueba}}\",\n  \"idRol\": {{idRolCliente}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 Favorito con ID no positivo",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/0",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21.01 HU3 Quitar ID cero devuelve 400",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/0"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en favoritos HU3'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21.02 HU3 Agregar ID negativo devuelve 400",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/-1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en favoritos HU3'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21.03 HU3 Quitar ID negativo devuelve 400",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/-1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en favoritos HU3'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21.04 HU3 Agregar a usuario inexistente devuelve 404",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/9223372036854775807/artistas-favoritos/1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en favoritos HU3'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21.05 HU3 Quitar a usuario inexistente devuelve 404",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/9223372036854775807/artistas-favoritos/1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado en favoritos HU3'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21.06 HU3 Errores de favoritos no modifican preferencias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/preferencias"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error('Estado inesperado consultando preferencias'); }",
+              "pm.test('HU2: IDs de favoritos exactos', () => pm.expect(pm.response.json().artistasFavoritos).to.have.members([]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 Crear rol duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/roles",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"CLIENTE\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "23 Rol sin tipo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/roles",
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "if (pm.response.code !== 400) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 Consultar rol inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/roles/{{idRolInexistente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "25 No permite eliminar el rol utilizado",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/roles/{{idRolCliente}}",
+        "description": "El cliente creado en esta ejecución asegura la asociación; el rol no se elimina."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 Volver a agregar favorito para comprobar borrado del usuario",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos/{{idArtistaPrueba}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 Eliminar cliente creado",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "28 Cliente eliminado devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "29 Favoritos del usuario eliminado devuelven 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idCliente}}/artistas-favoritos",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"El error incluye su estado\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "30 Comprobar que el organizador sigue existiendo",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idOrganizador}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "31 Eliminar organizador creado",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/usuarios/{{idOrganizador}}",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
+              "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "32 Roles inicializados se conservan",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/roles",
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Se detiene el recorrido para no continuar con IDs incorrectos\"); }",
+              "const ids = pm.response.json().map(r => r.id); pm.test(\"Conserva ambos roles\", () => { pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idRolCliente\"))); pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"idRolOrganizador\"))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "33 Eliminar artista temporal de Eventos",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{eventosBaseUrl}}/api/artistas/{{idArtistaPrueba}}",
+        "description": "Elimina exclusivamente el artista creado en 00; se omite en modo simulador."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.variables.get('modoArtistas') === 'simulador') pm.execution.skipRequest();"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204 al eliminar artista temporal', () => pm.response.to.have.status(204));",
+              "pm.test('Artista eliminado sin cuerpo', () => pm.expect(pm.response.text()).to.eql(''));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

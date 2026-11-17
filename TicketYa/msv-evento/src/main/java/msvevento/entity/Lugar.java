@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "lugares")
+@Table(name = "lugares", indexes = @jakarta.persistence.Index(name = "idx_lugar_ciudad_normalizada", columnList = "ciudad_normalizada"))
 public class Lugar {
 
     @Id
@@ -23,6 +23,15 @@ public class Lugar {
     private Double latitud;
     private Double longitud;
     private String ciudad;
+
+    @jakarta.persistence.Column(name = "ciudad_normalizada")
+    private String ciudadNormalizada;
+
+    public String getCiudadNormalizada() { return ciudadNormalizada; }
+
+    @jakarta.persistence.PrePersist
+    @jakarta.persistence.PreUpdate
+    public void normalizarCiudad() { ciudadNormalizada = msvevento.service.CiudadNormalizada.de(ciudad); }
 
     @Enumerated(EnumType.STRING)
     private TipoLugar tipo;

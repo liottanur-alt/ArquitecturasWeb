@@ -1,83 +1,29 @@
 package com.universidad.msvsectoerasiento.Entities;
 
-import com.ticketya.eventos.enums.EstadoAsiento;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
-@Table(name = "asientos")
+@Table(name = "asientos", uniqueConstraints = @UniqueConstraint(name = "uk_asiento_posicion", columnNames = {"id_sector", "fila", "columna"}))
 public class Asiento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_sector")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_sector", nullable = false)
     private Sector sector;
 
-    private String columna;
+    @Column(nullable = false)
     private String fila;
-    private Long idEvento;
 
-    @Enumerated(EnumType.STRING)
-    private EstadoAsiento estado;
+    @Column(nullable = false)
+    private String columna;
 
-    public Asiento() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Sector getSector() {
-        return sector;
-    }
-
-    public void setSector(Sector sector) {
-        this.sector = sector;
-    }
-
-    public String getColumna() {
-        return columna;
-    }
-
-    public void setColumna(String columna) {
-        this.columna = columna;
-    }
-
-    public String getFila() {
-        return fila;
-    }
-
-    public void setFila(String fila) {
-        this.fila = fila;
-    }
-
-    public Long getIdEvento() {
-        return idEvento;
-    }
-
-    public void setIdEvento(Long idEvento) {
-        this.idEvento = idEvento;
-    }
-
-    public EstadoAsiento getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoAsiento estado) {
-        this.estado = estado;
-    }
 }

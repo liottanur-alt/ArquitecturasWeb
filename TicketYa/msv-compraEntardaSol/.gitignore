@@ -1,0 +1,17 @@
+# Compilados Maven
+target/
+
+# Configuracion local del IDE
+.idea/
+*.iml
+
+# Variables de entorno y respaldos locales
+.env
+.local/
+
+# Logs
+*.log
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db

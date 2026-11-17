@@ -7,7 +7,6 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
-        <module name="msv-SectoerAsiento" />
       </profile>
       <profile name="Annotation profile for msv-evento" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -17,6 +16,7 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.48/lombok-1.18.48.jar" />
         </processorPath>
         <module name="msv-evento" />
+        <module name="msv-SectoerAsiento" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

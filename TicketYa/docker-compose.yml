@@ -1,0 +1,158 @@
+name: ticketya-db
+
+services:
+  usuarios:
+    build: ./msv-usuario
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/usuarios
+      MSV_EVENTO_URL: http://eventos:8005
+      MSV_COMPRAS_URL: http://compras:8003
+      MSV_SECTORES_URL: http://sectores:8002
+    ports:
+      - "127.0.0.1:8004:8004"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eventos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "5", "http://localhost:8004/actuator/health"]
+      interval: 10s
+      timeout: 6s
+      retries: 18
+      start_period: 60s
+
+  eventos:
+    build: ./msv-evento
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/eventos
+      DB_USERNAME: evento_app
+      EVENTO_DB_PASSWORD: ${EVENTO_DB_PASSWORD:-${DB_PASSWORD:-evento_dev}}
+      MSVC_SECTORES_URL: http://sectores:8002
+    ports:
+      - "127.0.0.1:8005:8005"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "5", "http://localhost:8005/actuator/health"]
+      interval: 10s
+      timeout: 6s
+      retries: 18
+      start_period: 60s
+
+  sectores:
+    build: ./msv-SectoerAsiento
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/sectores_asientos
+      DB_USERNAME: sector_app
+      SECTOR_DB_PASSWORD: ${SECTOR_DB_PASSWORD:-${DB_PASSWORD:-sector_dev}}
+      MSVC_EVENTOS_URL: http://eventos:8005
+      MSVC_COMPRAS_URL: http://compras:8003
+    ports:
+      - "127.0.0.1:8002:8002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "5", "http://localhost:8002/actuator/health"]
+      interval: 10s
+      timeout: 6s
+      retries: 18
+      start_period: 60s
+
+  compras:
+    build: ./msv-compraEntardaSol
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/compra_entrada_sol
+      DB_USERNAME: compra_app
+      DB_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
+      MSVC_EVENTOS_URL: http://eventos:8005
+      MSVC_SECTORES_URL: http://sectores:8002
+    ports:
+      - "127.0.0.1:8003:8003"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eventos:
+        condition: service_healthy
+      sectores:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "5", "http://localhost:8003/actuator/health"]
+      interval: 10s
+      timeout: 6s
+      retries: 18
+      start_period: 60s
+
+  gateway:
+    build: ./api-gateway
+    restart: unless-stopped
+    environment:
+      MSVC_USUARIOS_URL: http://usuarios:8004
+      MSVC_EVENTOS_URL: http://eventos:8005
+      MSVC_SECTORES_URL: http://sectores:8002
+      MSVC_COMPRAS_URL: http://compras:8003
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      usuarios:
+        condition: service_healthy
+      eventos:
+        condition: service_healthy
+      sectores:
+        condition: service_healthy
+      compras:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "5", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 6s
+      retries: 18
+      start_period: 60s
+
+  mongodb:
+    image: mongo:8.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - usuarios_mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({ping:1}).ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_ticketya_dev}
+      MYSQL_USUARIO_PASSWORD: ${USUARIO_DB_PASSWORD:-${DB_PASSWORD:-usuario_dev}}
+      MYSQL_EVENTO_PASSWORD: ${EVENTO_DB_PASSWORD:-${DB_PASSWORD:-evento_dev}}
+      MYSQL_COMPRA_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
+      MYSQL_SECTOR_PASSWORD: ${SECTOR_DB_PASSWORD:-${DB_PASSWORD:-sector_dev}}
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+      - ./docker/mysql/check-health.sh:/opt/ticketya/check-health.sh:ro
+    healthcheck:
+      test: ["CMD", "bash", "/opt/ticketya/check-health.sh"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+volumes:
+  usuarios_mongo:
+    # Mismo volumen del entorno aislado: conserva los usuarios existentes.
+    name: ticketya-usuarios-local_usuarios_mongo
+  mysql_data:
+    name: ticketya_mysql_data

@@ -7,13 +7,11 @@ import com.msvusuario.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class RolService {
     private final RolRepository roles;
     private final UsuarioRepository usuarios;
@@ -26,20 +24,16 @@ public class RolService {
         return roles.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Rol no encontrado"));
     }
-
-    @Transactional
     public Rol crear(RolRequest request) {
         return guardar(new Rol(), request);
     }
-
-    @Transactional
     public Rol actualizar(Long id, RolRequest request) {
         return guardar(obtener(id), request);
     }
-
-    @Transactional
     public void eliminar(Long id) {
         Rol rol = obtener(id);
+        // MongoDB no tiene FK: la aplicacion comprueba que el rol no este en uso.
+        // Esta consulta y el borrado son operaciones separadas, sin transaccion conjunta.
         if (usuarios.existsByRolId(id)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El rol tiene usuarios asociados");
         }

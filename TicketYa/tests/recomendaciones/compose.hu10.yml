@@ -1,0 +1,76 @@
+services:
+  eventos:
+    image: ticketya-db-eventos:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      DB_URL: jdbc:mysql://mysql:3306/${HU10_EVENTOS_DB}
+      DB_USERNAME: ${HU10_DB_USER}
+      EVENTO_DB_PASSWORD: ${HU10_DB_PASSWORD}
+      MSVC_SECTORES_URL: http://hu10-sectores-${HU10_RUN}:8002
+    ports: ["127.0.0.1:0:8005"]
+    networks:
+      datos:
+        aliases: ["hu10-eventos-${HU10_RUN}"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8005/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+  sectores:
+    image: ticketya-db-sectores:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      DB_URL: jdbc:mysql://mysql:3306/${HU10_SECTORES_DB}
+      DB_USERNAME: ${HU10_DB_USER}
+      SECTOR_DB_PASSWORD: ${HU10_DB_PASSWORD}
+      MSVC_EVENTOS_URL: http://hu10-eventos-${HU10_RUN}:8005
+      MSVC_COMPRAS_URL: http://compras:8003
+    ports: ["127.0.0.1:0:8002"]
+    networks:
+      datos:
+        aliases: ["hu10-sectores-${HU10_RUN}"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8002/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+  usuarios:
+    image: ticketya-db-usuarios:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      MONGODB_URI: mongodb://mongodb:27017/${HU10_USUARIOS_DB}
+      MSV_EVENTO_URL: http://hu10-eventos-${HU10_RUN}:8005
+      MSV_SECTORES_URL: http://hu10-sectores-${HU10_RUN}:8002
+      MSV_COMPRAS_URL: http://compras:8003
+    ports: ["127.0.0.1:0:8004"]
+    networks:
+      datos:
+        aliases: ["hu10-usuarios-${HU10_RUN}"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8004/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+  gateway:
+    image: ticketya-db-gateway:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx128m
+      MSVC_USUARIOS_URL: http://hu10-usuarios-${HU10_RUN}:8004
+      MSVC_EVENTOS_URL: http://hu10-eventos-${HU10_RUN}:8005
+      MSVC_SECTORES_URL: http://hu10-sectores-${HU10_RUN}:8002
+      MSVC_COMPRAS_URL: http://compras:8003
+    ports: ["127.0.0.1:0:8080"]
+    networks: [datos]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+networks:
+  datos:
+    external: true
+    name: ticketya-db_default

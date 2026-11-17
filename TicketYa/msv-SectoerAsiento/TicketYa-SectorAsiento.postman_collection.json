@@ -1,0 +1,224 @@
+{
+  "info": {
+    "name": "TicketYa - SectorAsiento entrega 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idEvento",
+      "value": "1"
+    },
+    {
+      "key": "idSector",
+      "value": "1"
+    },
+    {
+      "key": "idAsiento",
+      "value": "1"
+    },
+    {
+      "key": "idReserva",
+      "value": "1"
+    },
+    {
+      "key": "claveReserva",
+      "value": "compra-demo-001"
+    },
+    {
+      "key": "claveDevolucion",
+      "value": "devolucion-demo-001"
+    }
+  ],
+  "item": [
+    {
+      "name": "1 Crear sector numerado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/sectores",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"idLugar\": 1, \"nombre\": \"Platea\", \"tipo\": \"NUMERADO\", \"capacidadTotal\": 1}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300) pm.collectionVariables.set(\"idSector\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 Crear asiento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/asientos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"idSector\":{{idSector}},\"fila\":\"A\",\"columna\":\"1\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300) pm.collectionVariables.set(\"idAsiento\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 Inicializar evento",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/eventos/{{idEvento}}/inventario",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"limitePorCliente\": 4}"
+        }
+      }
+    },
+    {
+      "name": "4 Configurar sector del evento",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/eventos/{{idEvento}}/sectores",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"idSector\":{{idSector}},\"precio\":1500,\"capacidadHabilitada\":1}"
+        }
+      }
+    },
+    {
+      "name": "5 Consultar disponibilidad",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/eventos/{{idEvento}}/sectores/{{idSector}}/disponibilidad"
+      }
+    },
+    {
+      "name": "6 Reservar (repetir comprueba idempotencia)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reservas",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"claveIdempotencia\":\"{{claveReserva}}\",\"idCliente\":1,\"idEvento\":{{idEvento}},\"idSector\":{{idSector}},\"cantidad\":1,\"idAsientos\":[{{idAsiento}}]}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code < 300) pm.collectionVariables.set(\"idReserva\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7 Confirmar pago aprobado",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/reservas/{{idReserva}}/confirmacion"
+      }
+    },
+    {
+      "name": "8 Consultar reserva",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/reservas/{{idReserva}}"
+      }
+    },
+    {
+      "name": "9 Devolucion aprobada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reservas/{{idReserva}}/devoluciones",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"claveIdempotencia\":\"{{claveDevolucion}}\",\"cantidad\":1,\"solicitadaEn\":\"{{solicitadaEn}}\",\"idAsientos\":[{{idAsiento}}]}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get(\"solicitadaEn\")) pm.collectionVariables.set(\"solicitadaEn\", new Date().toISOString());"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alternativa: liberar por rechazo (usar antes de confirmar)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/reservas/{{idReserva}}/liberacion"
+      }
+    },
+    {
+      "name": "Cancelar inventario (hacer al final)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/eventos/{{idEvento}}/inventario/cancelacion"
+      }
+    }
+  ]
+}
