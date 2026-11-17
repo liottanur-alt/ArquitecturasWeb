@@ -1,6 +1,8 @@
 # Arranque rápido de TicketYa
 
-Actualizado: 14/11/2026. Ejecutar los comandos desde la raíz, donde está docker-compose.yml.
+
+
+Actualizado: 16/11/2026. Ejecutar los comandos desde la raíz, donde está docker-compose.yml.
 
 ## Todo con Docker
 
@@ -11,7 +13,7 @@ docker compose up --build -d --wait --wait-timeout 600
 docker compose ps
 ```
 
-Deben aparecer seis contenedores saludables: Gateway, Usuarios, Eventos, Sectores, Compras y MySQL. La primera construcción descarga dependencias y puede tardar varios minutos. No hace falta instalar Java para esta opción.
+Deben aparecer siete contenedores saludables: Gateway, Usuarios, Eventos, Sectores, Compras, MongoDB y MySQL. La primera construcción descarga dependencias y puede tardar varios minutos. No hace falta instalar Java para esta opción.
 
 Comprobar en el navegador:
 
@@ -19,7 +21,7 @@ Comprobar en el navegador:
 - http://localhost:8080/roles
 - http://localhost:8080/api/eventos
 
-El puerto de MySQL es 3306 para los cuatro esquemas. Ver [cuentas y credenciales](docker/mysql/README.md).
+Usuarios usa MongoDB en 27017. Eventos, Sectores y Compras usan MySQL en 3306. Ver [cuentas y credenciales](docker/mysql/README.md).
 
 ## Java desde IntelliJ
 
@@ -27,14 +29,14 @@ Requiere JDK 21 o superior. Detener primero los contenedores de las aplicaciones
 
 ```powershell
 docker compose stop gateway compras usuarios eventos sectores
-docker compose up -d --wait mysql
+docker compose up -d --wait mysql mongodb
 ```
 
 Abrir los cinco módulos en IntelliJ y ejecutar sus clases Application: Usuarios, Eventos, SectorAsiento, Compras y Gateway. Iniciar Compras cuando Eventos y Sectores estén disponibles, y Gateway al final.
 
 También se puede ejecutar `./mvnw.cmd spring-boot:run` en una terminal por módulo; en Linux/macOS usar `sh ./mvnw spring-boot:run`.
 
-Las aplicaciones locales usan localhost:3306; dentro de Docker usan mysql:3306. Si IntelliJ conserva DB_URL con un puerto anterior, quitarla o actualizarla. Los puertos HTTP están en [Guia.md](Guia.md).
+Usuarios local usa mongodb://localhost:27017/usuarios; en Docker usa mongodb://mongodb:27017/usuarios. Los otros servicios usan localhost:3306 o mysql:3306. Si IntelliJ conserva DB_URL con un puerto anterior, quitarla o actualizarla. Los puertos HTTP están en [Guia.md](Guia.md).
 
 ## Probar y detener
 

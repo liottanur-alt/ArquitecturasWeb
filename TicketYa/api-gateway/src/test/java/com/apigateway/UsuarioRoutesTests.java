@@ -29,6 +29,9 @@ class UsuarioRoutesTests {
                 byte[] response = (exchange.getRequestMethod() + " " + exchange.getRequestURI()
                         + "|" + body).getBytes(StandardCharsets.UTF_8);
                 int status = exchange.getRequestURI().getPath().equals("/usuarios/999") ? 404 : 200;
+                exchange.getResponseHeaders().add("X-Historial-Verificado", "false");
+                exchange.getResponseHeaders().add("X-Disponibilidad-Verificada", "false");
+                exchange.getResponseHeaders().add("X-Respuesta-Parcial", "true");
                 exchange.sendResponseHeaders(status, response.length);
                 try (var output = exchange.getResponseBody()) { output.write(response); }
             });
@@ -59,13 +62,35 @@ class UsuarioRoutesTests {
 
     @Test
     void rutasDeUsuariosYRolesConservanQuerySinToken() throws Exception {
-        for (String path : new String[]{"/usuarios", "/roles", "/usuarios/7/artistas-favoritos?pagina=1"}) {
+        for (String path : new String[]{"/usuarios", "/roles", "/usuarios/7/artistas-favoritos?pagina=1",
+                "/usuarios/7/recomendaciones/por-compras", "/usuarios/7/recomendaciones?limite=2"}) {
             var response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
                     .GET().build(),
                     HttpResponse.BodyHandlers.ofString());
             assertEquals(200, response.statusCode());
             assertEquals("GET " + path + "|", response.body());
         }
+    }
+
+    @Test
+    void noPublicaElContratoInternoDeComprasEnComun() throws Exception {
+        for (String ruta : new String[]{"/interno/recomendaciones/clientes/7",
+                "/interno/recomendaciones/clientes/7/historial-valido", "/interno/inventario/disponibilidad",
+                "/interno/eventos/recomendaciones/candidatos", "/interno/eventos/recomendaciones/por-ids"}) {
+            HttpResponse<String> response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port
+                    + ruta)).GET().build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(404, response.statusCode());
+        }
+    }
+
+    @Test
+    void conservaCabecerasDeHistorialNoVerificado() throws Exception {
+        HttpResponse<String> response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port
+                + "/usuarios/7/recomendaciones/por-preferencias")).GET().build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, response.statusCode());
+        assertEquals("false", response.headers().firstValue("X-Historial-Verificado").orElseThrow());
+        assertEquals("false", response.headers().firstValue("X-Disponibilidad-Verificada").orElseThrow());
+        assertEquals("true", response.headers().firstValue("X-Respuesta-Parcial").orElseThrow());
     }
 
     @Test

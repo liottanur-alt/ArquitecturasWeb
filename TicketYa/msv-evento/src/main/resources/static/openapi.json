@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "TicketYa - API de Eventos",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "description": "Contrato actual sin JWT. Incluye catálogo de eventos, lugares y artistas. Documenta limitaciones reales, sin prometer validaciones no implementadas. Consultar REST.md y docs/PRUEBAS-POSTMAN.md."
   },
   "servers": [
@@ -1566,40 +1566,154 @@
     },
     "/api/eventos/mis-eventos": {
       "get": {
-        "tags": ["Eventos"],
+        "tags": [
+          "Eventos"
+        ],
         "operationId": "get_api_eventos_mis_eventos",
         "summary": "Listar eventos propios",
-        "parameters": [{"name": "X-Organizador-Id", "in": "header", "required": true, "schema": {"type": "integer", "format": "int64"}}],
-        "responses": {"200": {"description": "Eventos del organizador, incluidos sus borradores.", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/EventoResponse"}}}}}}
+        "parameters": [
+          {
+            "name": "X-Organizador-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eventos del organizador, incluidos sus borradores.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/eventos/interno/{id}": {
       "get": {
-        "tags": ["Eventos"],
+        "tags": [
+          "Eventos"
+        ],
         "operationId": "get_api_eventos_interno_id",
         "summary": "Consulta interna de evento",
         "description": "Ruta para que SectorAsiento consulte el evento antes de publicar y configurar inventario.",
-        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer", "format": "int64"}}],
-        "responses": {"200": {"description": "Evento consultado.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EventoResponse"}}}}, "404": {"description": "Evento inexistente."}}
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evento consultado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evento inexistente."
+          }
+        }
       }
     },
     "/api/eventos/interno/{id}/disponibilidad": {
       "patch": {
-        "tags": ["Eventos"],
+        "tags": [
+          "Eventos"
+        ],
         "operationId": "patch_api_eventos_interno_id_disponibilidad",
         "summary": "Sincronizar agotamiento",
-        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer", "format": "int64"}}, {"name": "agotado", "in": "query", "required": true, "schema": {"type": "boolean"}}],
-        "responses": {"204": {"description": "Estado de disponibilidad actualizado."}}
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "agotado",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Estado de disponibilidad actualizado."
+          }
+        }
       }
     },
     "/api/eventos/{id}/finalizar": {
       "patch": {
-        "tags": ["Eventos"],
+        "tags": [
+          "Eventos"
+        ],
         "operationId": "patch_api_eventos_id_finalizar",
         "summary": "Finalizar evento",
         "description": "El organizador dueño puede finalizar el evento una vez alcanzada su fecha y hora.",
-        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer", "format": "int64"}}, {"name": "X-Organizador-Id", "in": "header", "required": true, "schema": {"type": "integer", "format": "int64"}}],
-        "responses": {"200": {"description": "Evento finalizado.", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EventoResponse"}}}}, "403": {"description": "El organizador no es dueño del evento."}, "409": {"description": "No se alcanzó la fecha del evento o el evento fue cancelado."}}
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "X-Organizador-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evento finalizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "El organizador no es dueño del evento."
+          },
+          "409": {
+            "description": "No se alcanzó la fecha del evento o el evento fue cancelado."
+          }
+        }
       }
     },
     "/api/eventos/buscar": {
@@ -1797,6 +1911,78 @@
             "example": "fechaHora,asc"
           }
         ]
+      }
+    },
+    "/interno/eventos/recomendaciones/candidatos": {
+      "post": {
+        "tags": [
+          "Recomendaciones internas"
+        ],
+        "responses": {
+          "200": {
+            "description": "DTO minimo, sin consultas por evento ni paginacion anticipada. Ruta fuera del Gateway.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoRecomendacionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Criterios o IDs invalidos"
+          }
+        },
+        "summary": "Coincidencia por artista, tipo O ciudad normalizada (mayusculas, tildes y espacios). Solo publicados EN_CURSO posteriores a fechaDesde. Sin limite ni pagina: devuelve todos los candidatos. Preferencias vacias devuelven [].",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidatosRecomendacionRequest"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/interno/eventos/recomendaciones/por-ids": {
+      "post": {
+        "tags": [
+          "Recomendaciones internas"
+        ],
+        "responses": {
+          "200": {
+            "description": "DTO minimo, sin consultas por evento ni paginacion anticipada. Ruta fuera del Gateway.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoRecomendacionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Criterios o IDs invalidos"
+          }
+        },
+        "summary": "Un lote de IDs distintos. Devuelve solo los publicados que existen; conserva pasados y otros estados publicados para los motivos de referencia. Usuarios valida la disponibilidad de los candidatos.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventosPorIdsRequest"
+              }
+            }
+          },
+          "required": true
+        }
       }
     }
   },
@@ -2157,6 +2343,109 @@
         "required": [
           "status"
         ]
+      },
+      "CandidatosRecomendacionRequest": {
+        "type": "object",
+        "required": [
+          "tiposEventoPreferidos",
+          "artistasFavoritos",
+          "fechaDesde"
+        ],
+        "properties": {
+          "artistasFavoritos": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          "tiposEventoPreferidos": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "RECITAL",
+                "TEATRO",
+                "DEPORTE",
+                "CONFERENCIA",
+                "FESTIVAL",
+                "OTRO"
+              ]
+            }
+          },
+          "fechaDesde": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ciudadPreferida": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          }
+        }
+      },
+      "EventosPorIdsRequest": {
+        "type": "object",
+        "required": [
+          "idsEventos"
+        ],
+        "properties": {
+          "idsEventos": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        }
+      },
+      "EventoRecomendacionResponse": {
+        "type": "object",
+        "properties": {
+          "participantes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          },
+          "fechaHora": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "estadoPublicacion": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "lugar": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "ciudad": {
+                "type": "string"
+              }
+            }
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       }
     }
   }

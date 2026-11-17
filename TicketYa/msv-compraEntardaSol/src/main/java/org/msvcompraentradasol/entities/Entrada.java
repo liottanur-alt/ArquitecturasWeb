@@ -10,7 +10,8 @@ import org.msvcompraentradasol.enums.Estadoqr;
         name = "entrada",
         indexes = {
                 @Index(name = "idx_entrada_evento_asiento", columnList = "id_evento, id_asiento"),
-                @Index(name = "idx_entrada_compra", columnList = "id_compra")
+                @Index(name = "idx_entrada_compra", columnList = "id_compra"),
+                @Index(name = "idx_entrada_compra_estado", columnList = "id_compra,estado_entrada")
         }
 )
 public class Entrada {

@@ -82,6 +82,32 @@ public class InventarioService {
         return configuraciones.findByIdEvento(evento).stream().map(c -> disponibilidad(c, e)).toList();
     }
 
+    /** Comparte bloqueos y vencimientos con las reservas; nunca crea reservas nuevas. */
+    public List<DisponibilidadEventoResponse> consultarLote(@NotNull @Valid DisponibilidadLoteRequest request) {
+        List<DisponibilidadEventoResponse> resultado = new ArrayList<>();
+        // Orden comun entre lotes para evitar bloqueos cruzados sobre los mismos eventos.
+        for (Long id : new TreeSet<>(request.idsEventos())) {
+            Optional<InventarioEvento> inventario = inventarios.bloquear(id);
+            boolean disponible = false;
+            if (inventario.isPresent()) {
+                vencer(id);
+                if (!inventario.get().isCancelado()) {
+                    disponible = configuraciones.findByIdEvento(id).stream().anyMatch(this::tieneLugarReservable);
+                }
+            }
+            // Sin inventario o sin sectores configurados no hay entradas reservables.
+            resultado.add(new DisponibilidadEventoResponse(id, disponible));
+        }
+        return List.copyOf(resultado);
+    }
+
+    private boolean tieneLugarReservable(SectorEvento sector) {
+        if (sector.getEspaciosDisponibles() <= 0) return false;
+        if (sector.getSector().getTipo() == TipoSector.CAMPO) return true;
+        return posiciones.findBySectorEventoIdOrderByIdAsc(sector.getId()).stream()
+                .anyMatch(asiento -> asiento.getEstado() == EstadoAsiento.DISPONIBLE);
+    }
+
     /** Consulta un sector del evento y devuelve 404 si no fue configurado. */
     public DisponibilidadResponse consultarSector(@NotNull @Positive Long evento, @NotNull @Positive Long sector) {
         var e = bloquear(evento); vencer(evento);

@@ -20,6 +20,32 @@ class UsuarioServiceTests {
     private final UsuarioService service = new UsuarioService(usuarios, roles, mongo, artistas);
 
     @Test
+    void consultarPreferenciasSoloLeeElUsuarioSinConsultarEventosNiGuardar() {
+        Usuario usuario = new Usuario();
+        usuario.getTiposEventoPreferidos().add(com.msvusuario.entity.TipoEvento.RECITAL);
+        usuario.setCiudadPreferida("Rosario");
+        usuario.getArtistasFavoritos().add(8L);
+        when(usuarios.findById(1L)).thenReturn(Optional.of(usuario));
+        var preferencias = service.obtenerPreferencias(1L);
+        assertEquals(java.util.Set.of(com.msvusuario.entity.TipoEvento.RECITAL), preferencias.tiposEventoPreferidos());
+        assertEquals("Rosario", preferencias.ciudadPreferida());
+        assertEquals(java.util.Set.of(8L), preferencias.artistasFavoritos());
+        verify(usuarios).findById(1L);
+        verifyNoMoreInteractions(usuarios);
+        verifyNoInteractions(artistas, mongo, roles);
+        assertThrows(UnsupportedOperationException.class, () -> preferencias.artistasFavoritos().add(9L));
+        assertEquals(java.util.Set.of(8L), usuario.getArtistasFavoritos());
+    }
+
+    @Test
+    void preferenciasDeUsuarioInexistenteDevuelven404SinConsultarEventos() {
+        when(usuarios.findById(1L)).thenReturn(Optional.empty());
+        var error = assertThrows(ResponseStatusException.class, () -> service.obtenerPreferencias(1L));
+        assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
+        verifyNoInteractions(artistas, mongo, roles);
+    }
+
+    @Test
     void favoritosIncluyenNombreYGeneroDelServicioDeArtistas() {
         when(usuarios.findById(1L)).thenReturn(Optional.of(new Usuario()));
         Usuario usuario = new Usuario();

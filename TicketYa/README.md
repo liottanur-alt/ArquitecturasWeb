@@ -1,6 +1,8 @@
 # TicketYa
 
-Sistema de eventos y venta de entradas con cinco aplicaciones y un MySQL compartido. Cada microservicio conserva su propio esquema y usuario.
+
+
+Sistema de eventos y venta de entradas con cinco aplicaciones, MongoDB para Usuarios y MySQL para Eventos, Sectores y Compras. Cada servicio accede solo a su propia base.
 
 Para empezar, abrir Docker Desktop y ejecutar desde esta carpeta:
 

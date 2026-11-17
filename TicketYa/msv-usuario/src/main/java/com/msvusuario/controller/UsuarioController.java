@@ -1,6 +1,8 @@
 package com.msvusuario.controller;
 
 import com.msvusuario.dto.UsuarioRequest;
+import com.msvusuario.dto.PreferenciasRequest;
+import com.msvusuario.dto.PreferenciasResponse;
 import com.msvusuario.dto.UsuarioResponse;
 import com.msvusuario.dto.ArtistaResponse;
 import com.msvusuario.service.UsuarioService;
@@ -42,6 +44,16 @@ public class UsuarioController {
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/preferencias")
+    public PreferenciasResponse obtenerPreferencias(@PathVariable Long id) {
+        return service.obtenerPreferencias(id);
+    }
+
+    @PutMapping("/{id}/preferencias")
+    public UsuarioResponse actualizarPreferencias(@PathVariable Long id, @RequestBody PreferenciasRequest request) {
+        return service.actualizarPreferencias(id, request);
     }
 
     @GetMapping("/{id}/artistas-favoritos")

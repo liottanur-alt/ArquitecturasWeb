@@ -1,6 +1,8 @@
 package com.msvusuario.service;
 
 import com.msvusuario.dto.UsuarioRequest;
+import com.msvusuario.dto.PreferenciasRequest;
+import com.msvusuario.dto.PreferenciasResponse;
 import com.msvusuario.dto.UsuarioResponse;
 import com.msvusuario.dto.ArtistaResponse;
 import com.msvusuario.client.ArtistaClientFeign;
@@ -40,6 +42,28 @@ public class UsuarioService {
     }
     public UsuarioResponse actualizar(Long id, UsuarioRequest request) {
         return guardar(buscar(id), request);
+    }
+
+    public PreferenciasResponse obtenerPreferencias(Long id) {
+        // Solo lee MongoDB; los artistas se devuelven como IDs sin resolver el catalogo.
+        return PreferenciasResponse.from(buscar(id));
+    }
+
+    public UsuarioResponse actualizarPreferencias(Long id, PreferenciasRequest request) {
+        Usuario usuario = buscar(id);
+        if (request == null || (request.tiposEventoPreferidos() != null
+                && request.tiposEventoPreferidos().stream().anyMatch(java.util.Objects::isNull))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las preferencias no pueden contener tipos nulos");
+        }
+        String ciudad = request.ciudadPreferida() == null ? "" : request.ciudadPreferida().trim();
+        if (ciudad.length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La ciudad de preferencia admite hasta 100 caracteres");
+        }
+        // Solo cambian estos campos. @Version evita sobrescribir cambios concurrentes.
+        usuario.setTiposEventoPreferidos(new java.util.LinkedHashSet<>(
+                request.tiposEventoPreferidos() == null ? List.of() : request.tiposEventoPreferidos()));
+        usuario.setCiudadPreferida(ciudad);
+        return UsuarioResponse.from(usuarios.save(usuario));
     }
     public void eliminar(Long id) {
         Usuario usuario = buscar(id);

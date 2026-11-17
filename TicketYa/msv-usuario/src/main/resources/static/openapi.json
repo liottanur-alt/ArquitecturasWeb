@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "TicketYa - API de Usuarios",
-    "version": "1.0.0",
-    "description": "Contrato de la entrega 1, sin JWT. Usuarios, roles y artistas favoritos. Los ejemplos de IDs son ilustrativos. Los errores de Spring pueden omitir detail; solo status es obligatorio en Error."
+    "version": "1.9.0",
+    "description": "Contrato de la entrega 1, sin JWT. Usuarios, roles y artistas favoritos. Los ejemplos de IDs son ilustrativos. Los errores de Spring pueden omitir detail; solo status es obligatorio en Error. Preferencias de tipos de evento y ciudad, persistidas en MongoDB. Recomendaciones por artista (5), tipo (3) y ciudad (2), con filtros de venta y desempate estable. HU8: filtro comun de eventos ya comprados e indicador de historial verificado. Catalogo unico por solicitud (HU7). HU9: disponibilidad real por lote desde Sectores/Asientos; indica disponibilidad no verificada ante fallos. HU10: consultas filtradas OR y por lote en Eventos; no descarga el catalogo completo ni limita antes de clasificar."
   },
   "servers": [
     {
@@ -857,7 +857,7 @@
         ],
         "operationId": "get_usuarios_id_artistas-favoritos",
         "summary": "Listar artistas favoritos",
-        "description": "Devuelve idArtista, nombre y genero consultando Eventos. Sin favoritos devuelve []. No se garantiza el orden. Responde 502 si un artista ya no existe o devuelve datos incompletos y 503 si Eventos no esta disponible.",
+        "description": "Devuelve idArtista, nombre y genero consultando Eventos. Sin favoritos devuelve []. No se garantiza el orden. Responde 502 si un artista ya no existe o devuelve datos incompletos y 503 si Eventos no esta disponible. La consulta no escribe en MongoDB ni borra favoritos o preferencias ante errores. Para obtener solamente IDs sin depender de Eventos, consultar GET /usuarios/{id}/preferencias.",
         "responses": {
           "200": {
             "description": "Consulta o actualización exitosa.",
@@ -958,7 +958,7 @@
         ],
         "operationId": "put_usuarios_id_artistas-favoritos_idArtista",
         "summary": "Agregar favorito",
-        "description": "Sin body. El usuario debe existir y el artista debe ser un ID positivo. No valida su existencia en Eventos. Repetir la misma relación no la duplica.",
+        "description": "Sin body. El usuario debe existir y el artista debe ser un ID positivo. No valida su existencia en Eventos. Repetir la misma relación no la duplica. Operacion atomica sobre el array de favoritos en MongoDB. Conserva tipos preferidos, ciudad de preferencia, perfil y rol. Funciona sin consultar Eventos.",
         "responses": {
           "204": {
             "description": "Operación exitosa, sin cuerpo."
@@ -1057,7 +1057,7 @@
         ],
         "operationId": "delete_usuarios_id_artistas-favoritos_idArtista",
         "summary": "Quitar favorito",
-        "description": "Sin body. Si el usuario existe y la relación ya no está, devuelve 204. Usuario inexistente: 404; artista no positivo: 400.",
+        "description": "Sin body. Si el usuario existe y la relación ya no está, devuelve 204. Usuario inexistente: 404; artista no positivo: 400. Operacion atomica sobre el array de favoritos en MongoDB. Conserva tipos preferidos, ciudad de preferencia, perfil y rol. Funciona sin consultar Eventos.",
         "responses": {
           "204": {
             "description": "Operación exitosa, sin cuerpo."
@@ -1121,6 +1121,381 @@
           }
         ]
       }
+    },
+    "/usuarios/{id}/preferencias": {
+      "put": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "actualizar_preferencias",
+        "summary": "Reemplazar preferencias de tipos de evento y ciudad",
+        "description": "Conserva perfil, rol y artistas favoritos. Permite preferencias vacias. Un conflicto concurrente devuelve 409 sin sobrescribir datos.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferenciasRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuario con preferencias actualizadas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Edicion concurrente; consultar de nuevo y reintentar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "obtener_preferencias",
+        "summary": "Consultar preferencias e IDs de artistas favoritos",
+        "description": "Solo lectura local. Funciona aunque Eventos no este disponible. Sin preferencias devuelve listas vacias y ciudad null.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preferencias actuales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenciasResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuarios/{id}/recomendaciones": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "recomendaciones_unificadas",
+        "summary": "Lista unificada de preferencias y compras en comun",
+        "description": "Combina las fuentes completas, deduplica IDs y motivos, suma puntos de preferencias (0-10) y 2 por comprador en comun hasta 10 adicionales. Ordena por total descendente, fecha e ID ascendentes y luego limita. Una fuente vacia es exitosa; una fuente con 503 produce respuesta parcial si la otra funciona. Ambas con 503 devuelven 503. No expone identidades de vecinos. Las rutas por-preferencias y por-compras mantienen acceso a cada fuente. Excluye IDs del historial valido antes de ordenar y limitar. Historial inaccesible: 200 parcial con historialVerificado=false si alguna fuente responde. Comprueba en un lote el inventario solo de candidatos no comprados. Excluye eventos sin entradas antes del limite. Fallo de inventario: 200 parcial con disponibilidadVerificada=false; no crea reservas. HU10: una busqueda OR por preferencias y, si hay compras, un lote con IDs faltantes incluyendo referencias. Reutiliza datos recibidos; no descarga /api/eventos. Sin preferencias o sin IDs omite la consulta correspondiente.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista completa o parcial con metadatos de fuentes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecomendacionesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Ninguna fuente pudo obtenerse por indisponibilidad.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuarios/{id}/recomendaciones/por-compras": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "recomendar_por_compras",
+        "summary": "Recomendar por compras en comun",
+        "description": "Solo compras APROBADAS con al menos una entrada no reintegrada. Compras cuenta otros clientes distintos por candidato y excluye el historial propio. Usuarios valida candidatos futuros, PUBLICADO y EN_CURSO en Eventos. Orden: compradores en comun descendente, fecha e ID ascendentes. Sin historial o coincidencias devuelve []. No incluye identidades ni compras de otros clientes. Aplica el filtro comun de historial valido. Si el historial falla conserva resultados con cabeceras de respuesta parcial. Tambien aplica el filtro de inventario por lote; si no se verifica, conserva candidatos con respuesta parcial.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recomendaciones agregadas, sin datos individuales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecomendacionCompraResponse"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Respuesta-Parcial": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "description": "true si no pudo verificarse el historial o el inventario."
+              },
+              "X-Historial-Verificado": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "description": "Compras pudo verificar el historial valido del cliente."
+              },
+              "X-Disponibilidad-Verificada": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "description": "Se verifico el inventario de todos los candidatos, o no quedaron candidatos."
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo consultar Compras o validar candidatos en Eventos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usuarios/{id}/recomendaciones/por-preferencias": {
+      "get": {
+        "tags": [
+          "Usuarios"
+        ],
+        "operationId": "recomendar_por_preferencias",
+        "summary": "Recomendar eventos segun preferencias",
+        "description": "Artista favorito: +5; tipo preferido: +3; ciudad preferida: +2. Cada criterio suma una vez. Solo futuros, PUBLICADO y EN_CURSO. Excluye puntuacion cero y deduplica por idEvento. Orden: puntuacion descendente, fecha ascendente, ID ascendente. Ciudad ignora tildes, mayusculas y espacios sobrantes. No usa la ciudad del perfil como alternativa. Consulta Eventos incluso sin preferencias; un fallo devuelve 503. Aplica el filtro comun de historial valido. Si el historial falla conserva resultados con cabeceras de respuesta parcial. Tambien aplica el filtro de inventario por lote; si no se verifica, conserva candidatos con respuesta parcial.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Coincidencias ordenadas, o [] si no hay ninguna.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecomendacionResponse"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Respuesta-Parcial": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "description": "true si no pudo verificarse el historial o el inventario."
+              },
+              "X-Historial-Verificado": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "description": "Compras pudo verificar el historial valido del cliente."
+              },
+              "X-Disponibilidad-Verificada": {
+                "schema": {
+                  "type": "boolean"
+                },
+                "description": "Se verifico el inventario de todos los candidatos, o no quedaron candidatos."
+              }
+            }
+          },
+          "400": {
+            "description": "Datos invalidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo consultar el catalogo de Eventos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1181,7 +1556,9 @@
           "email",
           "dni",
           "ciudad",
-          "idRol"
+          "idRol",
+          "tiposEventoPreferidos",
+          "ciudadPreferida"
         ],
         "properties": {
           "id": {
@@ -1216,6 +1593,28 @@
             "format": "int64",
             "minimum": 1,
             "description": "ID real de un rol existente; consultar GET /roles."
+          },
+          "tiposEventoPreferidos": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "RECITAL",
+                "TEATRO",
+                "DEPORTE",
+                "CONFERENCIA",
+                "FESTIVAL",
+                "OTRO"
+              ]
+            },
+            "uniqueItems": true,
+            "default": []
+          },
+          "ciudadPreferida": {
+            "type": "string",
+            "maxLength": 100,
+            "default": "",
+            "description": "Independiente de la ciudad del perfil; se recortan espacios externos."
           }
         },
         "example": {
@@ -1224,7 +1623,12 @@
           "email": "ana.prueba@example.com",
           "dni": "PRUEBA-001",
           "ciudad": "Tandil",
-          "idRol": 7
+          "idRol": 7,
+          "tiposEventoPreferidos": [
+            "RECITAL",
+            "TEATRO"
+          ],
+          "ciudadPreferida": "Mar del Plata"
         }
       },
       "RolRequest": {
@@ -1304,6 +1708,330 @@
           "instance": {
             "type": "string"
           }
+        }
+      },
+      "PreferenciasRequest": {
+        "type": "object",
+        "description": "Reemplaza ambas preferencias. Campos omitidos o null equivalen a vacio. Tipos repetidos se deduplican.",
+        "properties": {
+          "tiposEventoPreferidos": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "RECITAL",
+                "TEATRO",
+                "DEPORTE",
+                "CONFERENCIA",
+                "FESTIVAL",
+                "OTRO"
+              ]
+            },
+            "uniqueItems": false,
+            "default": [],
+            "nullable": true
+          },
+          "ciudadPreferida": {
+            "type": "string",
+            "maxLength": 100,
+            "default": "",
+            "description": "Independiente de la ciudad del perfil; se recortan espacios externos.",
+            "nullable": true
+          }
+        },
+        "example": {
+          "tiposEventoPreferidos": [
+            "RECITAL",
+            "TEATRO"
+          ],
+          "ciudadPreferida": "Mar del Plata"
+        }
+      },
+      "PreferenciasResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tiposEventoPreferidos",
+          "ciudadPreferida",
+          "artistasFavoritos"
+        ],
+        "properties": {
+          "tiposEventoPreferidos": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "RECITAL",
+                "TEATRO",
+                "DEPORTE",
+                "CONFERENCIA",
+                "FESTIVAL",
+                "OTRO"
+              ]
+            },
+            "uniqueItems": true,
+            "default": []
+          },
+          "ciudadPreferida": {
+            "type": "string",
+            "nullable": true,
+            "description": "null si la ciudad de preferencia no esta definida."
+          },
+          "artistasFavoritos": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "description": "IDs guardados localmente; no consulta el catalogo de Eventos."
+          }
+        },
+        "example": {
+          "tiposEventoPreferidos": [
+            "RECITAL"
+          ],
+          "ciudadPreferida": "Rosario",
+          "artistasFavoritos": [
+            15,
+            28
+          ]
+        }
+      },
+      "RecomendacionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "idEvento",
+          "nombre",
+          "tipo",
+          "fechaHora",
+          "ciudad",
+          "puntuacion",
+          "motivos"
+        ],
+        "properties": {
+          "idEvento": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "fechaHora": {
+            "type": "string",
+            "description": "Fecha local de America/Argentina/Buenos_Aires, sin offset.",
+            "example": "2030-01-02T20:00:00"
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "puntuacion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "motivos": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "Participa un artista favorito",
+                "Coincide con un tipo de evento preferido",
+                "Se realiza en tu ciudad de preferencia"
+              ]
+            }
+          }
+        },
+        "example": {
+          "idEvento": 7,
+          "nombre": "Recital",
+          "tipo": "RECITAL",
+          "fechaHora": "2030-01-02T20:00:00",
+          "ciudad": "Rosario",
+          "puntuacion": 10,
+          "motivos": [
+            "Participa un artista favorito",
+            "Coincide con un tipo de evento preferido",
+            "Se realiza en tu ciudad de preferencia"
+          ]
+        }
+      },
+      "RecomendacionCompraResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "idEvento",
+          "nombre",
+          "tipo",
+          "fechaHora",
+          "ciudad",
+          "compradoresEnComun",
+          "motivo"
+        ],
+        "properties": {
+          "idEvento": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "fechaHora": {
+            "type": "string",
+            "description": "Fecha local America/Argentina/Buenos_Aires sin offset."
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "compradoresEnComun": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "Otros clientes distintos que compraron algun evento de mi historial y este candidato."
+          },
+          "motivo": {
+            "type": "string",
+            "example": "Clientes que compraron Recital X también compraron Festival Y"
+          }
+        }
+      },
+      "RecomendacionUnificadaResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "idEvento",
+          "nombre",
+          "tipo",
+          "fechaHora",
+          "ciudad",
+          "puntuacion",
+          "puntuacionPreferencias",
+          "compradoresEnComun",
+          "motivos",
+          "fuentes"
+        ],
+        "properties": {
+          "idEvento": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "fechaHora": {
+            "type": "string",
+            "description": "Fecha local Argentina, sin offset."
+          },
+          "ciudad": {
+            "type": "string",
+            "nullable": true
+          },
+          "puntuacion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "description": "puntuacionPreferencias + 2*min(compradoresEnComun,5)."
+          },
+          "puntuacionPreferencias": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "compradoresEnComun": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "motivos": {
+            "type": "array",
+            "uniqueItems": true,
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "fuentes": {
+            "type": "array",
+            "uniqueItems": true,
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "string",
+              "enum": [
+                "PREFERENCIAS",
+                "COMPRAS_EN_COMUN"
+              ]
+            }
+          }
+        }
+      },
+      "RecomendacionesResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recomendaciones",
+          "parcial",
+          "fuentesNoDisponibles",
+          "historialVerificado",
+          "disponibilidadVerificada"
+        ],
+        "properties": {
+          "recomendaciones": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/RecomendacionUnificadaResponse"
+            }
+          },
+          "parcial": {
+            "type": "boolean",
+            "description": "true si fallo una fuente, el historial o la comprobacion de inventario."
+          },
+          "fuentesNoDisponibles": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "enum": [
+                "PREFERENCIAS",
+                "COMPRAS_EN_COMUN"
+              ]
+            }
+          },
+          "historialVerificado": {
+            "type": "boolean",
+            "description": "true si Compras devolvio un historial valido. false implica respuesta parcial; pueden aparecer eventos ya comprados."
+          },
+          "disponibilidadVerificada": {
+            "type": "boolean",
+            "description": "true si se verifico el lote de candidatos en Sectores/Asientos, o no quedaron candidatos. false implica respuesta parcial: los resultados pueden carecer de entradas disponibles."
+          }
+        },
+        "example": {
+          "recomendaciones": [],
+          "parcial": false,
+          "fuentesNoDisponibles": [],
+          "historialVerificado": true,
+          "disponibilidadVerificada": true
         }
       }
     }

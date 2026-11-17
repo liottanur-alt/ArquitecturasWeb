@@ -111,6 +111,27 @@ Orden admitido: fechaHora o nombre, con dirección asc/desc. El valor por defect
 GET /api/eventos/buscar?tipo=RECITAL&ciudad=Tandil&idParticipante=17&fechaDesde=2030-01-01T00:00:00&fechaHasta=2030-12-31T23:59:59&pagina=0&tamanio=10&ordenar=fechaHora,asc
 ```
 
+## Consultas internas para recomendaciones (HU10)
+
+`POST /interno/eventos/recomendaciones/candidatos` recibe:
+
+```json
+{
+  "tiposEventoPreferidos": ["RECITAL"],
+  "artistasFavoritos": [9, 10],
+  "ciudadPreferida": "Córdoba",
+  "fechaDesde": "2030-01-01T09:00:00"
+}
+```
+
+Coincide por artista **o** tipo **o** ciudad normalizada (tildes, mayusculas y espacios). Solo eventos PUBLICADO, EN_CURSO y con fecha estrictamente posterior a `fechaDesde`. Sin criterios devuelve []. No pagina ni limita; Usuarios clasifica y combina ambas fuentes despues de recibir todos los candidatos. `/api/eventos/buscar` conserva su comportamiento anterior con AND y paginacion.
+
+`POST /interno/eventos/recomendaciones/por-ids` recibe `{"idsEventos":[7,100]}`. Devuelve una fila por ID publicado existente, orden ascendente y sin duplicados; puede incluir pasados/finalizados publicados para los nombres de los motivos de Compras. Omite inexistentes y no publicados. Lista vacia devuelve []. Usuarios aplica sus filtros a los candidatos, independientemente de los estados del lote.
+
+Ambos devuelven objetos con `id`, `nombre`, `tipo`, `fechaHora`, `lugar:{ciudad}`, `participantes:[{id}]`, `estado` y `estadoPublicacion`. Se cargan lugar y participantes junto con los candidatos, sin una consulta SQL adicional por evento. No exponen descripciones ni organizadores. Las rutas no estan enrutadas por Gateway. Los DTOs nuevos usan Bean Validation: campos/listas obligatorios ausentes o nulos, tipos desconocidos e IDs nulos/no positivos devuelven 400.
+
+Se agrega `lugares.ciudad_normalizada` con indice y normalizacion automatica al guardar por JPA. El arranque completa los lugares anteriores sin modificar la ciudad visible. Los imports SQL externos deben completar esa columna o ejecutar de nuevo el arranque para completar datos derivados. Eventos agrega indices de tipo y estado/publicacion/fecha. Hibernate actualiza el esquema en desarrollo como el resto del servicio; no se eliminan datos.
+
 ## Errores y límites actuales
 
 - 400: JSON o enums mal formados, tipos de parámetros inválidos, fecha no convertible, ordenamiento inválido o datos obligatorios incompletos al publicar.

@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Prueba transacciones reales y varias instancias logicas sin simular los repositorios. */
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -27,12 +29,14 @@ import static org.assertj.core.api.Assertions.*;
 class InventarioIntegrationTests {
     static final Instant BASE = Instant.parse("2030-01-01T12:00:00Z");
     static final AtomicLong SECUENCIA = new AtomicLong(100);
+    static final AtomicLong CONSULTAS_EVENTOS = new AtomicLong();
     static final HttpServer REMOTO = iniciarProveedor();
     @Autowired InventarioService inventario;
     @Autowired SectorService sectores;
     @Autowired AsientoService asientos;
     @Autowired RelojMutable reloj;
     @Autowired org.springframework.test.web.servlet.MockMvc mvc;
+    @Autowired com.universidad.msvsectoerasiento.repository.ReservaRepository reservas;
 
     @TestConfiguration
     static class RelojPrueba {
@@ -57,6 +61,7 @@ class InventarioIntegrationTests {
                     return;
                 }
                 long id = Long.parseLong(ruta);
+                CONSULTAS_EVENTOS.incrementAndGet();
                 String json = """
                     {"id":%d,"lugar":{"id":1,"nombre":"Teatro","ciudad":"Tandil"},"descripcion":"Contrato real","participantes":[],"nombre":"Prueba","idOrganizador":1,
                      "fechaHora":"2030-01-11T09:00:00","estado":"PUBLICADO","estadoPublicacion":"PUBLICADO"}
@@ -102,6 +107,80 @@ class InventarioIntegrationTests {
         return new ReservaRequest(clave, cliente, e.evento(), e.sector(), cantidad, ids);
     }
     String clave() { return UUID.randomUUID().toString(); }
+
+    boolean disponible(Long evento) {
+        return inventario.consultarLote(new DisponibilidadLoteRequest(List.of(evento))).getFirst().disponible();
+    }
+
+    @Test void loteCampoDescuentaReservasVigentesYLiberaVencidasSinCrearReservas() {
+        Escenario e = preparar(TipoSector.CAMPO, 2, 4);
+        assertThat(disponible(e.evento())).isTrue();
+        ReservaResponse reserva = inventario.reservar(pedido(e, clave(), 1, 2, List.of()));
+        long cantidad = reservas.count();
+        long consultas = CONSULTAS_EVENTOS.get();
+        assertThat(disponible(e.evento())).isFalse();
+        reloj.ahora = BASE.plus(Duration.ofMinutes(10));
+        assertThat(disponible(e.evento())).isTrue();
+        assertThat(reservas.count()).isEqualTo(cantidad);
+        assertThat(inventario.obtenerReserva(reserva.id()).estado()).isEqualTo(EstadoReserva.VENCIDA);
+        assertThat(CONSULTAS_EVENTOS.get()).isEqualTo(consultas);
+    }
+
+    @Test void loteNumeradoCompruebaAsientosYNoSoloLaCapacidadFisica() {
+        Escenario e = preparar(TipoSector.NUMERADO, 2, 4);
+        ReservaResponse primera = inventario.reservar(pedido(e, clave(), 1, 1, List.of(e.asientos().get(0))));
+        inventario.confirmar(primera.id());
+        ReservaResponse ultima = inventario.reservar(pedido(e, clave(), 2, 1, List.of(e.asientos().get(1))));
+        assertThat(disponible(e.evento())).isFalse();
+        inventario.liberar(ultima.id());
+        assertThat(disponible(e.evento())).isTrue();
+        ReservaResponse venta = inventario.reservar(pedido(e, clave(), 2, 1, List.of(e.asientos().get(1))));
+        inventario.confirmar(venta.id());
+        assertThat(disponible(e.evento())).isFalse();
+    }
+
+    @Test void loteNumeradoTambienLiberaAsientosConReservaVencida() {
+        Escenario e = preparar(TipoSector.NUMERADO, 1, 4);
+        inventario.reservar(pedido(e, clave(), 1, 1, e.asientos()));
+        assertThat(disponible(e.evento())).isFalse();
+        reloj.ahora = BASE.plus(Duration.ofMinutes(10));
+        assertThat(disponible(e.evento())).isTrue();
+    }
+
+    @Test void loteSinInventarioSinSectoresOCanceladoDevuelveNoDisponible() {
+        Escenario e = preparar(TipoSector.CAMPO, 2, 4);
+        inventario.cancelar(e.evento());
+        long sinSectores = SECUENCIA.incrementAndGet();
+        inventario.configurarEvento(sinSectores, new InventarioRequest(4));
+        List<DisponibilidadEventoResponse> lote = inventario.consultarLote(new DisponibilidadLoteRequest(
+                List.of(Long.MAX_VALUE, e.evento(), sinSectores)));
+        assertThat(lote).hasSize(3).allMatch(fila -> !fila.disponible());
+    }
+
+    @Test void loteConVariosSectoresDisponibleSiCualquieraTieneUnLugar() {
+        Escenario e = preparar(TipoSector.CAMPO, 1, 4);
+        inventario.reservar(pedido(e, clave(), 1, 1, List.of()));
+        assertThat(disponible(e.evento())).isFalse();
+        SectorRequest sector = new SectorRequest(); sector.setIdLugar(1L); sector.setNombre("Campo adicional");
+        sector.setTipo(TipoSector.CAMPO); sector.setCapacidadTotal(1);
+        inventario.configurarSector(e.evento(), new SectorEventoRequest(sectores.crear(sector).id(), BigDecimal.TEN, 1));
+        assertThat(disponible(e.evento())).isTrue();
+    }
+
+    @Test void contratoLoteDeduplicaValidaYNoCachea() throws Exception {
+        Escenario e = preparar(TipoSector.CAMPO, 2, 4);
+        mvc.perform(post("/interno/inventario/disponibilidad").contentType("application/json")
+                .content("{\"idsEventos\":[" + e.evento() + "," + e.evento() + "]}"))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0].disponible").value(true));
+        for (String invalido : List.of("{}", "{\"idsEventos\":null}", "{\"idsEventos\":[0]}",
+                "{\"idsEventos\":[-1]}", "{\"idsEventos\":[null]}")) {
+            mvc.perform(post("/interno/inventario/disponibilidad").contentType("application/json").content(invalido))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(post("/interno/inventario/disponibilidad").contentType("application/json").content("{\"idsEventos\":[]}"))
+                .andExpect(status().isOk()).andExpect(content().json("[]"));
+    }
 
     @Test void endpointsValidanYNoCachean() throws Exception {
         var e = preparar(TipoSector.CAMPO, 2, 4);

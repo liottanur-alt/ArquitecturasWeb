@@ -14,6 +14,16 @@ $artista = $null
 $usuario = $null
 $checks = [System.Collections.Generic.List[string]]::new()
 $name = 'Artista prueba ' + [guid]::NewGuid().ToString('N')
+function Assert-OtherPreferences {
+    $perfil = Invoke-RestMethod "$BaseUrl/usuarios/$($usuario.id)" -TimeoutSec 15
+    $preferencias = Invoke-RestMethod "$BaseUrl/usuarios/$($usuario.id)/preferencias" -TimeoutSec 15
+    if ($perfil.nombre -ne 'Integracion artistas' -or $perfil.email -ne "$tag@example.com" -or
+        $perfil.dni -ne $tag.Substring(0,20) -or $perfil.ciudad -ne 'Tandil' -or $perfil.idRol -ne $rol.id -or
+        $preferencias.ciudadPreferida -ne 'Rosario' -or
+        (($preferencias.tiposEventoPreferidos | Sort-Object) -join ',') -ne 'FESTIVAL,RECITAL') {
+        throw 'Una operacion sobre favoritos modifico el perfil o las otras preferencias'
+    }
+}
 try {
     $artista = Invoke-RestMethod "$EventosUrl/api/artistas" -Method Post -ContentType 'application/json' -Body (@{nombre=$name; genero='Rock'} | ConvertTo-Json) -TimeoutSec 15
     & "$PSScriptRoot/Test-Api.ps1" -BaseUrl $BaseUrl -IdArtistaPrueba $artista.id -NombreArtista $name
@@ -34,8 +44,25 @@ try {
     $rol = $roles | Where-Object name -eq 'CLIENTE' | Select-Object -First 1
     $tag = [guid]::NewGuid().ToString('N')
     $usuario = Invoke-RestMethod "$BaseUrl/usuarios" -Method Post -ContentType 'application/json' -Body (@{nombre='Integracion artistas'; email="$tag@example.com"; dni=$tag.Substring(0,20); ciudad='Tandil'; idRol=$rol.id} | ConvertTo-Json) -TimeoutSec 15
+    Invoke-RestMethod "$BaseUrl/usuarios/$($usuario.id)/preferencias" -Method Put -ContentType 'application/json' -TimeoutSec 15 -Body '{"tiposEventoPreferidos":["RECITAL","FESTIVAL"],"ciudadPreferida":"Rosario"}' | Out-Null
     $favoritosUrl = "$BaseUrl/usuarios/$($usuario.id)/artistas-favoritos"
+    1..2 | ForEach-Object {
+        Invoke-RestMethod "$favoritosUrl/$($artista.id)" -Method Put -TimeoutSec 15 | Out-Null
+        Assert-OtherPreferences
+    }
+    Invoke-RestMethod "$favoritosUrl/9223372036854775806" -Method Delete -TimeoutSec 15 | Out-Null
+    Assert-OtherPreferences
+    $ids = (Invoke-RestMethod "$BaseUrl/usuarios/$($usuario.id)/preferencias" -TimeoutSec 15).artistasFavoritos
+    if ($ids.Count -ne 1 -or $ids[0] -ne $artista.id) { throw 'Alta duplicada o baja ausente altero los favoritos' }
+    1..2 | ForEach-Object {
+        Invoke-RestMethod "$favoritosUrl/$($artista.id)" -Method Delete -TimeoutSec 15 | Out-Null
+        Assert-OtherPreferences
+    }
+    $ids = (Invoke-RestMethod "$BaseUrl/usuarios/$($usuario.id)/preferencias" -TimeoutSec 15).artistasFavoritos
+    if ($ids.Count -ne 0) { throw 'La baja del favorito no quedo persistida' }
     Invoke-RestMethod "$favoritosUrl/$($artista.id)" -Method Put -TimeoutSec 15 | Out-Null
+    Assert-OtherPreferences
+    $checks.Add('HU3: altas y bajas idempotentes conservan perfil, tipos y ciudad preferida')
 
     if ($TestOutage) {
         # Solo para el Compose local: se restaura Eventos aunque falle la comprobacion.
@@ -44,6 +71,9 @@ try {
             if ($LASTEXITCODE -ne 0) { throw 'No se pudo detener Eventos' }
             $response = Invoke-WebRequest $favoritosUrl -SkipHttpErrorCheck -TimeoutSec 20
             if ($response.StatusCode -ne 503) { throw 'Eventos caido no devolvio 503' }
+            Assert-OtherPreferences
+            $ids = (Invoke-RestMethod "$BaseUrl/usuarios/$($usuario.id)/preferencias" -TimeoutSec 15).artistasFavoritos
+            if ($ids.Count -ne 1 -or $ids[0] -ne $artista.id) { throw 'El fallo del catalogo borro favoritos' }
         } finally {
             & docker compose -f $rootCompose up -d --wait --wait-timeout 180 eventos
             if ($LASTEXITCODE -ne 0) { throw 'No se pudo restaurar Eventos' }
@@ -75,6 +105,7 @@ try {
     $artista = $null
     $response = Invoke-WebRequest $favoritosUrl -SkipHttpErrorCheck -TimeoutSec 15
     if ($response.StatusCode -ne 502) { throw 'Artista eliminado no devolvio 502' }
+    Assert-OtherPreferences
     $checks.Add('Artista eliminado en Eventos: Usuarios devuelve 502')
     @{passed=$true; checkedAt=[DateTimeOffset]::Now.ToString('o'); checks=$checks} | ConvertTo-Json -Depth 5 | Set-Content "$reportPath/integration.json"
     Write-Output 'OK: integracion con artistas reales verificada.'

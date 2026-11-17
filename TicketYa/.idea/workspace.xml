@@ -5,34 +5,45 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.env.mysql.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.mysql.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DOCKER.md" beforeDir="false" afterPath="$PROJECT_DIR$/DOCKER.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUIA-ARRANQUE.md" beforeDir="false" afterPath="$PROJECT_DIR$/GUIA-ARRANQUE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Guia.md" beforeDir="false" afterPath="$PROJECT_DIR$/Guia.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MEJORAS-PENDIENTES.md" beforeDir="false" afterPath="$PROJECT_DIR$/MEJORAS-PENDIENTES.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker/mysql/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docker/mysql/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/mysql/check-health.sh" beforeDir="false" afterPath="$PROJECT_DIR$/docker/mysql/check-health.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/mysql/init/01-create-databases.sh" beforeDir="false" afterPath="$PROJECT_DIR$/docker/mysql/init/01-create-databases.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/mysql/legacy/eventos.compose.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/mysql/legacy/sectores.compose.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/mysql/legacy/usuarios.compose.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/MODELO.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/MODELO.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/compose.mysql.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/docs/arquitectura.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/docs/arquitectura.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/service/InventarioService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/service/InventarioService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/static/openapi.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/InventarioIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/InventarioIntegrationTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/compose.mysql.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/docs/PRUEBAS-POSTMAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/docs/PRUEBAS-POSTMAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/docker-compose.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/REST.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Compra.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Compra.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Entrada.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/entities/Entrada.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/repositories/CompraRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/repositories/CompraRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/static/openapi.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/REST.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/entity/Evento.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/entity/Evento.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/entity/Lugar.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/entity/Lugar.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/repository/EventoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/repository/EventoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/resources/static/openapi.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/docker-compose.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/Migrar-Bases.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/Migrar-Bases.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/Verificar-Bases.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/Verificar-Bases.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/TicketYa-Usuarios.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/TicketYa-Usuarios.postman_collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/scripts/Test-Artistas-Reales.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/scripts/Test-Artistas-Reales.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/FeignConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/FeignConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/UsuarioResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/dto/UsuarioResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/UsuarioService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/UsuarioService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/service/UsuarioServiceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/service/UsuarioServiceTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/tests/system/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/RESULTADOS.md" beforeDir="false" afterPath="$PROJECT_DIR$/tests/system/RESULTADOS.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,41 +149,41 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Docker.docker-compose.yml: Compose Deployment.executor": "Run",
-    "Docker.msv-usuario: Compose Deployment.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Spring Boot.MsvUsuarioApplication.executor": "Run",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "implementacion-jwt",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/franc/IdeaProjects/ArquitecturasWeb/TicketYa",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.30689654",
-    "run.configurations.included.in.services": "true",
-    "settings.editor.selected.configurable": "preferences.general"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Docker.docker-compose.yml: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.msv-usuario: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.MsvUsuarioApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/franc/IdeaProjects/ArquitecturasWeb/TicketYa&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.30689654&quot;,
+    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.general&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "mysql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RunDashboard">
     <option name="configurationTypes">
       <set>

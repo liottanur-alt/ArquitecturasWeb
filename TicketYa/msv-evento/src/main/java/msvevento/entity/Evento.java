@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "eventos")
+@Table(name = "eventos", indexes = {
+        @jakarta.persistence.Index(name = "idx_evento_recomendable", columnList = "estadoPublicacion,estado,fechaHora"),
+        @jakarta.persistence.Index(name = "idx_evento_tipo", columnList = "tipo")})
 public class Evento {
 
     @Id

@@ -221,3 +221,14 @@ Respuesta:
 | SectorAsiento | `POST /reservas/{id}/liberacion` | Liberar por rechazo o cancelacion |
 | SectorAsiento | `POST /reservas/{id}/devoluciones` | Liberar por devolucion aprobada |
 | SectorAsiento | `POST /eventos/{id}/inventario/cancelacion` | Cerrar inventario del evento |
+
+
+## Interno: recomendaciones por compras en comun
+
+`GET /interno/recomendaciones/clientes/{idCliente}` devuelve una lista de objetos con `idEvento`, `compradoresEnComun` e `idEventoReferencia`. No expone compradores ni compras individuales. Usa APROBADA y entradas no reintegradas; deduplica cliente-evento y cuenta vecinos distintos. Excluye eventos ya presentes en el historial valido del cliente, elige la menor referencia compartida y ordena por cantidad descendente e ID ascendente. Sin historial o coincidencias: 200 con []; ID no positivo: 400. Usuarios valida los candidatos y los enriquece con Eventos. Este prefijo no es enrutado por Gateway. Ver README.md para reglas y pruebas.
+
+## Interno: historial valido para recomendaciones (HU8)
+
+`GET /interno/recomendaciones/clientes/{idCliente}/historial-valido` devuelve `{"idsEventos":[100,200]}`. Solo incluye IDs distintos y ascendentes de eventos del cliente consultado con compras `APROBADA` y al menos una entrada `PAGA`, `SOLICITUD_DEVOLUCION` o `DEVOLUCION_RECHAZADA`. Un reintegro parcial no elimina el evento si queda otra entrada vigente en cualquier compra. Se excluyen entradas `DEVOLUCION_ACEPTADA` y `EVENTO_CANCELADO`, y compras no aprobadas. Sin historial: 200 con `{"idsEventos":[]}`; ID no positivo: 400.
+
+No consulta Usuarios ni Eventos, no modifica registros y no expone compras individuales ni otros clientes. El Gateway no enruta esta ruta. Usuarios usa estos IDs para excluir eventos de ambas fuentes antes de ordenar y limitar; si esta consulta falla, informa historial no verificado.

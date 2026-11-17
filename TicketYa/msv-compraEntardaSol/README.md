@@ -106,3 +106,20 @@ La guia manual con Postman esta en [docs/PRUEBAS-POSTMAN.md](docs/PRUEBAS-POSTMA
 - El gateway ya expone `/compras`, `/entradas` y `/solicitudes` hacia el puerto 8003 (`MSVC_COMPRAS_URL`). Tambien se puede llamar directo al 8003.
 - No hay autenticacion ni roles en esta entrega.
 - El pago y los reintegros son simulados. Las notificaciones a los compradores afectados por una cancelacion quedan para la Entrega 2, igual que la proteccion por roles de los endpoints administrativos.
+
+
+## Recomendaciones por compras en comun (HU5)
+
+`GET /interno/recomendaciones/clientes/{idCliente}` es un contrato interno, fuera de las rutas de Gateway. Retorna solo eventos candidatos, numero de otros clientes distintos e ID de un evento de referencia del historial propio. La consulta SQL de `CompraRepository` deduplica cliente-evento antes de agregar y usa COUNT DISTINCT por vecino. `RecomendacionCompraService` es de solo lectura; los DTOs no incluyen clientes ni compras individuales.
+
+Una relacion cuenta si hay una compra APROBADA con alguna entrada PAGA, SOLICITUD_DEVOLUCION o DEVOLUCION_RECHAZADA. Las compras no confirmadas y entradas reintegradas/canceladas no cuentan en ninguna etapa. Un reintegro parcial conserva la relacion si queda otra entrada vigente. La validacion de fecha y estado del candidato se hace en Usuarios con Eventos. Sin historial o vecinos devuelve []. ID no positivo devuelve 400. No consulta la base de Usuarios.
+
+Se agregaron indices por estado/cliente/evento de Compra y por compra/estado de Entrada. Las pruebas de integracion ejecutan el SQL sobre H2 en modo MySQL; la prueba Test-ComprasEnComun.ps1 lo verifica tambien en MySQL real mediante pagos y devoluciones simulados. El contrato esta en OpenAPI y [REST.md](REST.md).
+
+## Historial valido propio (HU8)
+
+`GET /interno/recomendaciones/clientes/{idCliente}/historial-valido` devuelve `{"idsEventos":[100,200]}`. Consulta de solo lectura con IDs distintos y ascendentes; usa los mismos estados de compra/entrada que HU5. Conserva el evento mientras exista alguna entrada vigente, incluso en otra compra. Los reintegros totales permiten que Usuarios vuelva a recomendarlo.
+
+El contrato no expone compras ni otros clientes y no esta enrutado por Gateway. Usuarios lo consume mediante Feign y aplica la exclusion a ambas fuentes. Si no puede verificarlo, informa respuesta parcial e historial no verificado. Ver [REST.md](REST.md) y OpenAPI 1.2.0.
+
+Verificacion Java HU8 (16/11/2026): 85 pruebas de Compras sin fallos ni omitidas, incluyendo deduplicacion, privacidad, estados de compra/entrada y reintegros parciales y totales. Log: `.local/system-tests/hu8-compras-java.log` en la raiz. La prueba real conjunta es `./msv-usuario/scripts/Test-ComprasEnComun.ps1 -TestUnificadas -TestOutage` desde la raiz.

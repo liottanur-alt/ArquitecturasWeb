@@ -40,6 +40,10 @@ public class Usuario {
     // Solo contiene IDs: nombre y genero se consultan al servicio de eventos.
     private Set<Long> artistasFavoritos = new LinkedHashSet<>();
 
+    // Preferencias embebidas en MongoDB, independientes de la ciudad del perfil.
+    private Set<TipoEvento> tiposEventoPreferidos = new LinkedHashSet<>();
+    private String ciudadPreferida = "";
+
     // Impide que guardar un perfil desactualizado sobrescriba cambios concurrentes.
     @Version
     private Long version;

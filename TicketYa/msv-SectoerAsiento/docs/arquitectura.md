@@ -9,12 +9,13 @@ flowchart LR
     S --> DB[(MySQL propio)]
     S -->|REST Feign: validar evento| E[Eventos]
     CO[Compras: orquestador] -->|reservar / confirmar / liberar / devolver| S
+    US[Usuarios: recomendaciones] -->|disponibilidad por lote| S
     CO --> P[Pasarela de pagos mock]
     CO --> Q[Emision de entradas QR]
     E -->|cancelacion a coordinar por el proveedor| S
 ```
 
-El gateway y las rutas de inventario estan implementados. Los proveedores Eventos y Compras todavia deben implementar y acordar sus contratos. No se comparten entidades JPA entre servicios: idLugar, idCliente e idEvento son referencias externas. EventoInventario replica lugar/fecha del proveedor para coordinar su inventario; Eventos sigue siendo la fuente de verdad y se consulta por Feign antes de vender/confirmar y al devolver.
+El gateway, las rutas de inventario y la integracion con Eventos y Compras estan implementados. Usuarios consulta la disponibilidad global de sus candidatos mediante `POST /interno/inventario/disponibilidad`, sin crear reservas. El lote comparte bloqueos y liberacion de vencimientos con las operaciones de inventario. No se comparten entidades JPA entre servicios: idLugar, idCliente e idEvento son referencias externas. EventoInventario replica lugar/fecha del proveedor para coordinar su inventario; Eventos sigue siendo la fuente de verdad y se consulta por Feign antes de vender/confirmar y al devolver. El lote no consulta Eventos: Usuarios reutiliza su catalogo para validar fecha/publicacion, y Compras revalida al reservar.
 
 ## Modelo local
 

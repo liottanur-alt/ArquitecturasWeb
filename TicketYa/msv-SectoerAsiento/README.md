@@ -77,3 +77,13 @@ Nunca apuntar esta suite a una base con datos a conservar. Las pruebas H2 verifi
 La integración con servicios reales y MySQL compartido pasó. Las pruebas de concurrencia Java y la suite MySQL descartable son comprobaciones distintas de la carga local de lectura. Ver [resultados y límites](../tests/system/RESULTADOS.md).
 
 Desde la raíz, `docker compose up -d --wait mysql` levanta los cuatro esquemas. Este servicio usa sectores_asientos. Ver [configuración y migración](../docker/mysql/README.md).
+
+## Disponibilidad por lote para recomendaciones (HU9)
+
+`POST /interno/inventario/disponibilidad` recibe `{"idsEventos":[100,200]}` y devuelve un array con `idEvento` y `disponible`. Una fila por ID distinto en orden ascendente. Lista vacia devuelve []; lista ausente/nula o IDs nulos/no positivos devuelven 400. Un evento sin inventario, sin sectores o cancelado devuelve disponible=false. OpenAPI 1.1.0 incluye el contrato; Gateway no publica esta ruta.
+
+Se considera disponible si algun sector tiene al menos un lugar reservable: cupo libre en CAMPO o un AsientoEvento DISPONIBLE en NUMERADO. Antes de comprobarlo vence reservas caducadas bajo los mismos bloqueos y transaccion del inventario; los IDs se bloquean ordenados para evitar cruces entre lotes. No crea reservas ni consulta Eventos. Usuarios valida fecha/publicacion con su catalogo y consulta solamente sus candidatos.
+
+La respuesta usa `Cache-Control: no-store`; es una fotografia del inventario global, no una reserva. Compras vuelve a comprobar cupos/asientos, evento y limite por cliente. Las pruebas Java cubren cupos, asientos vendidos/reservados, vencimientos, varios sectores, cancelados, inventario ausente, validacion y ausencia de nuevas reservas. Prueba real desde la raiz: `./msv-usuario/scripts/Test-ComprasEnComun.ps1 -TestInventario -TestOutage`; retiene temporalmente los cupos del candidato, libera una entrada y verifica el regreso de la recomendacion. Restaura servicios, libera sus reservas y reintegra sus compras simuladas.
+
+Verificacion HU9 (16/11/2026): 43 pruebas Java de este modulo sin fallos ni omitidas. Integracion real MySQL por Gateway correcta: cupos retenidos excluyen el candidato en ambas fuentes, liberar una entrada lo restaura, Sectores inaccesible produce recomendaciones parciales con disponibilidad no verificada y la recuperacion restaura el indicador. Limpieza e inventario verificados. Informes en `.local/system-tests/hu9-sectores-java.log`, `hu9-real.log` y `hu9-real-result.json` de la raiz.

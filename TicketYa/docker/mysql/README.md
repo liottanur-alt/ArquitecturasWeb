@@ -1,6 +1,6 @@
 # MySQL compartido
 
-TicketYa usa MySQL 8.4 en localhost:3306, con cuatro esquemas independientes:
+TicketYa usa MySQL 8.4 en localhost:3306 para Eventos, Sectores y Compras. El esquema y la cuenta SQL de usuarios de la tabla siguiente son legado: msv-usuario ahora usa MongoDB en 27017. Se conservan los datos anteriores sin borrarlos ni trasladarlos automaticamente.
 
 | Esquema | Usuario | Contraseña de desarrollo |
 | --- | --- | --- |
