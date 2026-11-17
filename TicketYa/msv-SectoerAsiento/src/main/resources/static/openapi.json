@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "TicketYa - Sectores, Asientos e Inventario",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Entrega 1: sin JWT. Operaciones internas de inventario invocadas por Compras/Eventos; no exponer como operaciones autorizadas de un cliente final en la entrega 2."
   },
   "servers": [
@@ -1645,6 +1645,52 @@
         },
         "description": "Total o parcial. solicitadaEn proviene de Compras y debe ser al menos 72 horas antes del evento. No solicita reintegro monetario."
       }
+    },
+    "/interno/inventario/disponibilidad": {
+      "post": {
+        "operationId": "disponibilidadLote",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisponibilidadLoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "example": "no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Un resultado por cada ID distinto. Lote vacio devuelve [].",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DisponibilidadEventoResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lista ausente, nula o con IDs nulos/no positivos"
+          }
+        },
+        "tags": [
+          "Inventario interno"
+        ],
+        "summary": "Disponibilidad de varios eventos en una consulta",
+        "description": "Consulta interna no enrutable por Gateway. Deduplica y ordena IDs, vence reservas bajo los mismos bloqueos del inventario y comprueba cupos/asientos. Devuelve false para eventos sin inventario, sin sectores o cancelados. No crea reservas ni consulta Eventos; Usuarios filtra publicacion/fecha con su catalogo. La compra vuelve a validar disponibilidad y limite por cliente."
+      }
     }
   },
   "components": {
@@ -2147,6 +2193,40 @@
           "fila",
           "columna"
         ]
+      },
+      "DisponibilidadLoteRequest": {
+        "type": "object",
+        "properties": {
+          "idsEventos": {
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "idsEventos"
+        ]
+      },
+      "DisponibilidadEventoResponse": {
+        "type": "object",
+        "properties": {
+          "disponible": {
+            "type": "boolean"
+          },
+          "idEvento": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "idEvento",
+          "disponible"
+        ],
+        "additionalProperties": false
       }
     }
   }

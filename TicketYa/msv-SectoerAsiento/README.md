@@ -7,12 +7,12 @@ Gestiona sectores/asientos fisicos y su inventario por evento: precio, capacidad
 Requiere Java 21 o superior, Maven y Docker Desktop para MySQL. Desde esta carpeta:
 
 ```powershell
-docker compose -f compose.mysql.yml up -d --wait
+docker compose -f ../docker-compose.yml up -d --wait mysql
 $env:MSVC_EVENTOS_URL='http://localhost:8005'
 .\mvnw.cmd spring-boot:run
 ```
 
-El servicio escucha en 8002. MySQL se publica en 3310 y utiliza un volumen propio. La URL, usuario, password y puerto del servicio pueden cambiarse con DB_URL, DB_USERNAME, DB_PASSWORD y SERVER_PORT. `DDL_AUTO=update` crea el esquema de desarrollo sin borrar datos; no migra de forma segura instalaciones con las entidades antiguas. Antes de reutilizar una base anterior se requiere respaldo y una migracion revisada; usar una base nueva para este modelo.
+El servicio escucha en 8002. MySQL se publica en 3306 y comparte el volumen ticketya_mysql_data con las bases de Usuarios y Eventos; cada servicio mantiene su propio esquema y usuario. La URL, usuario, password y puerto del servicio pueden cambiarse con DB_URL, DB_USERNAME, SECTOR_DB_PASSWORD (o DB_PASSWORD) y SERVER_PORT. `DDL_AUTO=update` crea el esquema de desarrollo sin borrar datos; no migra de forma segura instalaciones con las entidades antiguas. Antes de reutilizar una base anterior se requiere respaldo y una migracion revisada; usar una base nueva para este modelo.
 
 El proveedor Eventos debe exponer `GET /api/eventos/{id}` con `id`, `lugar.id`, `fechaHora`, `estado` y `estadoPublicacion`. `fechaHora` es hora local en America/Argentina/Buenos_Aires; configurar inventario.zona-eventos si el contrato cambia. Solo se reservan/confirman lugares de eventos PUBLICADO, no cancelados, agotados, finalizados o iniciados. El cliente se adapto al contrato de Eventos incorporado desde main; probar ambos servicios reales con MySQL usando la guia de pruebas de la raiz. Las pruebas levantan un servidor HTTP local que responde ese contrato y ejercitan Feign realmente.
 
@@ -50,6 +50,8 @@ OpenAPI 3.0 en `src/main/resources/static/openapi.json`, servido en http://local
 
 ## Pruebas
 
+La comunicación con Eventos usa Feign con Apache HttpClient 5 (`feign-hc5`), que permite las llamadas PATCH de sincronización del agotamiento. El proveedor HTTP de pruebas contempla las rutas internas actuales de Eventos. Verificación del 14/11/2026: 37 pruebas correctas con H2 y proveedor HTTP local; la integración con servicios reales y MySQL compartido pasó; ver ../tests/system/RESULTADOS.md.
+
 ```powershell
 .\mvnw.cmd test
 ```
@@ -70,10 +72,18 @@ Nunca apuntar esta suite a una base con datos a conservar. Las pruebas H2 verifi
 
 `docs/arquitectura.md` contiene el diagrama de modulos, las relaciones locales y la secuencia de compra con rechazo/vencimiento. `MODELO.md` conserva el historial de decisiones; este README describe el contrato actual.
 
-## Verificacion ejecutada
+## Estado actual
 
-Se ejecutaron 37 pruebas del microservicio y 6 del gateway, todas correctas. Las pruebas de persistencia y concurrencia utilizaron H2 y un proveedor HTTP de Eventos local. No se pudo ejecutar MySQL: Docker Desktop no estaba iniciado. OpenAPI y la coleccion Postman se verificaron como JSON y se revisaron sus referencias internas.
+La integración con servicios reales y MySQL compartido pasó. Las pruebas de concurrencia Java y la suite MySQL descartable son comprobaciones distintas de la carga local de lectura. Ver [resultados y límites](../tests/system/RESULTADOS.md).
 
-## Limites del entregable
+Desde la raíz, `docker compose up -d --wait mysql` levanta los cuatro esquemas. Este servicio usa sectores_asientos. Ver [configuración y migración](../docker/mysql/README.md).
 
-Esta implementacion completa el circuito de inventario del microservicio para la entrega 1. La compra completa, pasarela mock, QR, aprobacion administrativa y reintegros monetarios pertenecen a otros microservicios. Queda pendiente conectar los proveedores reales y ejecutar la suite MySQL cuando Docker este disponible. JWT, fila virtual, NoSQL, reportes, recomendaciones, log centralizado y el despliegue Docker del sistema completo corresponden a la entrega 2 y al equipo, no a este CRUD.
+## Disponibilidad por lote para recomendaciones (HU9)
+
+`POST /interno/inventario/disponibilidad` recibe `{"idsEventos":[100,200]}` y devuelve un array con `idEvento` y `disponible`. Una fila por ID distinto en orden ascendente. Lista vacia devuelve []; lista ausente/nula o IDs nulos/no positivos devuelven 400. Un evento sin inventario, sin sectores o cancelado devuelve disponible=false. OpenAPI 1.1.0 incluye el contrato; Gateway no publica esta ruta.
+
+Se considera disponible si algun sector tiene al menos un lugar reservable: cupo libre en CAMPO o un AsientoEvento DISPONIBLE en NUMERADO. Antes de comprobarlo vence reservas caducadas bajo los mismos bloqueos y transaccion del inventario; los IDs se bloquean ordenados para evitar cruces entre lotes. No crea reservas ni consulta Eventos. Usuarios valida fecha/publicacion con su catalogo y consulta solamente sus candidatos.
+
+La respuesta usa `Cache-Control: no-store`; es una fotografia del inventario global, no una reserva. Compras vuelve a comprobar cupos/asientos, evento y limite por cliente. Las pruebas Java cubren cupos, asientos vendidos/reservados, vencimientos, varios sectores, cancelados, inventario ausente, validacion y ausencia de nuevas reservas. Prueba real desde la raiz: `./msv-usuario/scripts/Test-ComprasEnComun.ps1 -TestInventario -TestOutage`; retiene temporalmente los cupos del candidato, libera una entrada y verifica el regreso de la recomendacion. Restaura servicios, libera sus reservas y reintegra sus compras simuladas.
+
+Verificacion HU9 (16/11/2026): 43 pruebas Java de este modulo sin fallos ni omitidas. Integracion real MySQL por Gateway correcta: cupos retenidos excluyen el candidato en ambas fuentes, liberar una entrada lo restaura, Sectores inaccesible produce recomendaciones parciales con disponibilidad no verificada y la recuperacion restaura el indicador. Limpieza e inventario verificados. Informes en `.local/system-tests/hu9-sectores-java.log`, `hu9-real.log` y `hu9-real-result.json` de la raiz.

@@ -1,5 +1,7 @@
 # Modelo de sectores, asientos y reservas
 
+> Este documento conserva decisiones históricas, incluidas propuestas anteriores de rutas. Para configuración y contratos actuales consultar [README.md](README.md) y [docs/arquitectura.md](docs/arquitectura.md).
+
 - Sector representa un sector fisico de un lugar. idLugar es una referencia al servicio de eventos; no existe una relacion JPA entre microservicios. capacidadTotal es su limite fisico.
 - Asiento representa la posicion fisica (fila y columna) dentro de un sector numerado. Esa posicion es unica por sector.
 - SectorEvento configura un sector para un evento: precio con BigDecimal y capacidadHabilitada. La pareja evento-sector es unica. En CAMPO, lugaresReservados y lugaresVendidos permiten calcular el cupo disponible.

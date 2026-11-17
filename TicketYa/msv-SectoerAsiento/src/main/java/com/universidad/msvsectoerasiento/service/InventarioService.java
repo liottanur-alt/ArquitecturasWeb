@@ -82,6 +82,32 @@ public class InventarioService {
         return configuraciones.findByIdEvento(evento).stream().map(c -> disponibilidad(c, e)).toList();
     }
 
+    /** Comparte bloqueos y vencimientos con las reservas; nunca crea reservas nuevas. */
+    public List<DisponibilidadEventoResponse> consultarLote(@NotNull @Valid DisponibilidadLoteRequest request) {
+        List<DisponibilidadEventoResponse> resultado = new ArrayList<>();
+        // Orden comun entre lotes para evitar bloqueos cruzados sobre los mismos eventos.
+        for (Long id : new TreeSet<>(request.idsEventos())) {
+            Optional<InventarioEvento> inventario = inventarios.bloquear(id);
+            boolean disponible = false;
+            if (inventario.isPresent()) {
+                vencer(id);
+                if (!inventario.get().isCancelado()) {
+                    disponible = configuraciones.findByIdEvento(id).stream().anyMatch(this::tieneLugarReservable);
+                }
+            }
+            // Sin inventario o sin sectores configurados no hay entradas reservables.
+            resultado.add(new DisponibilidadEventoResponse(id, disponible));
+        }
+        return List.copyOf(resultado);
+    }
+
+    private boolean tieneLugarReservable(SectorEvento sector) {
+        if (sector.getEspaciosDisponibles() <= 0) return false;
+        if (sector.getSector().getTipo() == TipoSector.CAMPO) return true;
+        return posiciones.findBySectorEventoIdOrderByIdAsc(sector.getId()).stream()
+                .anyMatch(asiento -> asiento.getEstado() == EstadoAsiento.DISPONIBLE);
+    }
+
     /** Consulta un sector del evento y devuelve 404 si no fue configurado. */
     public DisponibilidadResponse consultarSector(@NotNull @Positive Long evento, @NotNull @Positive Long sector) {
         var e = bloquear(evento); vencer(evento);
@@ -115,6 +141,8 @@ public class InventarioService {
                 .filter(p -> ids.contains(p.getAsiento().getId())).toList();
             if (elegidos.size() != ids.size()) throw conflicto("Hay asientos que no pertenecen a este sector/evento");
             if (elegidos.stream().anyMatch(p -> p.getEstado() != EstadoAsiento.DISPONIBLE)) throw conflicto("Asiento no disponible");
+
+        /** Modofica el estado de los asientos y los reserva temporalmenta */
             elegidos.forEach(p -> p.setEstado(EstadoAsiento.RESERVADO));
         } else {
             if (c.getEspaciosDisponibles() < request.cantidad()) throw conflicto("Cupo insuficiente");
@@ -137,7 +165,10 @@ public class InventarioService {
     /** Confirma una sola vez. Si ya vencio, devuelve VENCIDA y conserva la liberacion en la base. */
     public ReservaResponse confirmar(@NotNull @Positive Long id) {
         var e = bloquearEventoReserva(id); vencer(e.getId()); var r = reserva(id);
-        if (r.getEstado() == EstadoReserva.CONFIRMADA) return ReservaResponse.from(r);
+        if (r.getEstado() == EstadoReserva.CONFIRMADA) {
+            sincronizarAgotamiento(e.getId());
+            return ReservaResponse.from(r);
+        }
         if (r.getEstado() == EstadoReserva.VENCIDA) return ReservaResponse.from(r);
         if (r.getEstado() != EstadoReserva.ACTIVA || e.isCancelado()) throw conflicto("La reserva no se puede confirmar");
         validarVentaRemota(e);
@@ -145,6 +176,7 @@ public class InventarioService {
         c.setLugaresReservados(c.getLugaresReservados() - r.getCantidad());
         c.setLugaresVendidos(c.getLugaresVendidos() + r.getCantidad());
         r.getAsientos().forEach(p -> p.setEstado(EstadoAsiento.VENDIDO)); r.setEstado(EstadoReserva.CONFIRMADA);
+        sincronizarAgotamiento(e.getId());
         return ReservaResponse.from(r);
     }
 
@@ -166,6 +198,7 @@ public class InventarioService {
             var d = previa.get();
             if (!d.getReserva().getId().equals(id) || !d.getCantidad().equals(request.cantidad()) || !d.getPosiciones().equals(firma) || !d.getSolicitadaEn().equals(request.solicitadaEn().truncatedTo(java.time.temporal.ChronoUnit.MICROS)))
                 throw conflicto("La clave de devolucion ya identifica otra solicitud");
+            sincronizarAgotamiento(e.getId());
             return ReservaResponse.from(r);
         }
         if (r.getEstado() != EstadoReserva.CONFIRMADA || e.isCancelado()) throw conflicto("La reserva no es una venta vigente");
@@ -176,6 +209,7 @@ public class InventarioService {
         devolverLugares(r, request.cantidad(), ids);
         var d = new Devolucion(); d.setClave(request.claveIdempotencia()); d.setReserva(r);
         d.setCantidad(request.cantidad()); d.setSolicitadaEn(request.solicitadaEn().truncatedTo(java.time.temporal.ChronoUnit.MICROS)); d.setPosiciones(firma); devoluciones.saveAndFlush(d);
+        sincronizarAgotamiento(e.getId());
         return ReservaResponse.from(r);
     }
 
@@ -252,6 +286,14 @@ public class InventarioService {
         var c = r.getSectorEvento(); c.setLugaresVendidos(c.getLugaresVendidos() - cantidad);
         r.setCantidadDevuelta(r.getCantidadDevuelta() + cantidad);
         if (r.getCantidadDevuelta().equals(r.getCantidad())) r.setEstado(EstadoReserva.DEVUELTA);
+    }
+
+    /** Un evento se agota solo cuando todos los cupos están vendidos y no quedan reservas temporales. */
+    private void sincronizarAgotamiento(Long evento) {
+        var sectoresEvento = configuraciones.findByIdEvento(evento);
+        boolean agotado = !sectoresEvento.isEmpty() && sectoresEvento.stream().allMatch(c ->
+            c.getLugaresVendidos() >= c.getCapacidadHabilitada() && c.getLugaresReservados() == 0);
+        eventos.actualizarDisponibilidad(evento, agotado);
     }
 
     /** Compara el contenido original: una clave repetida no permite cambiar cliente ni lugares. */
