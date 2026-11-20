@@ -31,10 +31,16 @@ services:
       DB_USERNAME: evento_app
       EVENTO_DB_PASSWORD: ${EVENTO_DB_PASSWORD:-${DB_PASSWORD:-evento_dev}}
       MSVC_SECTORES_URL: http://sectores:8002
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      FILA_MAX_COMPRADORES_SIMULTANEOS: ${FILA_MAX_COMPRADORES_SIMULTANEOS:-10}
+      FILA_DURACION_TURNO_SEGUNDOS: 900
     ports:
       - "127.0.0.1:8005:8005"
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "--max-time", "5", "http://localhost:8005/actuator/health"]
@@ -150,9 +156,23 @@ services:
       retries: 30
       start_period: 30s
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
 volumes:
   usuarios_mongo:
     # Mismo volumen del entorno aislado: conserva los usuarios existentes.
     name: ticketya-usuarios-local_usuarios_mongo
   mysql_data:
     name: ticketya_mysql_data
+  redis_data:
+    name: ticketya_redis_data

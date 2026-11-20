@@ -7,6 +7,7 @@ import msvevento.entity.Lugar;
 import msvevento.repository.LugarRepository;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -47,6 +48,7 @@ public class LugarService {
     }
 
     // Crear un lugar
+    @CacheEvict(cacheNames = {"eventos-catalogo", "eventos-busqueda", "evento-detalle"}, allEntries = true)
     public LugarResponseDTO crearLugar(LugarRequestDTO dto) {
 
         Lugar lugar = new Lugar();
@@ -64,6 +66,7 @@ public class LugarService {
     }
 
     // Actualizar un lugar
+    @CacheEvict(cacheNames = {"eventos-catalogo", "eventos-busqueda", "evento-detalle"}, allEntries = true)
     public LugarResponseDTO actualizarLugar(Long id, LugarRequestDTO dto) {
 
         Lugar lugar = lugarRepository.findById(id)
@@ -85,6 +88,7 @@ public class LugarService {
     }
 
     // Eliminar un lugar
+    @CacheEvict(cacheNames = {"eventos-catalogo", "eventos-busqueda", "evento-detalle"}, allEntries = true)
     public void eliminarLugar(Long id) {
 
         if (!lugarRepository.existsById(id)) {

@@ -34,14 +34,14 @@ class InventarioRoutesTests {
     @AfterAll static void cerrar() { BACKEND.stop(0); }
 
     @Test void conservaRutasQueryYBody() throws Exception {
-        for (String path : new String[]{"/sectores?idLugar=1", "/asientos", "/reservas/1",
+        for (String path : new String[]{"/sectores?idLugar=1", "/asientos",
                 "/eventos/1/sectores", "/eventos/1/sectores/2/disponibilidad", "/eventos/1/inventario"}) {
             var response = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + path)).GET().build(), HttpResponse.BodyHandlers.ofString());
             assertEquals(200, response.statusCode()); assertEquals("GET " + path + "|", response.body());
         }
-        var response = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/reservas"))
+        var reserva = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/reservas"))
             .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("{}" )).build(), HttpResponse.BodyHandlers.ofString());
-        assertEquals(200, response.statusCode()); assertEquals("POST /reservas|{}", response.body());
+        assertEquals(404, reserva.statusCode());
     }
     @Test void conservaErrorYNoCapturaCatalogoEventos() throws Exception {
         var error = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/asientos/999")).GET().build(), HttpResponse.BodyHandlers.ofString());

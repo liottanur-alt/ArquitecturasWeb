@@ -15,6 +15,8 @@ import org.msvcompraentradasol.dtos.CompraResponseDTO;
 import org.msvcompraentradasol.dtos.EventoFechaResponseDTO;
 import org.msvcompraentradasol.dtos.ReservaRequestDTO;
 import org.msvcompraentradasol.dtos.ReservaResponseDTO;
+import org.msvcompraentradasol.dtos.ValidarAutorizacionFilaRequestDTO;
+import org.msvcompraentradasol.dtos.ValidarAutorizacionFilaResponseDTO;
 import org.msvcompraentradasol.entities.Compra;
 import org.msvcompraentradasol.entities.Entrada;
 import org.msvcompraentradasol.entities.Solicitud;
@@ -92,6 +94,7 @@ public class CompraService {
         }
 
         validarEventoVendible(dto.getIdEvento());
+        String autorizacionFila = validarAutorizacionFila(dto);
 
         ReservaResponseDTO reserva = reservaClient.reservar(new ReservaRequestDTO(
                 dto.getClaveIdempotencia(),
@@ -120,6 +123,7 @@ public class CompraService {
         compra.setCantidadEntradas((long) cantidad);
         compra.setClaveIdempotencia(dto.getClaveIdempotencia());
         compra.setIdReserva(reserva.id());
+        compra.setAutorizacionCompra(autorizacionFila);
         compra.setPrecioUnitario(reserva.precioUnitario());
         compra.setImporteTotal(reserva.precioUnitario().multiply(BigDecimal.valueOf(cantidad)));
         compra.setDescripcion("Compra pendiente de pago");
@@ -233,7 +237,9 @@ public class CompraService {
             }
         }
 
-        return CompraResponseDTO.from(compraRepository.save(compra));
+        CompraResponseDTO respuesta = CompraResponseDTO.from(compraRepository.save(compra));
+        completarTurnoFila(compra);
+        return respuesta;
     }
 
     @Transactional
@@ -333,6 +339,41 @@ public class CompraService {
             throw new IllegalStateException(
                     "La reserva no pudo liberarse; estado actual: " + liberacion.estado()
             );
+        }
+    }
+
+    private String validarAutorizacionFila(CompraRequestDTO dto) {
+        String autorizacion = dto.getAutorizacionCompra();
+        ValidarAutorizacionFilaResponseDTO resultado = eventoClient.validarAutorizacionFila(
+                new ValidarAutorizacionFilaRequestDTO(
+                        dto.getIdEvento(), dto.getIdCliente(), autorizacion, dto.getClaveIdempotencia()
+                )
+        );
+        if (resultado == null || !resultado.autorizado()) {
+            String motivo = resultado == null ? "sin respuesta" : resultado.motivo();
+            String mensaje = autorizacion == null || autorizacion.isBlank()
+                    ? "Este evento requiere autorización de fila para iniciar la compra: " + motivo
+                    : "La autorización de la fila no es válida: " + motivo;
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, mensaje
+            );
+        }
+        return resultado.requiereFila() ? autorizacion : null;
+    }
+
+    private void completarTurnoFila(Compra compra) {
+        String autorizacion = compra.getAutorizacionCompra();
+        if (autorizacion == null || autorizacion.isBlank()) return;
+
+        ValidarAutorizacionFilaResponseDTO resultado = eventoClient.completarCompraEnFila(
+                new ValidarAutorizacionFilaRequestDTO(
+                        compra.getIdEvento(), compra.getIdCliente(), autorizacion,
+                        compra.getClaveIdempotencia()
+                )
+        );
+        if (resultado == null || !resultado.autorizado()) {
+            String motivo = resultado == null ? "sin respuesta" : resultado.motivo();
+            throw new IllegalStateException("La compra se confirmó, pero no se pudo liberar el turno de fila: " + motivo);
         }
     }
 

@@ -30,7 +30,7 @@ spring:
             - id: msvc-sectores-asientos
               uri: ${msvc.sectores.url}
               predicates:
-                - Path=/sectores,/sectores/**,/asientos,/asientos/**,/reservas,/reservas/**,/eventos/*/inventario,/eventos/*/inventario/**,/eventos/*/sectores,/eventos/*/sectores/**
+                - Path=/sectores,/sectores/**,/asientos,/asientos/**,/eventos/*/inventario,/eventos/*/inventario/**,/eventos/*/sectores,/eventos/*/sectores/**
             - id: msvc-compras
               uri: ${msvc.compras.url}
               predicates:

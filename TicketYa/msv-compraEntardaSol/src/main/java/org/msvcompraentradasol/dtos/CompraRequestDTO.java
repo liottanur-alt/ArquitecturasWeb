@@ -34,6 +34,8 @@ public class CompraRequestDTO {
     @NotBlank
     private String medioDePago;
 
+    private String autorizacionCompra;
+
     @JsonIgnore
     @AssertTrue(message = "Debe indicar idsAsientos o cantidadEntradas")
     public boolean isPedidoValido() {
@@ -61,4 +63,7 @@ public class CompraRequestDTO {
 
     public String getMedioDePago() {return medioDePago;}
     public void setMedioDePago(String medioDePago) {this.medioDePago = medioDePago;}
+
+    public String getAutorizacionCompra() {return autorizacionCompra;}
+    public void setAutorizacionCompra(String autorizacionCompra) {this.autorizacionCompra = autorizacionCompra;}
 }

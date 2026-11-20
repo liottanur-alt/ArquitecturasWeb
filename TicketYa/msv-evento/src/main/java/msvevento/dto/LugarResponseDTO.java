@@ -9,7 +9,7 @@ import msvevento.entity.TipoLugar;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LugarResponseDTO {
+public class LugarResponseDTO implements java.io.Serializable {
 
     private Long id;
     private String nombre;

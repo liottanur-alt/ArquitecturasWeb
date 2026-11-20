@@ -1,6 +1,6 @@
 # TicketYa | Historias de usuario
 
-> **Alcance** · 5 funcionalidades y 14 historias de usuario.
+> **Alcance** · Entrega 1: 5 funcionalidades y 14 historias. Entrega 2: 2 funcionalidades y 5 historias.
 
 ## Entrega 1 · Core del sistema
 
@@ -178,3 +178,73 @@
 - El sistema identifica las entradas vendidas y solicita los reintegros correspondientes, incluso si los compradores no iniciaron una devolución.
 - Si una entrada ya tiene un reintegro iniciado o completado, la cancelación no genera un segundo reintegro por esa entrada.
 - El sistema identifica y notifica a los compradores afectados por la cancelación. Este aviso forma parte del flujo del punto 7. La cobertura general de notificaciones se completa en la Entrega 2.
+
+## Entrega 2 · Sistema completo
+
+### Índice de funcionalidades
+
+- [F06 · Fila virtual](#f06)
+- [F07 · Caché del catálogo](#f07)
+
+---
+
+<a id="f06"></a>
+
+### F06 · Fila virtual
+
+#### HU-15 · Ingresar a la fila de un evento de alta demanda
+
+> Como cliente, quiero ingresar a una fila virtual cuando comienza la venta de un evento de alta demanda para esperar mi turno de compra.
+
+**Criterios de aceptación**
+
+- Cuando la venta está abierta y el evento está marcado como de alta demanda, el sistema me agrega a la fila y me informa que quedé registrado.
+- Si repito la solicitud para el mismo evento, el sistema conserva mi lugar y no crea otra posición para mí.
+- Los eventos que no están marcados como de alta demanda siguen permitiendo el acceso al flujo habitual de compra, sin pasar por la fila.
+
+#### HU-16 · Consultar la posición y el estado en la fila
+
+> Como cliente, quiero consultar mi posición y el estado de mi turno para saber cuánto falta para poder comprar.
+
+**Criterios de aceptación**
+
+- El sistema informa si sigo esperando, si ya tengo permiso para comprar o si mi turno venció.
+- Mientras espero, mi posición se actualiza cuando otros clientes avanzan, abandonan la fila o vencen.
+- Solo puedo consultar la posición y el estado asociados a mi identidad y al evento correspondiente.
+
+#### HU-17 · Comprar por turnos y limitar el acceso simultáneo
+
+> Como cliente, quiero recibir un turno temporal cuando me corresponda para poder iniciar la compra sin que ingresen más compradores simultáneos que los permitidos.
+
+**Criterios de aceptación**
+
+- El sistema habilita clientes en orden de llegada y no supera el máximo de compradores simultáneos configurado para el evento.
+- El permiso de compra queda asociado al cliente y al evento, y deja de ser válido al vencer o al completar el turno.
+- Una solicitud de compra con un permiso vencido, utilizado por otro cliente o emitido para otro evento se rechaza.
+- Si una operación se reintenta con la misma clave de idempotencia, el sistema reconoce el intento original y no crea una compra o reserva duplicada.
+- El orden y el límite de compradores se mantienen aunque las solicitudes sean atendidas por distintas instancias del sistema.
+
+<a id="f07"></a>
+
+### F07 · Caché del catálogo
+
+#### HU-18 · Consultar eventos y búsquedas con caché
+
+> Como cliente, quiero consultar rápidamente eventos, detalles y resultados de búsqueda para encontrar opciones disponibles.
+
+**Criterios de aceptación**
+
+- El sistema puede cachear consultas públicas de listados, detalles y búsquedas de eventos publicados.
+- Las búsquedas con filtros, orden o paginación diferentes no comparten una respuesta incorrecta: esos parámetros se consideran al identificar cada resultado cacheado.
+- El tiempo de vida (TTL) de cada tipo de consulta se puede configurar y, al vencer, el sistema obtiene datos actualizados.
+- La disponibilidad de asientos o sectores, las reservas, las posiciones de fila y los turnos de compra no se sirven desde esta caché.
+
+#### HU-19 · Actualizar la caché cuando cambian los eventos
+
+> Como cliente, quiero que el catálogo y las búsquedas reflejen los cambios de los eventos para no recibir información desactualizada.
+
+**Criterios de aceptación**
+
+- Cuando se crea, edita, publica, suspende, cancela o elimina un evento, el sistema invalida o actualiza las respuestas cacheadas que puedan incluirlo.
+- Cuando cambia un precio o un estado de venta que se muestra en una consulta pública, el resultado cacheado afectado deja de servirse como vigente.
+- Si una invalidación no ocurre, el TTL limita cuánto tiempo puede conservarse la respuesta anterior.

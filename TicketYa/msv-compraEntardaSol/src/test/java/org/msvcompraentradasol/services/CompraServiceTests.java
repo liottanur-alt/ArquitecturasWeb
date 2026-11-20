@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.msvcompraentradasol.dtos.CancelacionEventoResponseDTO;
 import org.msvcompraentradasol.dtos.CompraResponseDTO;
+import org.msvcompraentradasol.dtos.ValidarAutorizacionFilaResponseDTO;
 import org.msvcompraentradasol.entities.Compra;
 import org.msvcompraentradasol.entities.Entrada;
 import org.msvcompraentradasol.enums.EstadoCompra;
@@ -73,6 +74,8 @@ class CompraServiceTests {
         solicitudRepository.deleteAll();
         entradaRepository.deleteAll();
         compraRepository.deleteAll();
+        when(eventoClient.validarAutorizacionFila(any()))
+                .thenReturn(new ValidarAutorizacionFilaResponseDTO(true, false, "FILA_NO_REQUERIDA"));
     }
 
     @Test

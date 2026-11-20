@@ -9,12 +9,13 @@ import msvevento.entity.EstadoPublicacion;
 import msvevento.entity.TipoEvento;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventoResponseDTO {
+public class EventoResponseDTO implements Serializable {
 
     private Long id;
     private String nombre;

@@ -19,6 +19,8 @@ Formato de error uniforme:
 
 Crea una compra y su reserva. Devuelve `201`. Si la `claveIdempotencia` ya existe con el mismo pedido, devuelve la compra original; con otro contenido devuelve `409`.
 
+Para eventos con fila virtual, enviar también `autorizacionCompra` con el código recibido al ser admitido. Compras valida el código y lo asocia a `claveIdempotencia`; si falta o no es válido, rechaza la compra antes de reservar entradas. Al aprobar el pago usa ambos datos para completar el turno y liberar el lugar. En eventos sin fila, el campo se omite.
+
 ```json
 {
   "claveIdempotencia": "compra-2026-0001",
@@ -26,7 +28,8 @@ Crea una compra y su reserva. Devuelve `201`. Si la `claveIdempotencia` ya exist
   "idEvento": 40,
   "idSector": 7,
   "idsAsientos": [101, 102],
-  "medioDePago": "TARJETA"
+  "medioDePago": "TARJETA",
+  "autorizacionCompra": "codigo-recibido-de-la-fila"
 }
 ```
 

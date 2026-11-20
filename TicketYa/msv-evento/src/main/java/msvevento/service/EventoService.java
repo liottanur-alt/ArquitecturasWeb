@@ -17,6 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +53,7 @@ public class EventoService {
 
     // Listar todos los eventos
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "eventos-catalogo")
     public List<EventoResponseDTO> listarEventosPublicos() {
         return eventoRepository.findByEstadoPublicacion(EstadoPublicacion.PUBLICADO)
                 .stream()
@@ -78,6 +82,7 @@ public class EventoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "evento-detalle", key = "#p0")
     public EventoResponseDTO buscarEventoPublicado(Long id) {
         Evento evento = eventoRepository.findByIdAndEstadoPublicacion(id, EstadoPublicacion.PUBLICADO)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento publicado no encontrado"));
@@ -185,6 +190,11 @@ public class EventoService {
     }
     // Publicar un evento
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public EventoResponseDTO publicarEvento(Long id, Long idOrganizador) {
 
         Evento evento = eventoRepository.findById(id)
@@ -218,6 +228,11 @@ public class EventoService {
         }
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public void actualizarAgotamiento(Long id, boolean agotado) {
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
@@ -233,6 +248,11 @@ public class EventoService {
         eventoRepository.save(evento);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public EventoResponseDTO finalizarEvento(Long id, Long idOrganizador) {
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
@@ -319,6 +339,11 @@ public class EventoService {
 
 
     // Suspender un evento
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public EventoResponseDTO suspenderEvento(Long id) {
 
         Evento evento = eventoRepository.findById(id)
@@ -343,6 +368,11 @@ public class EventoService {
 
 
     // Cancelar un evento
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public EventoResponseDTO cancelarEvento(Long id) {
 
         Evento evento = eventoRepository.findById(id)
@@ -370,6 +400,11 @@ public class EventoService {
         return convertirAResponseDTO(eventoGuardado);
     }
     // Eliminar un evento
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public void eliminarEvento(Long id) {
 
         if (!eventoRepository.existsById(id)) {
@@ -384,6 +419,7 @@ public class EventoService {
 
     // Buscar eventos aplicando filtros
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "eventos-busqueda")
     public List<EventoResponseDTO> buscarEventos(
             TipoEvento tipo,
             Long idOrganizador,

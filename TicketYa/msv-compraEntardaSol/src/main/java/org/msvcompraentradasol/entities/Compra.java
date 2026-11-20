@@ -45,6 +45,9 @@ public class Compra {
     @Column(name = "id_reserva", nullable = false)
     private Long idReserva;
 
+    @Column(name = "autorizacion_compra", length = 100)
+    private String autorizacionCompra;
+
     @Column(name = "precio_unitario", nullable = false)
     private BigDecimal precioUnitario;
 
@@ -108,6 +111,9 @@ public class Compra {
     public void setIdReserva(Long idReserva) {
         this.idReserva = idReserva;
     }
+
+    public String getAutorizacionCompra() { return autorizacionCompra; }
+    public void setAutorizacionCompra(String autorizacionCompra) { this.autorizacionCompra = autorizacionCompra; }
 
     public BigDecimal getPrecioUnitario() {
         return precioUnitario;
