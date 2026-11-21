@@ -28,7 +28,24 @@ Agregar un favorito almacena el ID; listar consulta nombre y genero actuales en 
 | OpenAPI | http://localhost:8004/openapi.json |
 | MongoDB / DataGrip / Compass | mongodb://localhost:27017/usuarios |
 
-MongoDB local no requiere usuario ni clave (No auth). Esta publicado solo en localhost. El perfil dev inicializa cuatro roles y un administrador de prueba sin credenciales. La etapa actual funciona sin token.
+MongoDB local no requiere usuario ni clave (No auth). Esta publicado solo en localhost. El perfil dev inicializa cuatro roles y un administrador de prueba con clave tomada de `ADMIN_SEED_PASSWORD`.
+
+## Autenticación (Stage 1)
+
+Usuarios requiere token JWT en todas sus rutas excepto `POST /auth/registro`, `POST /auth/login`, `/actuator/health`, `/error` y `/openapi.json`. Las pruebas directas y el Gateway envían `Authorization: Bearer <token>`. Las llamadas Feign a Eventos, Sectores y Compras sustituyen ese encabezado por un JWT de servicio de 300 segundos (`sub` = `msv-usuario`, `roles=["SERVICIO_INTERNO"]` y `usuarioId` opcional), firmado con el mismo `JWT_SECRET` e issuer `msv-usuario`.
+
+Antes de `docker compose up`, completar `.env` desde `.env.example` con `JWT_SECRET` (mínimo 32 bytes) y `ADMIN_SEED_PASSWORD`. Si se ejecuta la aplicación desde IntelliJ con el perfil dev, esas mismas variables deben estar en la configuración de ejecución; las pruebas usan un secreto propio de test.
+
+```powershell
+# Registro publico: siempre crea CLIENTE.
+Invoke-RestMethod -Method Post -Uri http://localhost:8004/auth/registro -ContentType application/json -Body '{"nombre":"Ana","email":"ana@example.com","dni":"12345678","ciudad":"Tandil","password":"clave"}'
+# Login.
+$token = (Invoke-RestMethod -Method Post -Uri http://localhost:8004/auth/login -ContentType application/json -Body '{"email":"ana@example.com","password":"clave"}').accessToken
+# Uso con token.
+Invoke-RestMethod -Uri http://localhost:8004/usuarios/1 -Headers @{ Authorization = "Bearer $token" }
+```
+
+Las reglas por rol, el contrato de los endpoints y la migración de cuentas antiguas sin `passwordHash` estan en [REST.md](REST.md).
 
 ## Pruebas con artistas reales
 

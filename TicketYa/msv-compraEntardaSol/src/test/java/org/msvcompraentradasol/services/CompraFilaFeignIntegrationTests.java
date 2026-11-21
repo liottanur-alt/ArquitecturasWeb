@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.msvcompraentradasol.entities.Compra;
+import org.msvcompraentradasol.JwtTestSupport;
 import org.msvcompraentradasol.MsvCompraEntradaSolApplication;
 import org.msvcompraentradasol.repositories.CompraRepository;
 import org.msvcompraentradasol.repositories.EntradaRepository;
@@ -30,12 +31,17 @@ import org.msvcompraentradasol.repositories.SolicitudRepository;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
 class CompraFilaFeignIntegrationTests {
 
     private static final long CLIENTE_EN_FILA = 101L;
     private static final String AUTORIZACION = "autorizacion-101";
+    private static final String TOKEN_USUARIO = JwtTestSupport.bearer(
+            JwtTestSupport.token("101", "CLIENTE"));
+    private static final AtomicReference<String> autorizacionEventos = new AtomicReference<>();
+    private static final AtomicReference<String> autorizacionSectores = new AtomicReference<>();
     private static final AtomicBoolean operacionValidada = new AtomicBoolean();
     private static final AtomicBoolean siguienteAdmitido = new AtomicBoolean();
     private static final AtomicInteger reservasIniciadas = new AtomicInteger();
@@ -64,6 +70,8 @@ class CompraFilaFeignIntegrationTests {
         siguienteAdmitido.set(false);
         reservasIniciadas.set(0);
         idOperacionValidada.set(null);
+        autorizacionEventos.set(null);
+        autorizacionSectores.set(null);
     }
 
     @AfterAll
@@ -82,6 +90,7 @@ class CompraFilaFeignIntegrationTests {
                 HttpRequest.newBuilder(uri("/compras"))
                         .timeout(Duration.ofSeconds(15))
                         .header("Content-Type", "application/json")
+                        .header(HttpHeaders.AUTHORIZATION, TOKEN_USUARIO)
                         .POST(HttpRequest.BodyPublishers.ofString(solicitud))
                         .build(),
                 HttpResponse.BodyHandlers.ofString()
@@ -96,6 +105,7 @@ class CompraFilaFeignIntegrationTests {
         HttpResponse<String> pagada = HTTP.send(
                 HttpRequest.newBuilder(uri("/compras/" + idCompra + "/pago?aprobado=true"))
                         .timeout(Duration.ofSeconds(15))
+                        .header(HttpHeaders.AUTHORIZATION, TOKEN_USUARIO)
                         .PUT(HttpRequest.BodyPublishers.noBody())
                         .build(),
                 HttpResponse.BodyHandlers.ofString()
@@ -115,6 +125,7 @@ class CompraFilaFeignIntegrationTests {
                 HttpRequest.newBuilder(uri("/compras"))
                         .timeout(Duration.ofSeconds(15))
                         .header("Content-Type", "application/json")
+                        .header(HttpHeaders.AUTHORIZATION, TOKEN_USUARIO)
                         .POST(HttpRequest.BodyPublishers.ofString(solicitud("sin-fila-" + UUID.randomUUID(), null)))
                         .build(),
                 HttpResponse.BodyHandlers.ofString()
@@ -122,6 +133,33 @@ class CompraFilaFeignIntegrationTests {
 
         assertThat(respuesta.statusCode()).isEqualTo(HttpStatus.CONFLICT.value());
         assertThat(reservasIniciadas).hasValue(0);
+    }
+
+    @Test
+    void feignEnvíaTokenDeServicioConLaIdentidadDelUsuario() throws Exception {
+        HttpResponse<String> creada = HTTP.send(
+                HttpRequest.newBuilder(uri("/compras"))
+                        .timeout(Duration.ofSeconds(15))
+                        .header("Content-Type", "application/json")
+                        .header(HttpHeaders.AUTHORIZATION, TOKEN_USUARIO)
+                        .POST(HttpRequest.BodyPublishers.ofString(
+                                solicitud("token-" + UUID.randomUUID(), AUTORIZACION)))
+                        .build(),
+                HttpResponse.BodyHandlers.ofString()
+        );
+
+        assertThat(creada.statusCode()).isEqualTo(HttpStatus.CREATED.value());
+        assertTokenDeServicio(autorizacionEventos.get());
+        assertTokenDeServicio(autorizacionSectores.get());
+    }
+
+    private static void assertTokenDeServicio(String authorization) {
+        assertThat(authorization).startsWith("Bearer ");
+        var jwt = JwtTestSupport.decode(authorization.substring("Bearer ".length()));
+        assertThat(jwt.getClaimAsString("iss")).isEqualTo(JwtTestSupport.ISSUER);
+        assertThat(jwt.getSubject()).isEqualTo("msv-compraEntardaSol");
+        assertThat(jwt.getClaimAsStringList("roles")).contains("SERVICIO_INTERNO");
+        assertThat(((Number) jwt.getClaim("usuarioId")).longValue()).isEqualTo(CLIENTE_EN_FILA);
     }
 
     private static String solicitud(String clave, String autorizacion) {
@@ -137,6 +175,8 @@ class CompraFilaFeignIntegrationTests {
             server.createContext("/", exchange -> {
                 String path = exchange.getRequestURI().getPath();
                 String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+                String authorization = exchange.getRequestHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+                (eventos ? autorizacionEventos : autorizacionSectores).set(authorization);
                 try {
                     if (eventos) responderEventos(exchange, path, body);
                     else responderSectores(exchange, path);

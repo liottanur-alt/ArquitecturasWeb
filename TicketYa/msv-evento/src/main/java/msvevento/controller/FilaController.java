@@ -6,6 +6,9 @@ import msvevento.dto.ValidarTurnoRequest;
 import msvevento.dto.ValidarTurnoResponse;
 import msvevento.service.FilaService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,13 +38,29 @@ public class FilaController {
     @PostMapping("/interno/fila/autorizaciones/validar")
     public ValidarTurnoResponse validar(@RequestBody ValidarTurnoRequest request) {
         return filaService.validarAutorizacion(
-                request.eventoId(), request.clienteId(), request.autorizacionCompra(), request.idOperacion());
+                request.eventoId(), clienteInterno(), request.autorizacionCompra(), request.idOperacion());
     }
 
     @PostMapping("/interno/fila/autorizaciones/completar")
     public ValidarTurnoResponse completar(@RequestBody ValidarTurnoRequest request) {
         return filaService.completarCompra(
-                request.eventoId(), request.clienteId(), request.autorizacionCompra(), request.idOperacion());
+                request.eventoId(), clienteInterno(), request.autorizacionCompra(), request.idOperacion());
+    }
+
+    private Long clienteInterno() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication instanceof JwtAuthenticationToken jwt) || !jwt.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Se requiere token de servicio");
+        }
+        Object claim = jwt.getToken().getClaims().get("usuarioId");
+        if (claim == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El token de servicio requiere el claim usuarioId");
+        }
+        try {
+            return claim instanceof Number numero ? numero.longValue() : Long.valueOf(claim.toString());
+        } catch (NumberFormatException exception) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El claim usuarioId debe ser numerico");
+        }
     }
 
     private Long clienteId(Principal principal) {

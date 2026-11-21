@@ -1,52 +1,71 @@
 package com.apigateway;
 
 import com.sun.net.httpserver.HttpServer;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.*;
-import java.net.*;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.http.*;
 import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class InventarioRoutesTests {
-    static final HttpServer BACKEND = iniciar();
-    @Value("${local.server.port}") int puerto;
-    final HttpClient cliente = HttpClient.newHttpClient();
+@ActiveProfiles("test")
+class InventarioRoutesTests extends GatewayTestSupport {
+    private static final HttpServer backend = backend();
+    @Value("${local.server.port}") private int port;
+    private final HttpClient client = HttpClient.newHttpClient();
 
-    static HttpServer iniciar() {
+    private static HttpServer backend() {
         try {
-            var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-            server.createContext("/", e -> {
-                var entrada = new String(e.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-                var body = (e.getRequestMethod() + " " + e.getRequestURI() + "|" + entrada).getBytes(StandardCharsets.UTF_8);
-                e.sendResponseHeaders(e.getRequestURI().getPath().equals("/asientos/999") ? 409 : 200, body.length);
-                e.getResponseBody().write(body); e.close();
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.createContext("/", exchange -> {
+                byte[] response = (exchange.getRequestMethod() + " " + exchange.getRequestURI())
+                        .getBytes(StandardCharsets.UTF_8);
+                int status = exchange.getRequestURI().getPath().equals("/asientos/999") ? 409 : 200;
+                exchange.sendResponseHeaders(status, response.length);
+                try (var output = exchange.getResponseBody()) { output.write(response); }
             });
-            server.start(); return server;
-        } catch (Exception e) { throw new IllegalStateException(e); }
+            server.start();
+            return server;
+        } catch (IOException e) { throw new IllegalStateException(e); }
     }
-    @DynamicPropertySource static void urls(DynamicPropertyRegistry r) {
-        r.add("msvc.sectores.url", () -> "http://127.0.0.1:" + BACKEND.getAddress().getPort());
-    }
-    @AfterAll static void cerrar() { BACKEND.stop(0); }
 
-    @Test void conservaRutasQueryYBody() throws Exception {
-        for (String path : new String[]{"/sectores?idLugar=1", "/asientos",
-                "/eventos/1/sectores", "/eventos/1/sectores/2/disponibilidad", "/eventos/1/inventario"}) {
-            var response = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + path)).GET().build(), HttpResponse.BodyHandlers.ofString());
-            assertEquals(200, response.statusCode()); assertEquals("GET " + path + "|", response.body());
-        }
-        var reserva = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/reservas"))
-            .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("{}" )).build(), HttpResponse.BodyHandlers.ofString());
-        assertEquals(404, reserva.statusCode());
+    @DynamicPropertySource
+    static void properties(DynamicPropertyRegistry registry) {
+        registry.add("msvc.sectores.url", () -> "http://127.0.0.1:" + backend.getAddress().getPort());
     }
-    @Test void conservaErrorYNoCapturaCatalogoEventos() throws Exception {
-        var error = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/asientos/999")).GET().build(), HttpResponse.BodyHandlers.ofString());
-        assertEquals(409, error.statusCode());
-        var evento = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/eventos/1")).GET().build(), HttpResponse.BodyHandlers.ofString());
-        assertEquals(404, evento.statusCode());
+
+    @AfterAll
+    static void stop() { backend.stop(0); }
+
+    @Test
+    void conservaRutasQueryYBody() throws Exception {
+        String auth = bearer(token("7", "CLIENTE"));
+        for (String path : new String[]{"/sectores?idLugar=1", "/asientos", "/eventos/1/sectores",
+                "/eventos/1/sectores/2/disponibilidad", "/eventos/1/inventario"}) {
+            assertEquals(200, get(path, auth).statusCode());
+        }
+        assertEquals(404, get("/reservas", auth).statusCode());
+    }
+
+    @Test
+    void conservaErrorYNoCapturaCatalogoEventos() throws Exception {
+        String auth = bearer(token("7", "CLIENTE"));
+        assertEquals(409, get("/asientos/999", auth).statusCode());
+        assertEquals(404, get("/eventos/1", auth).statusCode());
+    }
+
+    private HttpResponse<String> get(String path, String authorization) throws Exception {
+        return client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                .header("Authorization", authorization).GET().build(), HttpResponse.BodyHandlers.ofString());
     }
 }

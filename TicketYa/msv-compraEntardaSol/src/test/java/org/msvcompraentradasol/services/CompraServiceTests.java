@@ -25,6 +25,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.msvcompraentradasol.dtos.CancelacionEventoResponseDTO;
+import org.msvcompraentradasol.dtos.CompraRequestDTO;
 import org.msvcompraentradasol.dtos.CompraResponseDTO;
 import org.msvcompraentradasol.dtos.ValidarAutorizacionFilaResponseDTO;
 import org.msvcompraentradasol.entities.Compra;
@@ -84,7 +85,7 @@ class CompraServiceTests {
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "1500.00", List.of(11L, 12L)));
 
-        CompraResponseDTO compra = compraService.crearCompra(
+        CompraResponseDTO compra = crearCompra(
                 compraConAsientos("clave-1", ID_CLIENTE, ID_EVENTO, List.of(11L, 12L))
         );
 
@@ -109,7 +110,7 @@ class CompraServiceTests {
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "900.00", List.of()));
 
-        CompraResponseDTO compra = compraService.crearCompra(
+        CompraResponseDTO compra = crearCompra(
                 compraSinAsientos("clave-campo", ID_CLIENTE, ID_EVENTO, 3)
         );
 
@@ -124,10 +125,10 @@ class CompraServiceTests {
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "1500.00", List.of(11L)));
 
-        CompraResponseDTO primera = compraService.crearCompra(
+        CompraResponseDTO primera = crearCompra(
                 compraConAsientos("clave-repetida", ID_CLIENTE, ID_EVENTO, List.of(11L))
         );
-        CompraResponseDTO segunda = compraService.crearCompra(
+        CompraResponseDTO segunda = crearCompra(
                 compraConAsientos("clave-repetida", ID_CLIENTE, ID_EVENTO, List.of(11L))
         );
 
@@ -142,11 +143,11 @@ class CompraServiceTests {
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "1500.00", List.of(11L)));
 
-        compraService.crearCompra(
+        crearCompra(
                 compraConAsientos("clave-unica", ID_CLIENTE, ID_EVENTO, List.of(11L))
         );
 
-        assertThatThrownBy(() -> compraService.crearCompra(
+        assertThatThrownBy(() -> crearCompra(
                 compraConAsientos("clave-unica", ID_CLIENTE, ID_EVENTO, List.of(99L))
         ))
                 .isInstanceOf(IllegalStateException.class)
@@ -165,7 +166,7 @@ class CompraServiceTests {
                 )
         );
 
-        assertThatThrownBy(() -> compraService.crearCompra(
+        assertThatThrownBy(() -> crearCompra(
                 compraConAsientos("clave-borrador", ID_CLIENTE, ID_EVENTO, List.of(11L))
         ))
                 .isInstanceOf(IllegalStateException.class)
@@ -179,7 +180,7 @@ class CompraServiceTests {
         when(eventoClient.obtenerEvento(ID_EVENTO))
                 .thenThrow(feignError(404, "obtenerEvento"));
 
-        assertThatThrownBy(() -> compraService.crearCompra(
+        assertThatThrownBy(() -> crearCompra(
                 compraConAsientos("clave-inexistente", ID_CLIENTE, ID_EVENTO, List.of(11L))
         ))
                 .isInstanceOf(ResponseStatusException.class)
@@ -364,11 +365,15 @@ class CompraServiceTests {
         assertThat(resultado.comprasCanceladas()).isEqualTo(1);
     }
 
+    private CompraResponseDTO crearCompra(CompraRequestDTO dto) {
+        return compraService.crearCompra(dto, ID_CLIENTE);
+    }
+
     private CompraResponseDTO crearCompraPendiente() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "1500.00", List.of(11L, 12L)));
-        return compraService.crearCompra(
+        return crearCompra(
                 compraConAsientos("clave-" + System.nanoTime(), ID_CLIENTE, ID_EVENTO, List.of(11L, 12L))
         );
     }

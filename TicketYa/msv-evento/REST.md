@@ -1,6 +1,6 @@
 # API REST de Eventos
 
-Base actual: http://localhost:8005. Sin autenticación JWT. Todas las rutas del catálogo comienzan con `/api` y el Gateway las enruta.
+Base actual: http://localhost:8005. Todas las rutas del catálogo comienzan con `/api` y el Gateway las enruta. Eventos valida localmente el JWT HS256 con issuer `msv-usuario` y el mismo `JWT_SECRET` del Gateway. El catálogo público solo exige token válido; crear, publicar, editar y consultar `mis-eventos` requiere `ORGANIZADOR` o `ADMINISTRADOR`. Las rutas con segmento `interno` solo aceptan JWT de servicio con `ROLE_SERVICIO_INTERNO`.
 
 Contrato importable: [src/main/resources/static/openapi.json](src/main/resources/static/openapi.json), servido en http://localhost:8005/openapi.json. Incluye parámetros, esquemas, ejemplos de requests/responses y códigos de error.
 
@@ -45,15 +45,15 @@ Response: id, nombre y genero. El campo de identificación se llama id, no idArt
 | Método | Ruta | Resultado |
 | --- | --- | --- |
 | GET | /api/eventos | Lista pública: solo eventos publicados, 200 |
-| GET | /api/eventos/mis-eventos | Lista eventos del organizador indicado en `X-Organizador-Id`, 200 |
-| POST | /api/eventos | Crea EN_CURSO/BORRADOR, 201 |
+| GET | /api/eventos/mis-eventos | Lista eventos del organizador autenticado (`sub` del JWT), 200 |
+| POST | /api/eventos | Crea EN_CURSO/BORRADOR para el organizador autenticado, 201 |
 | GET | /api/eventos/{id} | Consulta evento publicado, 200 o 404 |
-| GET | /api/eventos/interno/{id} | Consulta interna de cualquier estado, para SectorAsiento |
-| PUT | /api/eventos/{id} | Edita borrador propio; requiere `X-Organizador-Id` |
+| GET | /api/eventos/interno/{id} | Consulta interna de cualquier estado; solo `ROLE_SERVICIO_INTERNO` |
+| PUT | /api/eventos/{id} | Edita borrador propio; ignora `X-Organizador-Id` del cliente |
 | DELETE | /api/eventos/{id} | Elimina, 204 o 404 |
-| PATCH | /api/eventos/{id}/publicar | BORRADOR a PUBLICADO si es propio y válido; requiere `X-Organizador-Id` |
-| PATCH | /api/eventos/{id}/finalizar | Marca FINALIZADO al llegar a la fecha/hora del evento; requiere `X-Organizador-Id` |
-| PATCH | /api/eventos/interno/{id}/disponibilidad?agotado={bool} | Sincronización interna de AGOTADO al vender/devolver cupos |
+| PATCH | /api/eventos/{id}/publicar | BORRADOR a PUBLICADO si es propio y válido; ignora `X-Organizador-Id` del cliente |
+| PATCH | /api/eventos/{id}/finalizar | Marca FINALIZADO al llegar a la fecha/hora del evento; ignora `X-Organizador-Id` del cliente |
+| PATCH | /api/eventos/interno/{id}/disponibilidad?agotado={bool} | Sincronización interna de AGOTADO; solo `ROLE_SERVICIO_INTERNO` |
 | PATCH | /api/eventos/{id}/suspender | PUBLICADO a SUSPENDIDO, 200; conflicto 409 |
 | PATCH | /api/eventos/{id}/cancelar | Estado CANCELADO y publicación SUSPENDIDO, 200; repetir devuelve el estado actual; conflicto 409 si FINALIZADO |
 | GET | /api/eventos/buscar | Array de eventos publicados filtrados, 200 |
@@ -75,7 +75,7 @@ Ejemplo de creación/actualización (IDs ilustrativos; usar los obtenidos al cre
 
 Tipos: RECITAL, TEATRO, DEPORTE, CONFERENCIA, FESTIVAL y OTRO. El lugar y los artistas deben existir en la base de Eventos. idOrganizador es una referencia externa que no se valida contra Usuarios. fechaHora es una fecha y hora local sin Z ni offset.
 
-Aunque el DTO acepta estado y estadoPublicacion, el servicio ignora esos campos al crear/actualizar. Al crear fija EN_CURSO/BORRADOR. Para editar o publicar, enviar el ID del organizador dueño en `X-Organizador-Id`; si no coincide, responde 403. Las consultas públicas (`GET /api/eventos`, `/buscar` y `/{id}`) solo muestran PUBLICADO. Para consultar eventos propios, incluso borradores, usar `GET /api/eventos/mis-eventos` con el mismo encabezado. `GET /interno/{id}` es para SectorAsiento, que necesita preparar inventario antes de publicar.
+Aunque el DTO acepta estado y estadoPublicacion, el servicio ignora esos campos al crear/actualizar. Al crear fija EN_CURSO/BORRADOR y usa el `sub` del JWT como `idOrganizador`, sobrescribiendo cualquier valor del cuerpo. Para editar o publicar se compara ese `sub` con el dueño; un `X-Organizador-Id` enviado por el cliente se reemplaza por la identidad verificada, por lo que no puede suplantar al organizador. Las consultas públicas (`GET /api/eventos`, `/buscar` y `/{id}`) solo muestran PUBLICADO. Para consultar eventos propios, incluso borradores, usar `GET /api/eventos/mis-eventos`. Las rutas `interno` son exclusivas de SectorAsiento, Usuarios y Compras mediante Feign con JWT de servicio; necesitan preparar inventario antes de publicar y sincronizar agotamiento.
 
 Antes de publicar se requieren nombre, descripción, tipo, organizador con ID positivo, fecha futura, lugar con nombre/dirección/coordenadas y al menos un participante. También debe existir al menos un sector de inventario con precio no negativo y capacidad positiva. Si falta información, responde 400 (datos del evento) o 409 (sectores); el estado queda BORRADOR. Si SectorAsiento no responde, devuelve 503 y no publica. Al venderse todos los cupos, SectorAsiento marca el evento AGOTADO; una devolución que libera cupo lo devuelve a EN_CURSO cuando la venta sigue habilitada. El organizador puede finalizarlo con `PATCH /{id}/finalizar` una vez alcanzada la fecha/hora; FINALIZADO y AGOTADO rechazan nuevas ventas. Cancelar exige que el estado no sea FINALIZADO; repetir una cancelación devuelve el estado actual para permitir reintentos seguros.
 
@@ -135,7 +135,7 @@ Se agrega `lugares.ciudad_normalizada` con indice y normalizacion automatica al 
 ## Errores y límites actuales
 
 - 400: JSON o enums mal formados, tipos de parámetros inválidos, fecha no convertible, ordenamiento inválido o datos obligatorios incompletos al publicar.
-- 403: el ID enviado en `X-Organizador-Id` no es dueño del borrador.
+- 403: el `sub` del JWT no es dueño del borrador, o la ruta `interno` no fue invocada con `ROLE_SERVICIO_INTERNO`.
 - 404: artista, lugar o evento publicado no encontrado; referencias inexistentes al guardar eventos.
 - 409: publicación sin sectores válidos o suspender/cancelar desde un estado no admitido.
 - 503: SectorAsiento no disponible para validar sectores al publicar.

@@ -9,6 +9,8 @@ services:
       MSV_EVENTO_URL: http://eventos:8005
       MSV_COMPRAS_URL: http://compras:8003
       MSV_SECTORES_URL: http://sectores:8002
+      JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
+      ADMIN_SEED_PASSWORD: "${ADMIN_SEED_PASSWORD:?Definir ADMIN_SEED_PASSWORD en .env o en el entorno}"
     ports:
       - "127.0.0.1:8004:8004"
     depends_on:
@@ -35,6 +37,7 @@ services:
       REDIS_PORT: 6379
       FILA_MAX_COMPRADORES_SIMULTANEOS: ${FILA_MAX_COMPRADORES_SIMULTANEOS:-10}
       FILA_DURACION_TURNO_SEGUNDOS: 900
+      JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
     ports:
       - "127.0.0.1:8005:8005"
     depends_on:
@@ -58,6 +61,7 @@ services:
       SECTOR_DB_PASSWORD: ${SECTOR_DB_PASSWORD:-${DB_PASSWORD:-sector_dev}}
       MSVC_EVENTOS_URL: http://eventos:8005
       MSVC_COMPRAS_URL: http://compras:8003
+      JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
     ports:
       - "127.0.0.1:8002:8002"
     depends_on:
@@ -79,6 +83,7 @@ services:
       DB_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
       MSVC_EVENTOS_URL: http://eventos:8005
       MSVC_SECTORES_URL: http://sectores:8002
+      JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
     ports:
       - "127.0.0.1:8003:8003"
     depends_on:
@@ -103,6 +108,7 @@ services:
       MSVC_EVENTOS_URL: http://eventos:8005
       MSVC_SECTORES_URL: http://sectores:8002
       MSVC_COMPRAS_URL: http://compras:8003
+      JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

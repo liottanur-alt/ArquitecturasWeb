@@ -6,7 +6,7 @@ Actualizado: 16/11/2026. Ejecutar los comandos desde la raíz, donde está docke
 
 ## Todo con Docker
 
-Abrir Docker Desktop con contenedores Linux y ejecutar:
+Copiar `.env.example` a `.env` y completar `JWT_SECRET` y `ADMIN_SEED_PASSWORD` antes del primer arranque. Abrir Docker Desktop con contenedores Linux y ejecutar:
 
 ```powershell
 docker compose up --build -d --wait --wait-timeout 600
@@ -18,8 +18,17 @@ Deben aparecer siete contenedores saludables: Gateway, Usuarios, Eventos, Sector
 Comprobar en el navegador:
 
 - http://localhost:8080/actuator/health
-- http://localhost:8080/roles
 - http://localhost:8080/api/eventos
+
+`/roles` y el resto de las rutas protegidas requieren `Authorization: Bearer <token>`. Para obtener un token con la cuenta de administrador de prueba:
+
+```powershell
+$login = Invoke-RestMethod -Method Post -Uri http://localhost:8080/auth/login `
+  -ContentType application/json `
+  -Body '{"email":"admin@admin.com","password":"CLAVE_DE_.ENV"}'
+$headers = @{ Authorization = "Bearer $($login.accessToken)" }
+Invoke-RestMethod -Uri http://localhost:8080/roles -Headers $headers
+```
 
 Usuarios usa MongoDB en 27017. Eventos, Sectores y Compras usan MySQL en 3306. Ver [cuentas y credenciales](docker/mysql/README.md).
 
@@ -57,4 +66,4 @@ Esto detiene el sistema y conserva los datos. Para volver a iniciarlo, repetir e
 | Un servicio no arranca | Consultar `docker compose logs --tail 50 NOMBRE`. |
 | Instalación anterior con bases separadas | Seguir la [migración](docker/mysql/README.md) antes de iniciar las aplicaciones. |
 
-La etapa actual no requiere token. Los pagos y reintegros son simulados; la [auditoría](tests/system/RESULTADOS.md) documenta las limitaciones de seguridad.
+El Gateway valida JWT, bloquea las rutas internas y reemplaza `X-Organizador-Id` con el `sub` verificado. Eventos, Sectores y Compras también validan el token localmente y exigen un JWT de servicio en sus rutas `interno` y en las llamadas Feign reservadas. Los pagos y reintegros siguen siendo simulados. Ver la [política del Gateway](api-gateway/README.md) y los [resultados](tests/system/RESULTADOS.md).

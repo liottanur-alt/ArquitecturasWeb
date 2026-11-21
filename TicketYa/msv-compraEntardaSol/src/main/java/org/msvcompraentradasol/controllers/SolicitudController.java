@@ -2,6 +2,7 @@ package org.msvcompraentradasol.controllers;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import org.msvcompraentradasol.config.SecurityConfig;
 import org.msvcompraentradasol.dtos.SolicitudRequestDTO;
 import org.msvcompraentradasol.dtos.SolicitudResolucionDTO;
 import org.msvcompraentradasol.dtos.SolicitudResponseDTO;
@@ -31,7 +32,7 @@ public class SolicitudController {
             @Valid @RequestBody SolicitudRequestDTO dto
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(solicitudService.crearSolicitud(dto));
+                .body(solicitudService.crearSolicitud(dto, SecurityConfig.authenticatedUserId()));
     }
 
     @GetMapping("/{id}")
@@ -65,7 +66,7 @@ public class SolicitudController {
     ) {
         return ResponseEntity.ok(solicitudService.resolverSolicitud(
                 id,
-                dto.getIdAdministrador(),
+                SecurityConfig.authenticatedUserId(),
                 dto.getEstadoSolicitud()
         ));
     }

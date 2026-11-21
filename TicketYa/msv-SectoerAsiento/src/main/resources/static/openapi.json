@@ -3,7 +3,7 @@
   "info": {
     "title": "TicketYa - Sectores, Asientos e Inventario",
     "version": "1.1.0",
-    "description": "Entrega 1: sin JWT. Operaciones internas de inventario invocadas por Compras/Eventos; no exponer como operaciones autorizadas de un cliente final en la entrega 2."
+    "description": "Control de inventario con validación local de JWT HS256 (issuer msv-usuario). Las rutas interno y /reservas/** exigen ROLE_SERVICIO_INTERNO; POST /reservas usa el claim usuarioId del JWT de servicio como idCliente."
   },
   "servers": [
     {
@@ -13,6 +13,11 @@
     {
       "url": "http://localhost:8002",
       "description": "Microservicio local"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
     }
   ],
   "paths": {
@@ -1694,6 +1699,14 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT HS256 emitido por msv-usuario. Las rutas interno y /reservas/** exigen roles=[SERVICIO_INTERNO]."
+      }
+    },
     "schemas": {
       "SectorRequest": {
         "type": "object",

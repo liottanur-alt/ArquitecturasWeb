@@ -3,15 +3,19 @@
   "info": {
     "title": "TicketYa - API de Eventos",
     "version": "1.2.0",
-    "description": "Contrato actual sin JWT. Incluye catálogo de eventos, lugares y artistas. Documenta limitaciones reales, sin prometer validaciones no implementadas. Consultar REST.md y docs/PRUEBAS-POSTMAN.md."
+    "description": "Contrato actual con validación local de JWT HS256 (issuer msv-usuario). Incluye catálogo de eventos, lugares y artistas. Las operaciones de organizador usan el sub del JWT; las rutas interno requieren ROLE_SERVICIO_INTERNO. Consultar REST.md y docs/PRUEBAS-POSTMAN.md."
   },
   "servers": [
     {
       "url": "http://localhost:8005",
-      "description": "Microservicio directo; el catálogo aún no está en el Gateway."
+      "description": "Microservicio directo; el Gateway en 8080 también enruta el catálogo, excepto las rutas interno."
     }
   ],
-  "security": [],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "tags": [
     {
       "name": "Eventos"
@@ -1016,7 +1020,7 @@
         ],
         "operationId": "put_api_eventos_id",
         "summary": "Actualizar evento",
-        "description": "Edita únicamente borradores del organizador indicado en X-Organizador-Id. El estado y estadoPublicacion se conservan; lugar y participantes se actualizan con sus IDs. No es parcial.",
+        "description": "Edita únicamente borradores del organizador identificado por el sub del JWT. Cualquier X-Organizador-Id del cliente se sobrescribe. El estado y estadoPublicacion se conservan; lugar y participantes se actualizan con sus IDs. No es parcial.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1222,7 +1226,7 @@
         ],
         "operationId": "patch_api_eventos_id_publicar",
         "summary": "Publicar evento",
-        "description": "Solo admite borradores del organizador indicado en X-Organizador-Id y los cambia a PUBLICADO tras validar datos y sectores. Si otro organizador lo intenta, devuelve 403. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
+        "description": "Solo admite borradores del organizador identificado por el sub del JWT y los cambia a PUBLICADO tras validar datos y sectores. Si otro organizador lo intenta, devuelve 403. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1575,7 +1579,8 @@
           {
             "name": "X-Organizador-Id",
             "in": "header",
-            "required": true,
+            "required": false,
+            "description": "Se ignora: el servidor usa el sub del JWT verificado.",
             "schema": {
               "type": "integer",
               "format": "int64"
@@ -1689,7 +1694,8 @@
           {
             "name": "X-Organizador-Id",
             "in": "header",
-            "required": true,
+            "required": false,
+            "description": "Se ignora: el servidor usa el sub del JWT verificado.",
             "schema": {
               "type": "integer",
               "format": "int64"
@@ -1987,6 +1993,14 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT HS256 emitido por msv-usuario. Las rutas interno exigen roles=[SERVICIO_INTERNO]."
+      }
+    },
     "schemas": {
       "ArtistaRequest": {
         "type": "object",

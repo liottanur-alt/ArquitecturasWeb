@@ -82,7 +82,7 @@ class SolicitudServiceTests {
     void crearSolicitudValidaQuedaPendiente() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
 
-        SolicitudResponseDTO respuesta = solicitudService.crearSolicitud(
+        SolicitudResponseDTO respuesta = crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         );
 
@@ -100,7 +100,7 @@ class SolicitudServiceTests {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
 
         assertThatThrownBy(() -> solicitudService.crearSolicitud(
-                solicitud(entrada.getId(), 999L)
+                solicitud(entrada.getId(), 999L), 999L
         ))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(exception -> assertThat(
@@ -110,7 +110,7 @@ class SolicitudServiceTests {
 
     @Test
     void crearSolicitudDeEntradaInexistenteDevuelve404() {
-        assertThatThrownBy(() -> solicitudService.crearSolicitud(solicitud(999L, ID_CLIENTE)))
+        assertThatThrownBy(() -> crearSolicitud(solicitud(999L, ID_CLIENTE)))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(exception -> assertThat(
                         ((ResponseStatusException) exception).getStatusCode().value()
@@ -125,7 +125,7 @@ class SolicitudServiceTests {
                 )).plusHours(24))
         );
 
-        assertThatThrownBy(() -> solicitudService.crearSolicitud(
+        assertThatThrownBy(() -> crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         ))
                 .isInstanceOf(IllegalStateException.class)
@@ -144,7 +144,7 @@ class SolicitudServiceTests {
                 )
         );
 
-        assertThatThrownBy(() -> solicitudService.crearSolicitud(
+        assertThatThrownBy(() -> crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         ))
                 .isInstanceOf(IllegalStateException.class)
@@ -154,9 +154,9 @@ class SolicitudServiceTests {
     @Test
     void crearSolicitudDuplicadaFalla() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
-        solicitudService.crearSolicitud(solicitud(entrada.getId(), ID_CLIENTE));
+        crearSolicitud(solicitud(entrada.getId(), ID_CLIENTE));
 
-        assertThatThrownBy(() -> solicitudService.crearSolicitud(
+        assertThatThrownBy(() -> crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         ))
                 .isInstanceOf(IllegalStateException.class)
@@ -168,7 +168,7 @@ class SolicitudServiceTests {
         entrada.setEstadoEntrada(EstadoEntrada.DEVOLUCION_ACEPTADA);
         entradaRepository.save(entrada);
 
-        assertThatThrownBy(() -> solicitudService.crearSolicitud(
+        assertThatThrownBy(() -> crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         ))
                 .isInstanceOf(IllegalStateException.class)
@@ -178,7 +178,7 @@ class SolicitudServiceTests {
     @Test
     void resolverAceptadaLiberaEntradaYReintegra() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
-        SolicitudResponseDTO creada = solicitudService.crearSolicitud(
+        SolicitudResponseDTO creada = crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         );
         when(reservaClient.devolver(eq(ID_RESERVA), any()))
@@ -208,7 +208,7 @@ class SolicitudServiceTests {
     @Test
     void resolverAceptadaUsaLaFechaDeLaSolicitudNoLaActual() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
-        SolicitudResponseDTO creada = solicitudService.crearSolicitud(
+        SolicitudResponseDTO creada = crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         );
 
@@ -231,7 +231,7 @@ class SolicitudServiceTests {
     @Test
     void resolverRechazadaDevuelveEntradaAlCliente() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
-        SolicitudResponseDTO creada = solicitudService.crearSolicitud(
+        SolicitudResponseDTO creada = crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         );
 
@@ -249,7 +249,7 @@ class SolicitudServiceTests {
     @Test
     void resolverMismoEstadoEsIdempotente() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
-        SolicitudResponseDTO creada = solicitudService.crearSolicitud(
+        SolicitudResponseDTO creada = crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         );
         when(reservaClient.devolver(eq(ID_RESERVA), any()))
@@ -269,7 +269,7 @@ class SolicitudServiceTests {
     @Test
     void resolverConOtroEstadoFalla() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
-        SolicitudResponseDTO creada = solicitudService.crearSolicitud(
+        SolicitudResponseDTO creada = crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         );
         solicitudService.resolverSolicitud(creada.id(), 9L, EstadoSolicitud.RECHAZADA);
@@ -304,7 +304,7 @@ class SolicitudServiceTests {
     @Test
     void resolverSolicitudDeEventoCanceladoFalla() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
-        SolicitudResponseDTO creada = solicitudService.crearSolicitud(
+        SolicitudResponseDTO creada = crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         );
         entrada.setEstadoEntrada(EstadoEntrada.EVENTO_CANCELADO);
@@ -320,7 +320,7 @@ class SolicitudServiceTests {
     @Test
     void consultasDeSolicitudes() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
-        SolicitudResponseDTO creada = solicitudService.crearSolicitud(
+        SolicitudResponseDTO creada = crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         );
 
@@ -328,6 +328,10 @@ class SolicitudServiceTests {
         assertThat(solicitudService.listarPorEntrada(entrada.getId())).hasSize(1);
         assertThat(solicitudService.listarPendientes()).hasSize(1);
         assertThat(solicitudService.listarPorCliente(ID_CLIENTE)).hasSize(1);
+    }
+
+    private SolicitudResponseDTO crearSolicitud(SolicitudRequestDTO dto) {
+        return solicitudService.crearSolicitud(dto, ID_CLIENTE);
     }
 
     private static SolicitudRequestDTO solicitud(Long idEntrada, Long idCliente) {

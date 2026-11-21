@@ -11,6 +11,11 @@ msvc:
   eventos:
     url: ${MSVC_EVENTOS_URL:http://localhost:8005}
 
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: msv-usuario
+
 spring:
   application:
     name: apigateway
@@ -22,7 +27,7 @@ spring:
             - id: msvc-usuarios
               uri: ${msvc.usuarios.url}
               predicates:
-                - Path=/usuarios,/usuarios/**,/roles,/roles/**
+                - Path=/auth,/auth/**,/usuarios,/usuarios/**,/roles,/roles/**
             - id: msvc-eventos
               uri: ${msvc.eventos.url}
               predicates:

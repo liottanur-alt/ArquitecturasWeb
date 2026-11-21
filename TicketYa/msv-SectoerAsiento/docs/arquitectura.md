@@ -15,7 +15,7 @@ flowchart LR
     E -->|cancelacion a coordinar por el proveedor| S
 ```
 
-El gateway, las rutas de inventario y la integracion con Eventos y Compras estan implementados. Usuarios consulta la disponibilidad global de sus candidatos mediante `POST /interno/inventario/disponibilidad`, sin crear reservas. El lote comparte bloqueos y liberacion de vencimientos con las operaciones de inventario. No se comparten entidades JPA entre servicios: idLugar, idCliente e idEvento son referencias externas. EventoInventario replica lugar/fecha del proveedor para coordinar su inventario; Eventos sigue siendo la fuente de verdad y se consulta por Feign antes de vender/confirmar y al devolver. El lote no consulta Eventos: Usuarios reutiliza su catalogo para validar fecha/publicacion, y Compras revalida al reservar.
+El gateway, las rutas de inventario y la integracion con Eventos y Compras estan implementados. Sectores valida el JWT localmente; `/interno/**` y `/reservas/**` solo aceptan `ROLE_SERVICIO_INTERNO` y `POST /reservas` toma `idCliente` del claim `usuarioId` del JWT de servicio. Usuarios consulta la disponibilidad global de sus candidatos mediante `POST /interno/inventario/disponibilidad`, sin crear reservas. El lote comparte bloqueos y liberacion de vencimientos con las operaciones de inventario. No se comparten entidades JPA entre servicios: idLugar, idCliente e idEvento son referencias externas. EventoInventario replica lugar/fecha del proveedor para coordinar su inventario; Eventos sigue siendo la fuente de verdad y se consulta por Feign antes de vender/confirmar y al devolver. El lote no consulta Eventos: Usuarios reutiliza su catalogo para validar fecha/publicacion, y Compras revalida al reservar.
 
 ## Modelo local
 

@@ -106,6 +106,8 @@ class EventoCacheIntegrationTests {
 
         eventoService.actualizarAgotamiento(eventoId, true);
 
+        assertThat(eventoRepository.findById(eventoId).orElseThrow().getEstado())
+                .isEqualTo(EstadoEvento.AGOTADO);
         assertThat(eventoService.listarEventosPublicos())
                 .singleElement().extracting(evento -> evento.getEstado().name()).isEqualTo("AGOTADO");
         assertThat(eventoService.buscarEventoPublicado(eventoId).getEstado()).isEqualTo(EstadoEvento.AGOTADO);

@@ -3,7 +3,7 @@
   "info": {
     "title": "TicketYa - API de Usuarios",
     "version": "1.9.0",
-    "description": "Contrato de la entrega 1, sin JWT. Usuarios, roles y artistas favoritos. Los ejemplos de IDs son ilustrativos. Los errores de Spring pueden omitir detail; solo status es obligatorio en Error. Preferencias de tipos de evento y ciudad, persistidas en MongoDB. Recomendaciones por artista (5), tipo (3) y ciudad (2), con filtros de venta y desempate estable. HU8: filtro comun de eventos ya comprados e indicador de historial verificado. Catalogo unico por solicitud (HU7). HU9: disponibilidad real por lote desde Sectores/Asientos; indica disponibilidad no verificada ante fallos. HU10: consultas filtradas OR y por lote en Eventos; no descarga el catalogo completo ni limita antes de clasificar."
+    "description": "Contrato con autenticacion JWT HS256 (issuer msv-usuario): /auth/registro y /auth/login son publicos y el resto exige Bearer token. Usuarios, roles y artistas favoritos. Los ejemplos de IDs son ilustrativos. Los errores de Spring pueden omitir detail; solo status es obligatorio en Error. Preferencias de tipos de evento y ciudad, persistidas en MongoDB. Recomendaciones por artista (5), tipo (3) y ciudad (2), con filtros de venta y desempate estable. HU8: filtro comun de eventos ya comprados e indicador de historial verificado. Catalogo unico por solicitud (HU7). HU9: disponibilidad real por lote desde Sectores/Asientos; indica disponibilidad no verificada ante fallos. HU10: consultas filtradas OR y por lote en Eventos; no descarga el catalogo completo ni limita antes de clasificar."
   },
   "servers": [
     {
@@ -26,7 +26,11 @@
       "name": "Favoritos"
     }
   ],
-  "security": [],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "paths": {
     "/usuarios": {
       "get": {
@@ -1499,6 +1503,14 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT HS256 emitido por msv-usuario. Las rutas /auth/registro y /auth/login son publicas."
+      }
+    },
     "schemas": {
       "UsuarioRequest": {
         "type": "object",

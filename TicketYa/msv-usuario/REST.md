@@ -301,15 +301,57 @@ La busqueda por preferencias usa OR; no reutiliza el endpoint publico `/api/even
 - 404: usuario o rol inexistente.
 - 409: email, DNI o nombre de rol duplicado; rol en uso; otra restriccion de integridad.
 
-## Autenticacion diferida
+## Autenticacion (Stage 1)
 
-La version activa no requiere token ni contrasena. Crear cuentas con POST /usuarios e idRol obtenido de GET /roles. Las rutas /auth/login y /auth/registro estan retiradas y devuelven 404.
+Rutas publicas: `POST /auth/registro`, `POST /auth/login`, `/actuator/health`, `/error` y `/openapi.json`. El resto exige `Authorization: Bearer <token>`. Los contratos `interno` de Eventos, Sectores y Compras se invocan mediante Feign con un JWT de servicio HS256 del mismo secreto e issuer, `sub` = `msv-usuario`, `roles=["SERVICIO_INTERNO"]`, validez de 300 segundos y `usuarioId` opcional; no aceptan el token del usuario final por Gateway.
 
-Los roles siguen siendo datos del dominio; en esta etapa no restringen acceso a los endpoints. La autenticacion y autorizacion se incorporaran cuando se restaure y adapte el modulo JWT.
+`POST /auth/registro` acepta `nombre`, `email`, `dni`, `ciudad` y `password` (minimo 4 caracteres y hasta 72 bytes) y crea siempre un `CLIENTE`, aunque el cuerpo envie otro rol. `POST /auth/login` devuelve `{ "accessToken": "...", "tokenType": "Bearer", "expiresIn": 1800 }`. El JWT incluye `sub` con el ID numerico, `roles`, emisor `msv-usuario` y expiracion; no incluye contrasena ni datos sensibles. Las respuestas de usuario nunca exponen `passwordHash`.
+
+Autorizacion: `/roles` requiere `ADMINISTRADOR`. El perfil, las preferencias, los favoritos y las recomendaciones de un usuario requieren ser el dueno o `ADMINISTRADOR`. `GET /usuarios` y `POST /usuarios` requieren `ADMINISTRADOR`. Un usuario puede editar su perfil, pero no asignarse otro rol.
+
+### Migracion de cuentas existentes sin passwordHash
+
+Las cuentas creadas antes de este cambio no tienen `passwordHash` y no pueden iniciar sesion. No hay migracion automatica. Para conservar el `_id` y las referencias desde otros servicios, asignar un hash BCrypt al documento ya existente.
+
+1. Generar el hash desde `msv-usuario` usando las dependencias del proyecto:
+
+```powershell
+.\mvnw.cmd -q dependency:build-classpath "-Dmdep.outputFile=target/classpath.txt"
+$src = Join-Path $env:TEMP 'HashBcrypt.java'
+$code = @'
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+public class HashBcrypt {
+  public static void main(String[] args) {
+    System.out.println(new BCryptPasswordEncoder().encode(args[0]));
+  }
+}
+'@
+[System.IO.File]::WriteAllText($src, $code, [System.Text.UTF8Encoding]::new($false))
+java -cp (Get-Content target/classpath.txt -Raw) $src 'CLAVE_TEMPORAL'
+Remove-Item $src -Force
+```
+
+2. Copiar el hash generado y actualizar el documento en MongoDB desde la raiz:
+
+```powershell
+docker compose exec mongodb mongosh usuarios --eval '
+db.usuarios.updateOne(
+  { email: "usuario@example.com" },
+  { $set: { passwordHash: "HASH_BCRYPT_GENERADO" } }
+)'
+```
+
+3. Comprobar el acceso:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:8004/auth/login -ContentType application/json -Body '{"email":"usuario@example.com","password":"CLAVE_TEMPORAL"}'
+```
+
+Repetir para cada cuenta. No existe todavia un endpoint de cambio de clave: entregar la contrasena temporal por un canal seguro.
 
 ## Verificacion
 
-`mvnw.cmd test` ejecuta pruebas unitarias, persistencia MongoDB y CRUD HTTP sin token. Requiere un servidor MongoDB disponible; usa una base temporal aislada que se elimina al terminar.
+`mvnw.cmd test` ejecuta pruebas unitarias, persistencia MongoDB, flujos `/auth/**` con JWT reales y comprobaciones de rutas protegidas. Requiere un servidor MongoDB disponible; usa una base temporal aislada que se elimina al terminar. El perfil de test usa un secreto JWT propio, reemplazable mediante `JWT_SECRET`.
 
 ## Contrato OpenAPI y colección de pruebas
 

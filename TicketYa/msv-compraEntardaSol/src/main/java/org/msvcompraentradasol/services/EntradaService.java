@@ -76,7 +76,9 @@ public class EntradaService {
 
     @Transactional
     public EntradaResponseDTO marcarUsadaPorQr(String qr) {
-        return toResponse(marcar(obtenerPorQr(qr)));
+        Entrada entrada = entradaRepository.findByQrParaActualizar(qr)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
+        return toResponse(marcar(entrada));
     }
 
     private Entrada marcar(Entrada entrada) {

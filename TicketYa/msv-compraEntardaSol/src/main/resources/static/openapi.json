@@ -3,12 +3,17 @@
   "info": {
     "title": "TicketYa - Compras, entradas y solicitudes",
     "version": "1.2.0",
-    "description": "Microservicio de compra (HU-08 a HU-14): reserva, pago simulado, emision de entradas con QR, devoluciones, reintegros y cancelacion de eventos."
+    "description": "Microservicio de compra (HU-08 a HU-14) con validacion local de JWT HS256 (issuer msv-usuario). El cliente se toma del sub del token; las rutas interno exigen ROLE_SERVICIO_INTERNO."
   },
   "servers": [
     {
       "url": "http://localhost:8003",
       "description": "Ejecucion local"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
     }
   ],
   "tags": [
@@ -683,6 +688,14 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT HS256 emitido por msv-usuario. Las rutas interno exigen roles=[SERVICIO_INTERNO]."
+      }
+    },
     "parameters": {
       "IdCompra": {
         "name": "id",

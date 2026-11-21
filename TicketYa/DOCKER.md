@@ -42,4 +42,17 @@ MySQL publica 3306 y conserva los esquemas SQL en ticketya_mysql_data; el esquem
 
 Las credenciales de desarrollo están en [MySQL](docker/mysql/README.md). Se pueden personalizar copiando .env.mysql.example a .env antes de crear el volumen; cambiar ese archivo no actualiza contraseñas ya guardadas en MySQL.
 
+## Variables de autenticación
+
+Antes de arrancar el Compose, copiar `.env.example` a `.env` y completar:
+
+| Variable | Uso |
+| --- | --- |
+| `JWT_SECRET` | Secreto HS256 compartido por Usuarios, Gateway, Eventos, Sectores y Compras para firmar y validar JWT de usuarios y de servicio. Mínimo 32 bytes y estable entre reinicios. |
+| `ADMIN_SEED_PASSWORD` | Clave del administrador de prueba creado por el perfil dev de Usuarios. No dejar la clave por defecto `1234`. |
+
+Si también se personalizan credenciales MySQL, agregar al mismo `.env` las variables de `.env.mysql.example`. Compose falla de inmediato con un mensaje claro si falta `JWT_SECRET` o `ADMIN_SEED_PASSWORD`. Usuarios no tiene secreto JWT por defecto; la clave `1234` del administrador de prueba solo se aplica si se ejecuta la aplicación fuera de Compose sin definir `ADMIN_SEED_PASSWORD`.
+
+Estas variables, junto con `JWT_SECRET`, deben estar también en la configuración de ejecución de IntelliJ de cada aplicación iniciada fuera de Compose. Las pruebas Java usan un secreto propio de test, reemplazable mediante `JWT_SECRET`; ningún perfil principal incluye un secreto por defecto.
+
 Ver [arranque rápido](GUIA-ARRANQUE.md), [puertos](Guia.md), [migración de datos anteriores](docker/mysql/README.md) y [pruebas](tests/system/README.md).

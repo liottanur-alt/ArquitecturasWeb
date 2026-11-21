@@ -52,9 +52,11 @@ public class EventoController {
     // Crear un evento
     @PostMapping
     public ResponseEntity<EventoResponseDTO> crearEvento(
+            @RequestHeader("X-Organizador-Id") Long idOrganizador,
             @RequestBody EventoRequestDTO dto
     ) {
 
+        dto.setIdOrganizador(idOrganizador);
         EventoResponseDTO eventoCreado = eventoService.crearEvento(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(eventoCreado);

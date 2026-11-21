@@ -117,16 +117,20 @@ class ConsultaRecomendacionIntegrationTests {
     @Test
     void endpointsValidanEntradaYDevuelvenContratoMinimo() throws Exception {
         Evento evento = evento(TipoEvento.RECITAL, lugar("Tandil"));
-        mvc.perform(post("/interno/eventos/recomendaciones/por-ids").contentType("application/json")
-                .content("{\"idsEventos\":[" + evento.getId() + "]}"))
+        String autorizacion = JwtTestSupport.bearer(JwtTestSupport.serviceToken());
+        mvc.perform(post("/interno/eventos/recomendaciones/por-ids")
+                        .header("Authorization", autorizacion).contentType("application/json")
+                        .content("{\"idsEventos\":[" + evento.getId() + "]}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(evento.getId()))
                 .andExpect(jsonPath("$[0].descripcion").doesNotExist()).andExpect(jsonPath("$[0].idOrganizador").doesNotExist());
         for (String invalido : List.of("{}", "{\"idsEventos\":[0]}", "{\"idsEventos\":[null]}")) {
-            mvc.perform(post("/interno/eventos/recomendaciones/por-ids").contentType("application/json").content(invalido))
+            mvc.perform(post("/interno/eventos/recomendaciones/por-ids")
+                            .header("Authorization", autorizacion).contentType("application/json").content(invalido))
                     .andExpect(status().isBadRequest());
         }
-        mvc.perform(post("/interno/eventos/recomendaciones/candidatos").contentType("application/json")
-                .content("{\"tiposEventoPreferidos\":[\"INVALIDO\"],\"artistasFavoritos\":[],\"fechaDesde\":\"2030-01-01T12:00:00\"}"))
+        mvc.perform(post("/interno/eventos/recomendaciones/candidatos")
+                        .header("Authorization", autorizacion).contentType("application/json")
+                        .content("{\"tiposEventoPreferidos\":[\"INVALIDO\"],\"artistasFavoritos\":[],\"fechaDesde\":\"2030-01-01T12:00:00\"}"))
                 .andExpect(status().isBadRequest());
     }
 }

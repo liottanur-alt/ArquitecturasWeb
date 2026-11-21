@@ -4,7 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.msvcompraentradasol.dtos.EntradaResponseDTO;
@@ -106,6 +112,40 @@ class EntradaServiceTests {
         assertThatThrownBy(() -> entradaService.marcarUsadaPorQr(entrada.getQr()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("utilizada");
+    }
+
+    @Test
+    void marcarUsadaPorQrConcurrenteAceptaUnSoloEscaneo() throws Exception {
+        Entrada entrada = crearEntrada(11L);
+        String qr = entrada.getQr();
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CountDownLatch inicio = new CountDownLatch(1);
+        List<Future<String>> resultados = new ArrayList<>();
+        try {
+            for (int i = 0; i < 2; i++) {
+                resultados.add(pool.submit(() -> {
+                    inicio.await();
+                    try {
+                        entradaService.marcarUsadaPorQr(qr);
+                        return "ok";
+                    } catch (IllegalStateException exception) {
+                        return exception.getMessage();
+                    }
+                }));
+            }
+            inicio.countDown();
+
+            List<String> desenlaces = new ArrayList<>();
+            for (Future<String> resultado : resultados) {
+                desenlaces.add(resultado.get(15, TimeUnit.SECONDS));
+            }
+            assertThat(desenlaces).containsExactlyInAnyOrder("ok", "La entrada ya fue utilizada");
+            assertThat(entradaRepository.findByQr(qr).orElseThrow().getEstadoqr())
+                    .isEqualTo(Estadoqr.ESCANEADO);
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     @Test

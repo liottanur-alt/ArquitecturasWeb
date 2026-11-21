@@ -20,6 +20,7 @@ import com.msvusuario.repository.UsuarioRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.concurrent.DelegatingSecurityContextExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
@@ -33,12 +34,24 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
 public class RecomendacionService {
+    /** El historial es independiente de las fuentes; se traslada el SecurityContext para el token de servicio. */
+    private static final Executor HISTORIAL_EXECUTOR = new DelegatingSecurityContextExecutor(
+            Executors.newFixedThreadPool(16, tarea -> {
+                Thread hilo = new Thread(tarea, "recomendaciones-historial");
+                hilo.setDaemon(true);
+                return hilo;
+            }));
+
     private final UsuarioRepository usuarios;
     private final RecomendacionPreferenciasService preferencias;
     private final RecomendacionComprasService compras;
@@ -74,6 +87,8 @@ public class RecomendacionService {
         if (!usuarios.existsById(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
         }
+        CompletableFuture<Historial> historialFuturo = CompletableFuture.supplyAsync(
+                () -> consultarHistorial(idUsuario), HISTORIAL_EXECUTOR);
         List<FuenteRecomendacion> noDisponibles = new ArrayList<>();
         LocalDateTime instanteConsulta = LocalDateTime.now(reloj);
         CatalogoSolicitud catalogo = new CatalogoSolicitud(instanteConsulta);
@@ -85,7 +100,7 @@ public class RecomendacionService {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                     "No se pudieron obtener recomendaciones de preferencias ni de compras en comun");
         }
-        Historial historial = consultarHistorial(idUsuario);
+        Historial historial = esperar(historialFuturo);
         LocalDateTime ahora = LocalDateTime.now(reloj);
         Map<Long, Acumulada> unicos = new HashMap<>();
         // Preferencias tiene prioridad para los datos descriptivos si ambas fuentes coinciden.
@@ -140,6 +155,17 @@ public class RecomendacionService {
     }
 
     private record InventarioFiltrado<T>(List<T> resultados, boolean verificado) {}
+
+    private static <T> T esperar(CompletableFuture<T> futuro) {
+        try {
+            return futuro.join();
+        } catch (CompletionException exception) {
+            Throwable causa = exception.getCause();
+            if (causa instanceof RuntimeException runtime) throw runtime;
+            if (causa instanceof Error error) throw error;
+            throw exception;
+        }
+    }
 
     private Historial consultarHistorial(Long idUsuario) {
         try {

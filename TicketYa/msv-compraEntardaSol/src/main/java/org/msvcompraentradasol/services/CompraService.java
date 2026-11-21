@@ -69,7 +69,7 @@ public class CompraService {
         this.pagoSimuladoService = pagoSimuladoService;
     }
 
-    public CompraResponseDTO crearCompra(CompraRequestDTO dto) {
+    public CompraResponseDTO crearCompra(CompraRequestDTO dto, Long idCliente) {
         List<Long> idsAsientos = dto.getIdsAsientos() == null
                 ? List.of()
                 : List.copyOf(dto.getIdsAsientos());
@@ -87,18 +87,18 @@ public class CompraService {
         var compraExistente = compraRepository.findByClaveIdempotencia(dto.getClaveIdempotencia());
         if (compraExistente.isPresent()) {
             Compra existente = compraExistente.get();
-            if (!coincideConPedido(existente, dto, idsAsientos, cantidad)) {
+            if (!coincideConPedido(existente, dto, idCliente, idsAsientos, cantidad)) {
                 throw new IllegalStateException("La clave de idempotencia ya corresponde a otra compra");
             }
             return CompraResponseDTO.from(existente);
         }
 
         validarEventoVendible(dto.getIdEvento());
-        String autorizacionFila = validarAutorizacionFila(dto);
+        String autorizacionFila = validarAutorizacionFila(dto, idCliente);
 
         ReservaResponseDTO reserva = reservaClient.reservar(new ReservaRequestDTO(
                 dto.getClaveIdempotencia(),
-                dto.getIdCliente(),
+                idCliente,
                 dto.getIdEvento(),
                 dto.getIdSector(),
                 cantidad,
@@ -115,7 +115,7 @@ public class CompraService {
                 : List.copyOf(reserva.idAsientos());
 
         Compra compra = new Compra();
-        compra.setIdCliente(dto.getIdCliente());
+        compra.setIdCliente(idCliente);
         compra.setIdEvento(dto.getIdEvento());
         compra.setMedioDePago(dto.getMedioDePago());
         compra.setIdSector(dto.getIdSector());
@@ -133,7 +133,7 @@ public class CompraService {
             return CompraResponseDTO.from(compraRepository.saveAndFlush(compra));
         } catch (DataIntegrityViolationException exception) {
             return compraRepository.findByClaveIdempotencia(dto.getClaveIdempotencia())
-                    .filter(existente -> coincideConPedido(existente, dto, idsAsientos, cantidad))
+                    .filter(existente -> coincideConPedido(existente, dto, idCliente, idsAsientos, cantidad))
                     .map(CompraResponseDTO::from)
                     .orElseThrow(() -> new IllegalStateException(
                             "No se pudo registrar la compra por un conflicto de datos"
@@ -342,11 +342,11 @@ public class CompraService {
         }
     }
 
-    private String validarAutorizacionFila(CompraRequestDTO dto) {
+    private String validarAutorizacionFila(CompraRequestDTO dto, Long idCliente) {
         String autorizacion = dto.getAutorizacionCompra();
         ValidarAutorizacionFilaResponseDTO resultado = eventoClient.validarAutorizacionFila(
                 new ValidarAutorizacionFilaRequestDTO(
-                        dto.getIdEvento(), dto.getIdCliente(), autorizacion, dto.getClaveIdempotencia()
+                        dto.getIdEvento(), idCliente, autorizacion, dto.getClaveIdempotencia()
                 )
         );
         if (resultado == null || !resultado.autorizado()) {
@@ -415,10 +415,11 @@ public class CompraService {
     private boolean coincideConPedido(
             Compra compra,
             CompraRequestDTO dto,
+            Long idCliente,
             List<Long> idsAsientos,
             int cantidad
     ) {
-        return Objects.equals(compra.getIdCliente(), dto.getIdCliente())
+        return Objects.equals(compra.getIdCliente(), idCliente)
                 && Objects.equals(compra.getIdEvento(), dto.getIdEvento())
                 && Objects.equals(compra.getIdSector(), dto.getIdSector())
                 && Objects.equals(compra.getCantidadEntradas(), (long) cantidad)

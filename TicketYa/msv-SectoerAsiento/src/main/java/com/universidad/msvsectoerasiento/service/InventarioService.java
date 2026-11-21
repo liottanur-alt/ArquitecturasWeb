@@ -82,18 +82,25 @@ public class InventarioService {
         return configuraciones.findByIdEvento(evento).stream().map(c -> disponibilidad(c, e)).toList();
     }
 
-    /** Comparte bloqueos y vencimientos con las reservas; nunca crea reservas nuevas. */
+    /** Solo lectura: expira vencidas de forma logica para no competir con las reservas por el bloqueo del evento. */
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public List<DisponibilidadEventoResponse> consultarLote(@NotNull @Valid DisponibilidadLoteRequest request) {
         List<DisponibilidadEventoResponse> resultado = new ArrayList<>();
+        Instant ahora = reloj.instant();
         // Orden comun entre lotes para evitar bloqueos cruzados sobre los mismos eventos.
         for (Long id : new TreeSet<>(request.idsEventos())) {
-            Optional<InventarioEvento> inventario = inventarios.bloquear(id);
+            Optional<InventarioEvento> inventario = inventarios.findById(id);
             boolean disponible = false;
-            if (inventario.isPresent()) {
-                vencer(id);
-                if (!inventario.get().isCancelado()) {
-                    disponible = configuraciones.findByIdEvento(id).stream().anyMatch(this::tieneLugarReservable);
+            if (inventario.isPresent() && !inventario.get().isCancelado()) {
+                Map<Long, Integer> cuposVencidos = new HashMap<>();
+                Set<Long> asientosVencidos = new HashSet<>();
+                for (Reserva r : reservas.findBySectorEventoIdEventoAndEstadoAndVenceEnLessThanEqual(
+                        id, EstadoReserva.ACTIVA, ahora)) {
+                    cuposVencidos.merge(r.getSectorEvento().getId(), r.getCantidad(), Integer::sum);
+                    r.getAsientos().stream().map(a -> a.getAsiento().getId()).forEach(asientosVencidos::add);
                 }
+                disponible = configuraciones.findByIdEvento(id).stream()
+                        .anyMatch(c -> tieneLugarReservable(c, cuposVencidos, asientosVencidos));
             }
             // Sin inventario o sin sectores configurados no hay entradas reservables.
             resultado.add(new DisponibilidadEventoResponse(id, disponible));
@@ -101,11 +108,15 @@ public class InventarioService {
         return List.copyOf(resultado);
     }
 
-    private boolean tieneLugarReservable(SectorEvento sector) {
-        if (sector.getEspaciosDisponibles() <= 0) return false;
+    /** Cuenta como lugar libre tanto el cupo disponible como el retenido por reservas ya vencidas. */
+    private boolean tieneLugarReservable(SectorEvento sector, Map<Long, Integer> cuposVencidos,
+                                         Set<Long> asientosVencidos) {
+        int libres = sector.getEspaciosDisponibles() + cuposVencidos.getOrDefault(sector.getId(), 0);
+        if (libres <= 0) return false;
         if (sector.getSector().getTipo() == TipoSector.CAMPO) return true;
         return posiciones.findBySectorEventoIdOrderByIdAsc(sector.getId()).stream()
-                .anyMatch(asiento -> asiento.getEstado() == EstadoAsiento.DISPONIBLE);
+                .anyMatch(asiento -> asiento.getEstado() == EstadoAsiento.DISPONIBLE
+                        || asientosVencidos.contains(asiento.getAsiento().getId()));
     }
 
     /** Consulta un sector del evento y devuelve 404 si no fue configurado. */

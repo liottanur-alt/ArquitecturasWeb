@@ -11,8 +11,11 @@ $dbEventos="hu10_${tag}_eventos"; $dbSectores="hu10_${tag}_sectores"; $dbUsuario
 $cuenta="hu10_$tag"
 if ($dbEventos -notmatch '^hu10_[a-f0-9]{12}_eventos$' -or $dbSectores -notmatch '^hu10_[a-f0-9]{12}_sectores$' -or
     $dbUsuarios -notmatch '^hu10_[a-f0-9]{12}_usuarios$' -or $cuenta -notmatch '^hu10_[a-f0-9]{12}$') { throw 'Nombres temporales invalidos' }
+$jwtCompartido=(& docker compose -f $composeRaiz config --format json | ConvertFrom-Json).services.compras.environment.JWT_SECRET
+if([string]::IsNullOrWhiteSpace($jwtCompartido)){throw 'No se pudo leer JWT_SECRET de Compose; el benchmark usa la misma clave que Compras'}
 $variables=@{HU10_RUN=$tag;HU10_EVENTOS_DB=$dbEventos;HU10_SECTORES_DB=$dbSectores;HU10_USUARIOS_DB=$dbUsuarios;
-    HU10_DB_USER=$cuenta;HU10_DB_PASSWORD="hu10_test_$tag"}
+    HU10_DB_USER=$cuenta;HU10_DB_PASSWORD="hu10_test_$tag";HU10_JWT_SECRET=$jwtCompartido;
+    HU10_ADMIN_SEED_PASSWORD="hu10_admin_$tag"}
 $anteriores=@{}
 foreach($nombre in $variables.Keys){$anteriores[$nombre]=[Environment]::GetEnvironmentVariable($nombre,'Process');[Environment]::SetEnvironmentVariable($nombre,$variables[$nombre],'Process')}
 $salida=Join-Path $raiz '.local/system-tests/hu10-performance-result.json'
@@ -23,15 +26,33 @@ function Sql([string]$Texto) {
     $Texto | & docker compose -f $composeRaiz exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot --default-character-set=utf8mb4'
     if($LASTEXITCODE -ne 0){throw 'Fallo SQL en bases temporales de HU10'}
 }
-function Api([string]$Metodo,[string]$Url,$Body=$null){
-    $http=@{Method=$Metodo;Uri=$Url;TimeoutSec=40}
+function Api([string]$Metodo,[string]$Url,$Body=$null,[hashtable]$Headers=@{}){
+    $http=@{Method=$Metodo;Uri=$Url;TimeoutSec=40;Headers=$Headers}
     if($null -ne $Body){$http.ContentType='application/json';$http.Body=$Body|ConvertTo-Json -Depth 10}
-    Invoke-RestMethod @http
+    try{Invoke-RestMethod @http}catch{
+        $detalle=''
+        try{$r=Invoke-WebRequest @http -SkipHttpErrorCheck;$detalle=" status=$($r.StatusCode) body=$($r.Content)"}catch{}
+        throw "Api $Metodo $Url : $($_.Exception.Message)$detalle"
+    }
 }
 function Puerto([string]$Servicio,[int]$Puerto){
     $direccion=& docker compose -p $proyecto -f $compose port $Servicio $Puerto
     if($LASTEXITCODE -ne 0){throw 'No se encontro el puerto temporal'}
     return "http://$($direccion.Trim())"
+}
+function Base64Url([byte[]]$Bytes){
+    [Convert]::ToBase64String($Bytes).TrimEnd('=').Replace('+','-').Replace('/','_')
+}
+function New-ServiceToken {
+    param([long]$UsuarioId=0)
+    $ahora=[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $encabezado=Base64Url ([Text.Encoding]::UTF8.GetBytes('{"alg":"HS256","typ":"JWT"}'))
+    $cuerpo=@{iss='msv-usuario';sub='hu10-benchmark';iat=$ahora;exp=$ahora+300;roles=@('SERVICIO_INTERNO')}
+    if($UsuarioId -gt 0){$cuerpo.usuarioId=$UsuarioId}
+    $cuerpo=$cuerpo|ConvertTo-Json -Compress
+    $carga=Base64Url ([Text.Encoding]::UTF8.GetBytes($cuerpo))
+    $firma=Base64Url ([Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes($variables.HU10_JWT_SECRET)).ComputeHash([Text.Encoding]::UTF8.GetBytes("$encabezado.$carga")))
+    "$encabezado.$carga.$firma"
 }
 try {
     Sql "CREATE DATABASE $dbEventos CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci; CREATE DATABASE $dbSectores CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci; CREATE USER '$cuenta'@'%' IDENTIFIED BY '$($variables.HU10_DB_PASSWORD)'; GRANT ALL ON $dbEventos.* TO '$cuenta'@'%'; GRANT ALL ON $dbSectores.* TO '$cuenta'@'%';"
@@ -72,23 +93,28 @@ db.getSiblingDB('__DB__').secuencias.updateOne({_id:'usuarios'},{$set:{valor:Num
 '@
     & docker compose -f $composeRaiz exec -T mongodb mongosh --quiet --eval ($semilla.Replace('__DB__',$dbUsuarios)) | Out-Null
     if($LASTEXITCODE -ne 0){throw 'No se preparo la secuencia Mongo temporal'}
-    $roles=Api GET "$gateway/roles"; $rol=$roles|Where-Object name -eq 'CLIENTE'|Select-Object -First 1
-    $usuario=Api POST "$gateway/usuarios" @{nombre='Rendimiento HU10';email="hu10-$tag@example.com";dni=$tag;ciudad='Mendoza';idRol=$rol.id}
-    $historial=Api GET "http://localhost:8003/interno/recomendaciones/clientes/$($usuario.id)/historial-valido"
+    $email="hu10-$tag@example.com"; $password="Rendimiento-$tag!"
+    $usuario=Api POST "$gateway/auth/registro" @{nombre='Rendimiento HU10';email=$email;dni=$tag;ciudad='Mendoza';password=$password}
+    $token=(Api POST "$gateway/auth/login" @{email=$email;password=$password}).accessToken
+    if([string]::IsNullOrWhiteSpace($token)){throw 'El Gateway no devolvio un token para la medicion'}
+    $cabeceras=@{Authorization="Bearer $token"}
+    $servicioCabeceras=@{Authorization="Bearer $(New-ServiceToken)"}
+    $reservaCabeceras=@{Authorization="Bearer $(New-ServiceToken -UsuarioId $usuario.id)"}
+    $historial=Api GET "http://localhost:8003/interno/recomendaciones/clientes/$($usuario.id)/historial-valido" $null $servicioCabeceras
     if(@($historial.idsEventos).Count -ne 0){throw 'El ID temporal debe carecer de compras reales'}
-    Api PUT "$gateway/usuarios/$($usuario.id)/preferencias" @{tiposEventoPreferidos=@('RECITAL');ciudadPreferida='cordoba'}|Out-Null
-    Api PUT "$gateway/usuarios/$($usuario.id)/artistas-favoritos/1"|Out-Null
+    Api PUT "$gateway/usuarios/$($usuario.id)/preferencias" @{tiposEventoPreferidos=@('RECITAL');ciudadPreferida='cordoba'} $cabeceras|Out-Null
+    Api PUT "$gateway/usuarios/$($usuario.id)/artistas-favoritos/1" $null $cabeceras|Out-Null
     # Tres candidatos siguen publicados pero tienen sus diez lugares retenidos por reservas reales.
     $agotados=@($esperados|Where-Object idEvento -ne $CantidadEventos|Select-Object -First 3)
     foreach($evento in $agotados){
         $idSector=if($evento.ciudad -eq 'Mendoza'){1}else{2}
-        Api POST "$sectores/reservas" @{claveIdempotencia="hu10-$tag-$($evento.idEvento)";idCliente=1000000000002L;
-            idEvento=$evento.idEvento;idSector=$idSector;cantidad=10;idAsientos=@()}|Out-Null
+        Api POST "$sectores/reservas" @{claveIdempotencia="hu10-$tag-$($evento.idEvento)";idCliente=$usuario.id;
+            idEvento=$evento.idEvento;idSector=$idSector;cantidad=10;idAsientos=@()} $reservaCabeceras|Out-Null
     }
     $todosEsperados=@($esperados|Where-Object {$_.idEvento -notin @($agotados.idEvento)}|Sort-Object @{Expression='puntuacion';Descending=$true},fechaHora,idEvento)
     $esperadosLimitados=@($todosEsperados|Select-Object -First 10)
     # Baseline completo solo desde el ejecutor, nunca desde Usuarios.
-    $catalogo=Api GET "$eventos/api/eventos"
+    $catalogo=Api GET "$gateway/api/eventos" $null $cabeceras
     if(@($catalogo).Count -ne $CantidadEventos){throw 'El catalogo de prueba no tiene la cantidad requerida'}
     $baseline=[Collections.Generic.List[object]]::new()
     foreach($evento in $catalogo){
@@ -105,10 +131,10 @@ db.getSiblingDB('__DB__').secuencias.updateOne({_id:'usuarios'},{$set:{valor:Num
     if((($baseline.idEvento|Sort-Object) -join '|') -ne (($esperados.idEvento|Sort-Object) -join '|')){throw 'El baseline del catalogo completo difiere del conjunto sembrado'}
     $esperadosLimitados=@($baseline|Where-Object {$_.idEvento -notin @($agotados.idEvento)}|
         Sort-Object @{Expression='puntuacion';Descending=$true},fechaHora,idEvento|Select-Object -First 10)
-    $filtrados=Api POST "$eventos/interno/eventos/recomendaciones/candidatos" @{tiposEventoPreferidos=@('RECITAL');artistasFavoritos=@(1);ciudadPreferida='cordoba';fechaDesde=[DateTime]::Now.ToString('s')}
+    $filtrados=Api POST "$eventos/interno/eventos/recomendaciones/candidatos" @{tiposEventoPreferidos=@('RECITAL');artistasFavoritos=@(1);ciudadPreferida='cordoba';fechaDesde=[DateTime]::Now.ToString('s')} $servicioCabeceras
     if(@($filtrados).Count -ne $esperados.Count){throw 'La consulta OR no coincide con el baseline del catalogo completo'}
     $idsLote=@($agotados.idEvento)+@([long]$CantidadEventos)
-    $porIds=Api POST "$eventos/interno/eventos/recomendaciones/por-ids" @{idsEventos=@($idsLote)}
+    $porIds=Api POST "$eventos/interno/eventos/recomendaciones/por-ids" @{idsEventos=@($idsLote)} $servicioCabeceras
     if(@($porIds).Count -ne $idsLote.Count){throw 'El lote de eventos no coincide con los IDs solicitados'}
     $uri="$gateway/usuarios/$($usuario.id)/recomendaciones?limite=10"
     function Verificar($respuesta){
@@ -125,10 +151,10 @@ db.getSiblingDB('__DB__').secuencias.updateOne({_id:'usuarios'},{$set:{valor:Num
             }
         }
     }
-    for($i=0;$i -lt 10;$i++){Verificar (Api GET $uri)}
+    for($i=0;$i -lt 10;$i++){Verificar (Api GET $uri $null $cabeceras)}
     $tiempos=[Collections.Generic.List[double]]::new()
     for($i=0;$i -lt $Consultas;$i++){
-        $reloj=[Diagnostics.Stopwatch]::StartNew();$respuesta=Api GET $uri;$reloj.Stop()
+        $reloj=[Diagnostics.Stopwatch]::StartNew();$respuesta=Api GET $uri $null $cabeceras;$reloj.Stop()
         $tiempos.Add($reloj.Elapsed.TotalMilliseconds);Verificar $respuesta
         if(($i+1)%20 -eq 0){Write-Output "HU10: $($i+1)/$Consultas consultas verificadas"}
     }

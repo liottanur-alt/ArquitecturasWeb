@@ -10,7 +10,7 @@ Para empezar, abrir Docker Desktop y ejecutar desde esta carpeta:
 docker compose up --build -d --wait --wait-timeout 600
 ```
 
-El Gateway queda en http://localhost:8080. El sistema actual funciona sin autenticación; pagos y reintegros son simulados.
+El Gateway queda en http://localhost:8080. Pagos y reintegros son simulados. Usuarios emite JWT y el Gateway y los cuatro microservicios protegidos validan localmente el mismo HS256, secreto e issuer; `/auth/login` y `/auth/registro` son públicos y el resto de las rutas sigue la [política del Gateway](api-gateway/README.md). Las llamadas Feign internas usan un JWT de servicio con `ROLE_SERVICIO_INTERNO` y las rutas con segmento `interno` no son accesibles desde el Gateway. Antes de arrancar, copiar `.env.example` a `.env` y completar `JWT_SECRET` y `ADMIN_SEED_PASSWORD` (ver [Docker](DOCKER.md)).
 
 - [Arranque rápido e IntelliJ](GUIA-ARRANQUE.md)
 - [Comandos y archivos Docker](DOCKER.md)

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.msvcompraentradasol.JwtTestSupport;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.msvcompraentradasol.entities.Compra;
@@ -16,6 +17,7 @@ import org.msvcompraentradasol.services.RecomendacionCompraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,8 @@ class ComprasEnComunIntegrationTests {
     @Autowired EntradaRepository entradas;
     @Autowired RecomendacionCompraService service;
     @Autowired MockMvc mvc;
+
+    private static final String SERVICIO = JwtTestSupport.bearer(JwtTestSupport.serviceToken(1L));
 
     private Compra compra(long cliente, long evento, EstadoCompra estado, EstadoEntrada... estados) {
         Compra c = new Compra();
@@ -61,11 +65,13 @@ class ComprasEnComunIntegrationTests {
         compra(1, 100, EstadoCompra.APROBADA, EstadoEntrada.PAGA, EstadoEntrada.PAGA);
         aprobada(1, 100); aprobada(1, 200); aprobada(2, 300);
         assertEquals(List.of(100L, 200L), service.historialValido(1L).idsEventos());
-        String json = mvc.perform(get("/interno/recomendaciones/clientes/1/historial-valido"))
+        String json = mvc.perform(get("/interno/recomendaciones/clientes/1/historial-valido")
+                .header(HttpHeaders.AUTHORIZATION, SERVICIO))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.idsEventos.length()").value(2))
                 .andExpect(jsonPath("$.idsEventos[0]").value(100)).andReturn().getResponse().getContentAsString();
         assertEquals(1, tools.jackson.databind.json.JsonMapper.builder().build().readTree(json).size());
-        mvc.perform(get("/interno/recomendaciones/clientes/0/historial-valido")).andExpect(status().isBadRequest());
+        mvc.perform(get("/interno/recomendaciones/clientes/0/historial-valido")
+                .header(HttpHeaders.AUTHORIZATION, SERVICIO)).andExpect(status().isBadRequest());
         assertTrue(service.historialValido(99L).idsEventos().isEmpty());
     }
 
@@ -172,7 +178,8 @@ class ComprasEnComunIntegrationTests {
     @Test
     void contratoHttpSoloExponeEventosYCantidadesAgregadas() throws Exception {
         aprobada(1, 100); aprobada(2, 100); aprobada(2, 300);
-        String body = mvc.perform(get("/interno/recomendaciones/clientes/1")).andExpect(status().isOk())
+        String body = mvc.perform(get("/interno/recomendaciones/clientes/1")
+                .header(HttpHeaders.AUTHORIZATION, SERVICIO)).andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].idEvento").value(300))
                 .andExpect(jsonPath("$[0].compradoresEnComun").value(1))
                 .andExpect(jsonPath("$[0].idEventoReferencia").value(100))
@@ -180,6 +187,7 @@ class ComprasEnComunIntegrationTests {
                 .andExpect(jsonPath("$[0].idCompra").doesNotExist())
                 .andReturn().getResponse().getContentAsString();
         assertEquals(3, tools.jackson.databind.json.JsonMapper.builder().build().readTree(body).get(0).size());
-        mvc.perform(get("/interno/recomendaciones/clientes/0")).andExpect(status().isBadRequest());
+        mvc.perform(get("/interno/recomendaciones/clientes/0")
+                .header(HttpHeaders.AUTHORIZATION, SERVICIO)).andExpect(status().isBadRequest());
     }
 }

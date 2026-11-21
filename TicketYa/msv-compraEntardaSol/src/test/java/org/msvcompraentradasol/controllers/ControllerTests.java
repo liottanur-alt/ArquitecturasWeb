@@ -2,6 +2,7 @@ package org.msvcompraentradasol.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -20,23 +21,31 @@ import org.msvcompraentradasol.dtos.CompraResponseDTO;
 import org.msvcompraentradasol.dtos.EntradaResponseDTO;
 import org.msvcompraentradasol.dtos.SolicitudResponseDTO;
 import org.msvcompraentradasol.enums.EstadoSolicitud;
+import org.msvcompraentradasol.JwtTestSupport;
 import org.msvcompraentradasol.services.CompraService;
 import org.msvcompraentradasol.services.EntradaService;
 import org.msvcompraentradasol.services.SolicitudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class ControllerTests {
+
+    private static final Long ID_CLIENTE_JWT = 77L;
+    private static final String TOKEN = JwtTestSupport.bearer(JwtTestSupport.token(
+            "77", "CLIENTE", "ADMINISTRADOR", "PERSONAL_ACCESO"));
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,9 +61,9 @@ class ControllerTests {
 
     @Test
     void crearCompraDevuelve201() throws Exception {
-        when(compraService.crearCompra(any())).thenReturn(compra(5L, "PENDIENTE"));
+        when(compraService.crearCompra(any(), eq(ID_CLIENTE_JWT))).thenReturn(compra(5L, "PENDIENTE"));
 
-        mockMvc.perform(post("/compras")
+        perform(post("/compras")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -70,11 +79,12 @@ class ControllerTests {
                 .andExpect(jsonPath("$.id").value(5))
                 .andExpect(jsonPath("$.estadoCompra").value("PENDIENTE"))
                 .andExpect(jsonPath("$.idsAsientos[0]").value(11));
+        verify(compraService).crearCompra(any(), eq(ID_CLIENTE_JWT));
     }
 
     @Test
     void crearCompraSinClaveDevuelve400() throws Exception {
-        mockMvc.perform(post("/compras")
+        perform(post("/compras")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -91,7 +101,7 @@ class ControllerTests {
 
     @Test
     void crearCompraSinAsientosNiCantidadDevuelve400() throws Exception {
-        mockMvc.perform(post("/compras")
+        perform(post("/compras")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -112,7 +122,7 @@ class ControllerTests {
     void buscarCompraDevuelve200() throws Exception {
         when(compraService.buscarPorId(5L)).thenReturn(compra(5L, "APROBADA"));
 
-        mockMvc.perform(get("/compras/5"))
+        perform(get("/compras/5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(5))
                 .andExpect(jsonPath("$.estadoCompra").value("APROBADA"));
@@ -123,7 +133,7 @@ class ControllerTests {
         when(compraService.buscarPorId(99L))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Compra no encontrada"));
 
-        mockMvc.perform(get("/compras/99"))
+        perform(get("/compras/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Compra no encontrada"));
     }
@@ -133,7 +143,7 @@ class ControllerTests {
         when(compraService.buscarPorId(7L))
                 .thenThrow(new IllegalStateException("La compra ya fue procesada con otro resultado"));
 
-        mockMvc.perform(get("/compras/7"))
+        perform(get("/compras/7"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value(
                         "La compra ya fue procesada con otro resultado"
@@ -144,7 +154,7 @@ class ControllerTests {
     void procesarPagoDevuelve200() throws Exception {
         when(compraService.procesarPago(eq(5L), eq(true))).thenReturn(compra(5L, "APROBADA"));
 
-        mockMvc.perform(put("/compras/5/pago").param("aprobado", "true"))
+        perform(put("/compras/5/pago").param("aprobado", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estadoCompra").value("APROBADA"));
     }
@@ -155,7 +165,7 @@ class ControllerTests {
                 new CancelacionEventoResponseDTO(1L, 2, 4, new BigDecimal("6000.00"), true)
         );
 
-        mockMvc.perform(post("/compras/eventos/1/cancelacion"))
+        perform(post("/compras/eventos/1/cancelacion"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.comprasCanceladas").value(2))
                 .andExpect(jsonPath("$.entradasReintegradas").value(4))
@@ -166,7 +176,7 @@ class ControllerTests {
     void listarComprasPorClienteDevuelve200() throws Exception {
         when(compraService.listarPorCliente(2L)).thenReturn(List.of(compra(5L, "APROBADA")));
 
-        mockMvc.perform(get("/compras/cliente/2"))
+        perform(get("/compras/cliente/2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(5));
     }
@@ -176,10 +186,10 @@ class ControllerTests {
         when(entradaService.buscarPorId(1L)).thenReturn(entrada("NO_ESCANEADO"));
         when(entradaService.buscarPorQr("qr-1")).thenReturn(entrada("NO_ESCANEADO"));
 
-        mockMvc.perform(get("/entradas/1"))
+        perform(get("/entradas/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.qr").value("qr-1"));
-        mockMvc.perform(get("/entradas/qr/qr-1"))
+        perform(get("/entradas/qr/qr-1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1));
     }
@@ -188,16 +198,16 @@ class ControllerTests {
     void marcarEntradaUsadaDevuelve200() throws Exception {
         when(entradaService.marcarUsada(1L)).thenReturn(entrada("ESCANEADO"));
 
-        mockMvc.perform(patch("/entradas/1/uso"))
+        perform(patch("/entradas/1/uso"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estadoQr").value("ESCANEADO"));
     }
 
     @Test
     void crearSolicitudDevuelve201() throws Exception {
-        when(solicitudService.crearSolicitud(any())).thenReturn(solicitud("PENDIENTE"));
+        when(solicitudService.crearSolicitud(any(), eq(ID_CLIENTE_JWT))).thenReturn(solicitud("PENDIENTE"));
 
-        mockMvc.perform(post("/solicitudes")
+        perform(post("/solicitudes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -208,11 +218,12 @@ class ControllerTests {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.estadoSolicitud").value("PENDIENTE"));
+        verify(solicitudService).crearSolicitud(any(), eq(ID_CLIENTE_JWT));
     }
 
     @Test
     void crearSolicitudSinDescripcionDevuelve400() throws Exception {
-        mockMvc.perform(post("/solicitudes")
+        perform(post("/solicitudes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -226,10 +237,10 @@ class ControllerTests {
 
     @Test
     void resolverSolicitudDevuelve200() throws Exception {
-        when(solicitudService.resolverSolicitud(3L, 9L, EstadoSolicitud.ACEPTADA))
+        when(solicitudService.resolverSolicitud(3L, ID_CLIENTE_JWT, EstadoSolicitud.ACEPTADA))
                 .thenReturn(solicitud("ACEPTADA"));
 
-        mockMvc.perform(put("/solicitudes/3/resolver")
+        perform(put("/solicitudes/3/resolver")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -239,13 +250,14 @@ class ControllerTests {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estadoSolicitud").value("ACEPTADA"));
+        verify(solicitudService).resolverSolicitud(3L, ID_CLIENTE_JWT, EstadoSolicitud.ACEPTADA);
     }
 
     @Test
     void listarSolicitudesPendientesDevuelve200() throws Exception {
         when(solicitudService.listarPendientes()).thenReturn(List.of(solicitud("PENDIENTE")));
 
-        mockMvc.perform(get("/solicitudes/pendientes"))
+        perform(get("/solicitudes/pendientes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].estadoSolicitud").value("PENDIENTE"));
     }
@@ -254,9 +266,13 @@ class ControllerTests {
     void respetaYDevuelveElCorrelationId() throws Exception {
         when(compraService.buscarPorId(5L)).thenReturn(compra(5L, "PENDIENTE"));
 
-        mockMvc.perform(get("/compras/5").header("X-Correlation-Id", "prueba-123"))
+        perform(get("/compras/5").header("X-Correlation-Id", "prueba-123"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-Correlation-Id", "prueba-123"));
+    }
+
+    private ResultActions perform(MockHttpServletRequestBuilder request) throws Exception {
+        return mockMvc.perform(request.header(HttpHeaders.AUTHORIZATION, TOKEN));
     }
 
     private static CompraResponseDTO compra(Long id, String estado) {
