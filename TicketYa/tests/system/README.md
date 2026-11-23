@@ -12,7 +12,7 @@ pwsh -NoProfile -File ./tests/system/Test-Concurrencia-MultiInstancia.ps1
 
 | Prueba | Qué comprueba |
 | --- | --- |
-| Integración | Servicios, MongoDB y MySQL reales por Gateway con token: evento, inventario, compra idempotente, pago simulado, QR por personal de acceso y devolución del cupo. |
+| Integración | Servicios, MongoDB, MySQL y Redis reales por Gateway con token: evento e inventario, compra idempotente, pago, QR, devolución y recorrido de fila de alta demanda hasta admitir al siguiente comprador. Para este último crea `FILA_MAX_COMPRADORES_SIMULTANEOS + 1` clientes de prueba; las identidades y los eventos se conservan para inspección. |
 | Seguridad | Con `-AuditSecurity`, comprueba que Gateway bloquea lectura anónima, token inválido, ruta interna y suplantación por `X-Organizador-Id`. |
 | Carga | 500 consultas autenticadas de catálogo, disponibilidad y compras, con hasta 10 trabajadores simultáneos. |
 | Concurrencia multi-instancia | 30 compras paralelas con claves distintas repartidas entre dos Gateway, dos Compras y dos Sectores aislados: overselling, duplicados, idempotencia cruzada, pagos y consistencia del inventario. |

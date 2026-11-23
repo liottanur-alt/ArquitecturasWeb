@@ -105,6 +105,83 @@ try {
     Assert-Equal $sold.vendidos 1 'Compra confirmada en inventario real'
     Assert-Equal $sold.disponibles 9 'Descuento de disponibilidad'
     $checks.Add('Compra, reintento idempotente, pago simulado, QR e inventario entre servicios reales')
+
+    # Usa el limite configurado por Compose para admitir a ese numero de clientes
+    # y dejar al siguiente esperando, sin reducir artificialmente la configuracion.
+    $limiteFila = 10
+    $limiteFilaTexto = [Environment]::GetEnvironmentVariable('FILA_MAX_COMPRADORES_SIMULTANEOS')
+    $archivoEnv = Join-Path $PSScriptRoot '../../.env'
+    if ([string]::IsNullOrWhiteSpace($limiteFilaTexto) -and (Test-Path -LiteralPath $archivoEnv)) {
+        $lineaLimite = Get-Content -LiteralPath $archivoEnv |
+            Where-Object { $_ -match '^\s*FILA_MAX_COMPRADORES_SIMULTANEOS\s*=' } |
+            Select-Object -Last 1
+        if ($lineaLimite) {
+            $limiteFilaTexto = ($lineaLimite -replace '^\s*FILA_MAX_COMPRADORES_SIMULTANEOS\s*=', '').Trim().Trim('"', "'")
+        }
+    }
+    if (-not [string]::IsNullOrWhiteSpace($limiteFilaTexto)) {
+        $limiteParseado = 0
+        if (-not [int]::TryParse($limiteFilaTexto, [ref]$limiteParseado) -or $limiteParseado -le 0) {
+            throw 'FILA_MAX_COMPRADORES_SIMULTANEOS debe ser un entero positivo.'
+        }
+        $limiteFila = $limiteParseado
+    }
+
+    $eventoFila = Invoke-Api POST '/api/eventos' @{
+        nombre = "Fila $tag"; descripcion = 'Recorrido integrado de fila y compra'; tipo = 'RECITAL'
+        idOrganizador = $ownerId; participantesIds = @($artist.id)
+        fechaHora = [DateTime]::UtcNow.AddDays(11).ToString('yyyy-MM-ddTHH:mm:ss')
+        idLugar = $place.id; demanda = $true
+    } $organizadorHeaders @(201)
+    $fixture.filaEventId = $eventoFila.id
+    Invoke-Api PUT "/eventos/$($eventoFila.id)/inventario" @{limitePorCliente = 1} $organizadorHeaders @(204) | Out-Null
+    Invoke-Api PUT "/eventos/$($eventoFila.id)/sectores" @{
+        idSector = $sectorId; precio = 1500; capacidadHabilitada = 1
+    } $organizadorHeaders | Out-Null
+    Invoke-Api PATCH "/api/eventos/$($eventoFila.id)/publicar" $null $organizadorHeaders | Out-Null
+
+    $compradoresFila = [System.Collections.Generic.List[object]]::new()
+    $compradoresFila.Add(@{ id = $clientId; token = $tokens.CLIENTE })
+    $compradoresFila.Add(@{ id = $clienteAjeno.id; token = (Get-Token $clienteAjenoEmail $passwordPrueba) })
+    while ($compradoresFila.Count -lt ($limiteFila + 1)) {
+        $indice = $compradoresFila.Count
+        $emailFila = "FILA-$tag-$indice@example.com"
+        $registroFila = @{
+            nombre = "Comprador fila $indice"; email = $emailFila
+            dni = [guid]::NewGuid().ToString('N').Substring(0,20); ciudad = 'Tandil'; password = $passwordPrueba
+        }
+        $usuarioFila = Invoke-Api POST '/auth/registro' $registroFila @{} @(201)
+        $compradoresFila.Add(@{ id = $usuarioFila.id; token = (Get-Token $emailFila $passwordPrueba) })
+    }
+    $fixture.filaConcurrentLimit = $limiteFila
+    $fixture.filaClientIds = @($compradoresFila | ForEach-Object { $_.id })
+
+    $turnosFila = [System.Collections.Generic.List[object]]::new()
+    foreach ($comprador in $compradoresFila) {
+        $headersComprador = Headers-ConToken $comprador.token
+        $turno = Invoke-Api POST "/api/eventos/$($eventoFila.id)/fila" $null $headersComprador
+        $turnosFila.Add(@{ comprador = $comprador; headers = $headersComprador; turno = $turno })
+    }
+    for ($i = 0; $i -lt $limiteFila; $i++) {
+        Assert-Equal $turnosFila[$i].turno.estado 'ADMITIDO' "Turno simultaneo $($i + 1)"
+    }
+    Assert-Equal $turnosFila[$limiteFila].turno.estado 'EN_ESPERA' 'Siguiente comprador inicialmente en espera'
+
+    $compradorAdmitido = $turnosFila[0]
+    $compraFila = Invoke-Api POST '/compras' @{
+        claveIdempotencia = "compra-fila-$tag"; idCliente = $compradorAdmitido.comprador.id
+        idEvento = $eventoFila.id; idSector = $sectorId; cantidadEntradas = 1
+        medioDePago = 'TARJETA'; autorizacionCompra = $compradorAdmitido.turno.autorizacionCompra
+    } $compradorAdmitido.headers @(201)
+    $pagoFila = Invoke-Api PUT "/compras/$($compraFila.id)/pago?aprobado=true" $null $compradorAdmitido.headers
+    Assert-Equal $pagoFila.estadoCompra 'APROBADA' 'Pago de compra con turno'
+
+    $estadoCompradorSiguiente = Invoke-Api GET "/api/eventos/$($eventoFila.id)/fila/mi-turno" $null $turnosFila[$limiteFila].headers
+    Assert-Equal $estadoCompradorSiguiente.estado 'ADMITIDO' 'El siguiente entra tras pagar el primero'
+    $estadoCompradorAnterior = Invoke-Api GET "/api/eventos/$($eventoFila.id)/fila/mi-turno" $null $compradorAdmitido.headers
+    Assert-Equal $estadoCompradorAnterior.estado 'COMPLETADO' 'El turno pagado queda completado'
+    $checks.Add('Fila, autorizacion JWT, compra real, pago y admision del siguiente con Redis y Eventos reales')
+
     Invoke-Api POST '/solicitudes' @{idEntrada = $ticket.id; idCliente = $clientId; descripcion = 'Cliente ajeno'} $clienteAjenoHeaders @(403) | Out-Null
     Invoke-Api POST '/compras' @{} $clienteHeaders @(400) | Out-Null
     $checks.Add('Solicitud de otro cliente rechazada y compra invalida rechazada')

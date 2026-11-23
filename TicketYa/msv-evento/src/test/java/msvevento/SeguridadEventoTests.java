@@ -143,6 +143,16 @@ class SeguridadEventoTests {
     }
 
     @Test
+    void filaPublicaSoloPermiteClientes() throws Exception {
+        mvc.perform(post("/api/eventos/9/fila")
+                        .header(AUTH, bearer(JwtTestSupport.token("77", "ORGANIZADOR"))))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/eventos/9/fila/mi-turno")
+                        .header(AUTH, bearer(JwtTestSupport.token("77", "ORGANIZADOR"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void filaInternaUsaElClaimUsuarioIdEIgnoraElCuerpo() throws Exception {
         String body = """
                 {"eventoId":9,"clienteId":999,"autorizacionCompra":"abc","idOperacion":"op-1"}
