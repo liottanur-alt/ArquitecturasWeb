@@ -8,6 +8,8 @@ import msvevento.service.EventoService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -72,6 +74,15 @@ public class EventoController {
 
         return ResponseEntity.ok(eventoService.actualizarEvento(id, idOrganizador, dto));
     }
+    @PatchMapping("/{id}/programacion")
+    public EventoResponseDTO reprogramarEvento(@PathVariable Long id,
+            @AuthenticationPrincipal Jwt usuario, @RequestBody Programacion programacion) {
+        return eventoService.reprogramarEvento(id, Long.valueOf(usuario.getSubject()),
+                programacion.fechaHora(), programacion.idLugar());
+    }
+
+    public record Programacion(LocalDateTime fechaHora, Long idLugar) {}
+
     // Publicar un evento
     @PatchMapping("/{id}/publicar")
     public ResponseEntity<EventoResponseDTO> publicarEvento(

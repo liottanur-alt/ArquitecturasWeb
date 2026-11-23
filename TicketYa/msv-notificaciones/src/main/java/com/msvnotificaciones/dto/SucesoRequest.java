@@ -2,6 +2,7 @@ package com.msvnotificaciones.dto;
 
 import com.msvnotificaciones.entity.TipoSuceso;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -16,9 +17,10 @@ public record SucesoRequest(
     @NotNull @Positive Long idEvento,
     @Positive Long idCompra,
     @Positive Long idCliente,
-    @Size(max = 320) String destinatario,
+    @Email @Size(max = 320) String destinatario,
     @PositiveOrZero Integer cantidadEntradas,
     @DecimalMin("0.00") BigDecimal importe,
     @Positive Integer capacidadTotal,
-    Instant fechaSuceso
+    Instant fechaSuceso,
+    @Size(max = 900) String detalle
 ) {}

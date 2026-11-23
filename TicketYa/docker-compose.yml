@@ -1,6 +1,44 @@
 name: ticketya-db
 
 services:
+  notificaciones:
+    build: ./msv-notificaciones
+    restart: unless-stopped
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      DB_URL: jdbc:mysql://mysql-notificaciones:3306/notificaciones
+      DB_USERNAME: notificaciones_app
+      DB_PASSWORD: ${DB_PASSWORD:-notificaciones_dev}
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@ticketya.local}
+    depends_on:
+      mysql-notificaciones:
+        condition: service_healthy
+
+  mysql-notificaciones:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: notificaciones
+      MYSQL_USER: notificaciones_app
+      MYSQL_PASSWORD: ${DB_PASSWORD:-notificaciones_dev}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_notificaciones_dev}
+    ports:
+      - "127.0.0.1:3309:3306"
+    volumes:
+      - mysql_notificaciones_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql --protocol=TCP -h 127.0.0.1 -u\"$$MYSQL_USER\" -D\"$$MYSQL_DATABASE\" -e 'SELECT 1' > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   usuarios:
     build: ./msv-usuario
     restart: unless-stopped
@@ -33,6 +71,9 @@ services:
       DB_USERNAME: evento_app
       EVENTO_DB_PASSWORD: ${EVENTO_DB_PASSWORD:-${DB_PASSWORD:-evento_dev}}
       MSVC_SECTORES_URL: http://sectores:8002
+      MSVC_USUARIOS_URL: http://usuarios:8004
+      MSVC_COMPRAS_URL: http://compras:8003
+      MSVC_NOTIFICACIONES_URL: http://notificaciones:8006
       REDIS_HOST: redis
       REDIS_PORT: 6379
       FILA_MAX_COMPRADORES_SIMULTANEOS: ${FILA_MAX_COMPRADORES_SIMULTANEOS:-10}
@@ -83,6 +124,8 @@ services:
       DB_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
       MSVC_EVENTOS_URL: http://eventos:8005
       MSVC_SECTORES_URL: http://sectores:8002
+      MSVC_USUARIOS_URL: http://usuarios:8004
+      MSVC_NOTIFICACIONES_URL: http://notificaciones:8006
       JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
     ports:
       - "127.0.0.1:8003:8003"
@@ -175,6 +218,7 @@ services:
       retries: 20
 
 volumes:
+  mysql_notificaciones_data:
   usuarios_mongo:
     # Mismo volumen del entorno aislado: conserva los usuarios existentes.
     name: ticketya-usuarios-local_usuarios_mongo

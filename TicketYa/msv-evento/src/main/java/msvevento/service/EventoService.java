@@ -21,6 +21,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,6 +30,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -38,17 +41,20 @@ public class EventoService {
     private final LugarRepository lugarRepository;
     private final ArtistaRepository artistaRepository;
     private final SectorEventoClient sectorEventoClient;
+    private final ApplicationEventPublisher eventos;
 
     public EventoService(
             EventoRepository eventoRepository,
             LugarRepository lugarRepository,
             ArtistaRepository artistaRepository,
-            SectorEventoClient sectorEventoClient
+            SectorEventoClient sectorEventoClient,
+            ApplicationEventPublisher eventos
     ) {
         this.eventoRepository = eventoRepository;
         this.lugarRepository = lugarRepository;
         this.artistaRepository = artistaRepository;
         this.sectorEventoClient = sectorEventoClient;
+        this.eventos = eventos;
     }
 
     // Listar todos los eventos
@@ -197,7 +203,7 @@ public class EventoService {
     })
     public EventoResponseDTO publicarEvento(Long id, Long idOrganizador) {
 
-        Evento evento = eventoRepository.findById(id)
+        Evento evento = eventoRepository.buscarParaActualizar(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No se encontro el evento con ID: " + id
@@ -218,8 +224,49 @@ public class EventoService {
         evento.setEstadoPublicacion(EstadoPublicacion.PUBLICADO);
 
         Evento eventoGuardado = eventoRepository.save(evento);
+        eventos.publishEvent(new NotificarEvento.Publicado(eventoGuardado.getId(), eventoGuardado.getNombre(),
+                eventoGuardado.getLugar().getCiudad(), eventoGuardado.getFechaHora(),
+                eventoGuardado.getParticipantes().stream().map(Artista::getId).toList()));
 
         return convertirAResponseDTO(eventoGuardado);
+    }
+
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
+    public EventoResponseDTO reprogramarEvento(Long id, Long idOrganizador, LocalDateTime fechaHora, Long idLugar) {
+        Evento evento = eventoRepository.buscarParaActualizar(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento inexistente"));
+        validarOrganizador(evento, idOrganizador);
+        if (evento.getEstadoPublicacion() != EstadoPublicacion.PUBLICADO
+                || evento.getEstado() == EstadoEvento.CANCELADO || evento.getEstado() == EstadoEvento.FINALIZADO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solo se pueden reprogramar eventos publicados activos");
+        }
+        if (fechaHora == null && idLugar == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Indicá fecha y hora o lugar");
+        }
+        Lugar lugarAnterior = evento.getLugar();
+        LocalDateTime fechaAnterior = evento.getFechaHora();
+        Lugar lugar = idLugar == null ? lugarAnterior : lugarRepository.findById(idLugar)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lugar inexistente"));
+        LocalDateTime fecha = fechaHora == null ? fechaAnterior : fechaHora;
+        if (Objects.equals(fechaAnterior, fecha) && Objects.equals(lugarAnterior.getId(), lugar.getId())) {
+            return convertirAResponseDTO(evento);
+        }
+        if (fecha == null || !fecha.isAfter(LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nueva programación debe ser futura");
+        }
+        evento.setFechaHora(fecha);
+        evento.setLugar(lugar);
+        Evento guardado = eventoRepository.save(evento);
+        String detalle = "Evento: " + evento.getNombre() + ". Antes: " + NotificarEvento.fecha(fechaAnterior)
+                + " en " + lugarAnterior.getNombre() + ". Ahora: " + NotificarEvento.fecha(fecha)
+                + " en " + lugar.getNombre() + ".";
+        eventos.publishEvent(new NotificarEvento.Cambio(id, "evento-modificado-" + UUID.randomUUID(),
+                "EVENTO_MODIFICADO", detalle));
+        return convertirAResponseDTO(guardado);
     }
 
     private void validarOrganizador(Evento evento, Long idOrganizador) {
@@ -375,7 +422,7 @@ public class EventoService {
     })
     public EventoResponseDTO cancelarEvento(Long id) {
 
-        Evento evento = eventoRepository.findById(id)
+        Evento evento = eventoRepository.buscarParaActualizar(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No se encontro el evento con ID: " + id
@@ -397,6 +444,8 @@ public class EventoService {
 
         Evento eventoGuardado = eventoRepository.save(evento);
 
+        eventos.publishEvent(new NotificarEvento.Cambio(id, "evento-cancelado-" + id,
+                "EVENTO_CANCELADO", "Evento: " + eventoGuardado.getNombre() + "."));
         return convertirAResponseDTO(eventoGuardado);
     }
     // Eliminar un evento

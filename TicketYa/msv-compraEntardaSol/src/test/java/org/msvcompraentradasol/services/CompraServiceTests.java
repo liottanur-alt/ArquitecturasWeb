@@ -34,6 +34,8 @@ import org.msvcompraentradasol.enums.EstadoCompra;
 import org.msvcompraentradasol.enums.EstadoEntrada;
 import org.msvcompraentradasol.enums.EstadoReintegro;
 import org.msvcompraentradasol.feigns.EventoClientFeign;
+import org.msvcompraentradasol.feigns.DestinatarioCompraClient;
+import org.msvcompraentradasol.feigns.NotificacionCompraClient;
 import org.msvcompraentradasol.feigns.ReservaClientFeign;
 import org.msvcompraentradasol.repositories.CompraRepository;
 import org.msvcompraentradasol.repositories.EntradaRepository;
@@ -70,6 +72,12 @@ class CompraServiceTests {
     @MockitoBean
     private EventoClientFeign eventoClient;
 
+    @MockitoBean
+    private DestinatarioCompraClient destinatarios;
+
+    @MockitoBean
+    private NotificacionCompraClient notificaciones;
+
     @BeforeEach
     void limpiarBase() {
         solicitudRepository.deleteAll();
@@ -77,6 +85,8 @@ class CompraServiceTests {
         compraRepository.deleteAll();
         when(eventoClient.validarAutorizacionFila(any()))
                 .thenReturn(new ValidarAutorizacionFilaResponseDTO(true, false, "FILA_NO_REQUERIDA"));
+        when(destinatarios.porId(ID_CLIENTE))
+                .thenReturn(new DestinatarioCompraClient.Destinatario("cliente@example.com"));
     }
 
     @Test
@@ -159,6 +169,7 @@ class CompraServiceTests {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(
                 new org.msvcompraentradasol.dtos.EventoFechaResponseDTO(
                         ID_EVENTO,
+                        "Recital",
                         java.time.LocalDateTime.now().plusDays(10),
                         "ACTIVO",
                         "BORRADOR",
@@ -199,6 +210,9 @@ class CompraServiceTests {
 
         assertThat(pagada.estadoCompra()).isEqualTo("APROBADA");
         assertThat(pagada.referenciaPago()).startsWith("SIM-");
+        verify(notificaciones).registrar(new NotificacionCompraClient.Suceso(
+                "compra-confirmada-" + pagada.id(), "COMPRA_CONFIRMADA", ID_EVENTO, pagada.id(), ID_CLIENTE,
+                "cliente@example.com", pagada.cantidadEntradas(), pagada.importeTotal(), "Evento: Recital."));
 
         List<Entrada> entradas = entradaRepository.findAllByCompra_Id(creada.id());
         assertThat(entradas).hasSize(2);
@@ -300,6 +314,7 @@ class CompraServiceTests {
     @Test
     void cancelarEventoReintegraEntradasYCambiaEstados() {
         CompraResponseDTO creada = crearCompraPagada();
+        assertThat(compraRepository.compradoresParaAviso(ID_EVENTO, false)).containsExactly(ID_CLIENTE);
 
         CancelacionEventoResponseDTO resultado = compraService.cancelarEvento(ID_EVENTO);
 
@@ -318,6 +333,8 @@ class CompraServiceTests {
                         .isEqualTo(EstadoEntrada.EVENTO_CANCELADO));
 
         verify(reservaClient).cancelarInventario(ID_EVENTO);
+        assertThat(compraRepository.compradoresParaAviso(ID_EVENTO, true)).containsExactly(ID_CLIENTE);
+        assertThat(compraRepository.compradoresParaAviso(ID_EVENTO, false)).isEmpty();
     }
 
     @Test

@@ -30,6 +30,7 @@ import org.msvcompraentradasol.repositories.CompraRepository;
 import org.msvcompraentradasol.repositories.EntradaRepository;
 import org.msvcompraentradasol.repositories.SolicitudRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +51,7 @@ public class CompraService {
     private final ReservaClientFeign reservaClient;
     private final EventoClientFeign eventoClient;
     private final PagoSimuladoService pagoSimuladoService;
+    private final ApplicationEventPublisher eventos;
 
     public CompraService(
             CompraRepository compraRepository,
@@ -58,7 +60,8 @@ public class CompraService {
             EntradaService entradaService,
             ReservaClientFeign reservaClient,
             EventoClientFeign eventoClient,
-            PagoSimuladoService pagoSimuladoService
+            PagoSimuladoService pagoSimuladoService,
+            ApplicationEventPublisher eventos
     ) {
         this.compraRepository = compraRepository;
         this.entradaRepository = entradaRepository;
@@ -67,6 +70,7 @@ public class CompraService {
         this.reservaClient = reservaClient;
         this.eventoClient = eventoClient;
         this.pagoSimuladoService = pagoSimuladoService;
+        this.eventos = eventos;
     }
 
     public CompraResponseDTO crearCompra(CompraRequestDTO dto, Long idCliente) {
@@ -171,7 +175,7 @@ public class CompraService {
             throw new IllegalStateException("La compra ya fue procesada con otro resultado");
         }
 
-        validarEventoVendible(compra.getIdEvento());
+        EventoFechaResponseDTO evento = validarEventoVendible(compra.getIdEvento());
 
         PagoSimuladoService.ResultadoPago resultadoPago = pagoSimuladoService.procesar(
                 compra.getImporteTotal(),
@@ -239,6 +243,7 @@ public class CompraService {
 
         CompraResponseDTO respuesta = CompraResponseDTO.from(compraRepository.save(compra));
         completarTurnoFila(compra);
+        eventos.publishEvent(new NotificarCompraConfirmada.CompraConfirmada(respuesta, evento.nombre()));
         return respuesta;
     }
 

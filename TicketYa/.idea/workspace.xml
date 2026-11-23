@@ -6,81 +6,32 @@
   <component name="ChangeListManager">
     <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DOCKER.md" beforeDir="false" afterPath="$PROJECT_DIR$/DOCKER.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GUIA-ARRANQUE.md" beforeDir="false" afterPath="$PROJECT_DIR$/GUIA-ARRANQUE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Guia.md" beforeDir="false" afterPath="$PROJECT_DIR$/Guia.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MEJORAS-PENDIENTES.md" beforeDir="false" afterPath="$PROJECT_DIR$/MEJORAS-PENDIENTES.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/ApiGatewayApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/ApiGatewayApplicationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/ComprasRoutesTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/ComprasRoutesTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/InventarioRoutesTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/InventarioRoutesTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/test/java/com/apigateway/UsuarioRoutesTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/docs/arquitectura.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/docs/arquitectura.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/controller/ReservaController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/controller/ReservaController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/resources/static/openapi.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/FeignClientsTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/FeignClientsTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/InventarioIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/java/com/universidad/msvsectoerasiento/InventarioIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/resources/application-test.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/test/resources/application-test.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/REST.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/config/FeignClientConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/config/FeignClientConfiguration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/controllers/CompraController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/controllers/CompraController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/controllers/SolicitudController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/controllers/SolicitudController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/dtos/EventoFechaResponseDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/dtos/EventoFechaResponseDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/repositories/CompraRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/repositories/CompraRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/services/CompraService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/services/CompraService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/services/SolicitudService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/services/SolicitudService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/static/openapi.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/controllers/ControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/controllers/ControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/repositories/ComprasEnComunIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/repositories/ComprasEnComunIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/CompraFilaFeignIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/CompraFilaFeignIntegrationTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/CompraServiceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/CompraServiceTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/SolicitudServiceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/SolicitudServiceTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/resources/application-test.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/resources/application-test.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/REST.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/docs/PRUEBAS-POSTMAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/docs/PRUEBAS-POSTMAN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/support/TestFixtures.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/support/TestFixtures.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/MsvEventoApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/MsvEventoApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/config/SecurityConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/controller/EventoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/controller/EventoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/controller/FilaController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/controller/FilaController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/repository/EventoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/repository/EventoRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/service/EventoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/service/EventoService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/msv-evento/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/resources/static/openapi.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/test/java/msvevento/ConsultaRecomendacionIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/test/java/msvevento/ConsultaRecomendacionIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/test/java/msvevento/service/EventoCacheIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/test/java/msvevento/service/EventoCacheIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/test/resources/application-test.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/test/resources/application-test.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/REST.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/REST.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/scripts/Test-ComprasEnComun.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/scripts/Test-ComprasEnComun.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/DatosIniciales.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/DatosIniciales.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/FeignConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/FeignConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/RecomendacionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/RecomendacionController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/RolController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/RolController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/controller/UsuarioController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/entity/Usuario.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application-dev.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application-dev.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/resources/static/openapi.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/FavoritosIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/FavoritosIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/PreferenciasIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/PreferenciasIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/RecomendacionIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/RecomendacionIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/RecomendacionUnificadaIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/RecomendacionUnificadaIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioSinAuthIntegrationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/java/com/msvusuario/UsuarioSinAuthIntegrationTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/test/resources/application-test.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/test/resources/application-test.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/recomendaciones/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/tests/recomendaciones/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/recomendaciones/Test-HU10-Rendimiento.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/tests/recomendaciones/Test-HU10-Rendimiento.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/recomendaciones/compose.hu10.yml" beforeDir="false" afterPath="$PROJECT_DIR$/tests/recomendaciones/compose.hu10.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/system/Common.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/tests/system/Common.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/system/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/tests/system/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/system/RESULTADOS.md" beforeDir="false" afterPath="$PROJECT_DIR$/tests/system/RESULTADOS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/system/Test-Load.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/tests/system/Test-Load.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/system/Test-System.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/tests/system/Test-System.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/test/java/msvevento/SectorEventoFeignTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/test/java/msvevento/SectorEventoFeignTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/dto/SucesoRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/dto/SucesoRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/entity/EstadoNotificacion.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/entity/EstadoNotificacion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/entity/Notificacion.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/entity/Notificacion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/entity/SucesoNegocio.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/entity/SucesoNegocio.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/entity/TipoSuceso.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/entity/TipoSuceso.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/service/NotificacionAsyncService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/service/NotificacionAsyncService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/service/SucesoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/src/main/java/com/msvnotificaciones/service/SucesoService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-notificaciones/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/msv-notificaciones/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/UsuarioRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/repository/UsuarioRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/RecomendacionPreferenciasService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/service/RecomendacionPreferenciasService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,61 +76,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.4391893949848202" />
-      <entry key="MS500" value="2.482428590804374" />
-      <entry key="S2" value="7.466417622838381" />
-      <entry key="S5" value="16.22733199196704" />
-      <entry key="S10" value="24.977661290562658" />
-      <entry key="S30" value="35.83523801803722" />
-      <entry key="S60" value="39.62375872070127" />
-      <entry key="M2" value="41.732718793070674" />
-      <entry key="M5" value="43.30568776732475" />
-      <entry key="M10" value="45.35795009275905" />
-      <entry key="M15" value="47.34472797564323" />
-      <entry key="M30" value="51.219144160684614" />
-      <entry key="H1" value="54.427747322920396" />
-      <entry key="H2" value="56.51049514076496" />
-      <entry key="H4" value="57.69956917342615" />
-      <entry key="D1" value="58.7750793589304" />
-      <entry key="W1" value="58.967661962715745" />
+      <entry key="MS100" value="1.4897101526295837" />
+      <entry key="MS500" value="1.902542891979719" />
+      <entry key="S2" value="2.69498786200743" />
+      <entry key="S5" value="3.324127295024753" />
+      <entry key="S10" value="3.9124827107356324" />
+      <entry key="S30" value="12.618350982587087" />
+      <entry key="S60" value="24.795323032055503" />
+      <entry key="M2" value="36.24263271921709" />
+      <entry key="M5" value="46.14830333379511" />
+      <entry key="M10" value="51.484755630060576" />
+      <entry key="M15" value="54.62792201551402" />
+      <entry key="M30" value="59.74308500263506" />
+      <entry key="H1" value="63.64324702851782" />
+      <entry key="H2" value="66.10340094134398" />
+      <entry key="H4" value="67.4918115773454" />
+      <entry key="D1" value="68.73982052868337" />
+      <entry key="W1" value="68.9626088328606" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
       <entry key="MS500" value="0.0" />
-      <entry key="S2" value="1.393826149658494E-268" />
-      <entry key="S5" value="9.109923779035633E-108" />
-      <entry key="S10" value="4.08503223821024E-54" />
-      <entry key="S30" value="2.5107521632381148E-18" />
-      <entry key="S60" value="2.237836793116185E-9" />
-      <entry key="M2" value="6.68777610787177E-5" />
-      <entry key="M5" value="0.0324112119740186" />
-      <entry key="M10" value="0.25459902129373746" />
-      <entry key="M15" value="0.5061118507042324" />
-      <entry key="M30" value="1.0060917669985339" />
-      <entry key="H1" value="1.4185140162719838" />
-      <entry key="H2" value="1.6843477957060635" />
-      <entry key="H4" value="1.8354006190490766" />
-      <entry key="D1" value="1.9715757779661984" />
-      <entry key="W1" value="1.995914444113712" />
+      <entry key="S2" value="8.454735785794164E-279" />
+      <entry key="S5" value="7.458840429724822E-112" />
+      <entry key="S10" value="3.6963558531564686E-56" />
+      <entry key="S30" value="5.231946258571608E-19" />
+      <entry key="S60" value="1.0215464628611416E-9" />
+      <entry key="M2" value="4.518523888492028E-5" />
+      <entry key="M5" value="0.02770647108183942" />
+      <entry key="M10" value="0.23539633742185367" />
+      <entry key="M15" value="0.4803323320807555" />
+      <entry key="M30" value="0.9801335430072367" />
+      <entry key="H1" value="1.4000948559243078" />
+      <entry key="H2" value="1.6733765813945678" />
+      <entry key="H4" value="1.8294132952448032" />
+      <entry key="D1" value="1.9705023938215582" />
+      <entry key="W1" value="1.9957591743336034" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.373937287402674" />
-      <entry key="MS500" value="2.460777184258924" />
-      <entry key="S2" value="7.450297512979549" />
-      <entry key="S5" value="16.20952600473774" />
-      <entry key="S10" value="24.959880054307643" />
-      <entry key="S30" value="35.82449324720339" />
-      <entry key="S60" value="39.61742933865567" />
-      <entry key="M2" value="41.72934256181253" />
-      <entry key="M5" value="43.33645286620135" />
-      <entry key="M10" value="45.61102708491061" />
-      <entry key="M15" value="47.849298042464305" />
-      <entry key="M30" value="52.22393694260173" />
-      <entry key="H1" value="55.84539227357116" />
-      <entry key="H2" value="58.19433728234684" />
-      <entry key="H4" value="59.53469670272388" />
-      <entry key="D1" value="60.746606571948554" />
-      <entry key="W1" value="60.963569391028486" />
+      <entry key="MS100" value="1.399616578054033" />
+      <entry key="MS500" value="1.8788252196020032" />
+      <entry key="S2" value="2.6859565944271404" />
+      <entry key="S5" value="3.3195132641324077" />
+      <entry key="S10" value="3.909498369769564" />
+      <entry key="S30" value="12.613146243205703" />
+      <entry key="S60" value="24.789739693293516" />
+      <entry key="M2" value="36.2384745529493" />
+      <entry key="M5" value="46.17367923195747" />
+      <entry key="M10" value="51.71824952401423" />
+      <entry key="M15" value="55.106453117763984" />
+      <entry key="M30" value="60.721780064734766" />
+      <entry key="H1" value="65.04239657298409" />
+      <entry key="H2" value="67.77623113826601" />
+      <entry key="H4" value="69.32093059670075" />
+      <entry key="D1" value="70.7102706954439" />
+      <entry key="W1" value="70.95836046478075" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -263,6 +214,14 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="MsvNotificacionesApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="msv-notificaciones" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.msvnotificaciones.MsvNotificacionesApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="MsvSectoerAsientoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
       <module name="msv-SectoerAsiento" />
@@ -318,7 +277,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-a203e0a19954-intellij.indexing.shared.core-IU-262.10315.125" />
+        <option value="bundled-jdk-30f59d01ecdd-ac68fc9d2b05-intellij.indexing.shared.core-IU-263.7307.200" />
       </set>
     </attachedChunks>
   </component>

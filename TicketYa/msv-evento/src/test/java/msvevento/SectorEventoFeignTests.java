@@ -5,9 +5,11 @@ import msvevento.client.SectorEventoClient;
 import msvevento.entity.*;
 import msvevento.repository.*;
 import msvevento.service.EventoService;
+import msvevento.service.NotificarEvento;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -67,10 +69,14 @@ class SectorEventoFeignTests {
     static void detener() { REMOTO.stop(0); }
 
     EventoService servicio(Evento evento) {
+        return servicio(evento, mock(ApplicationEventPublisher.class));
+    }
+
+    EventoService servicio(Evento evento, ApplicationEventPublisher eventos) {
         var repositorio = mock(EventoRepository.class);
-        when(repositorio.findById(7L)).thenReturn(Optional.of(evento));
+        when(repositorio.buscarParaActualizar(7L)).thenReturn(Optional.of(evento));
         when(repositorio.save(evento)).thenReturn(evento);
-        return new EventoService(repositorio, mock(LugarRepository.class), mock(ArtistaRepository.class), cliente);
+        return new EventoService(repositorio, mock(LugarRepository.class), mock(ArtistaRepository.class), cliente, eventos);
     }
 
     Evento borrador() {
@@ -85,6 +91,22 @@ class SectorEventoFeignTests {
         evento.setEstadoPublicacion(EstadoPublicacion.BORRADOR);
         evento.setEstado(EstadoEvento.EN_CURSO);
         return evento;
+    }
+
+    @Test
+    void reprogramarPublicaElCambioUnaVez() {
+        var evento = borrador();
+        evento.setEstadoPublicacion(EstadoPublicacion.PUBLICADO);
+        var fecha = evento.getFechaHora().plusDays(1);
+        var eventos = mock(ApplicationEventPublisher.class);
+        var servicio = servicio(evento, eventos);
+
+        servicio.reprogramarEvento(7L, 3L, fecha, null);
+        servicio.reprogramarEvento(7L, 3L, fecha, null);
+
+        assertThat(evento.getFechaHora()).isEqualTo(fecha);
+        verify(eventos).publishEvent(argThat((Object aviso) -> aviso instanceof NotificarEvento.Cambio cambio
+                && cambio.id().equals(7L) && cambio.tipo().equals("EVENTO_MODIFICADO")));
     }
 
     @Test

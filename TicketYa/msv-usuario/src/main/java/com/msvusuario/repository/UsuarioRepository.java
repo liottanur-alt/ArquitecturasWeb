@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.ExistsQuery;
 
 // Spring implementa el CRUD sobre MongoDB; Long es el tipo del _id de Usuario.
 public interface UsuarioRepository extends MongoRepository<Usuario, Long> {
+    java.util.List<Usuario> findByArtistasFavoritosIn(java.util.Collection<Long> artistas);
     // Spring genera estas consultas a partir del nombre del metodo, sin SQL.
     java.util.Optional<Usuario> findByEmailIgnoreCase(String email);
     boolean existsByEmailIgnoreCase(String email);

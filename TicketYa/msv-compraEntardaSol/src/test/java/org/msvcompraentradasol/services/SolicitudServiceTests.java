@@ -137,6 +137,7 @@ class SolicitudServiceTests {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(
                 new org.msvcompraentradasol.dtos.EventoFechaResponseDTO(
                         ID_EVENTO,
+                        "Recital",
                         LocalDateTime.now().plusDays(30),
                         "CANCELADO",
                         "PUBLICADO",

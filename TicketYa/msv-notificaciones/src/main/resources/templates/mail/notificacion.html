@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${asunto}">Aviso de TicketYa</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937;">
+
+<!-- Texto de vista previa oculto (aparece al lado del asunto en Gmail/Outlook) -->
+<div style="display: none; max-height: 0; overflow: hidden;" th:text="${mensaje}">
+    Tenés una novedad en TicketYa.
+</div>
+
+<!-- Contenedor principal -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f5f7; padding: 32px 16px;">
+    <tr>
+        <td align="center">
+
+            <!-- Tarjeta central (máx. 600px de ancho) -->
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);">
+
+                <!-- Encabezado con marca -->
+                <tr>
+                    <td style="background-color: #111827; padding: 24px 32px; text-align: left;">
+                            <span style="color: #ffffff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">
+                                Ticket<span style="color: #f97316;">Ya</span>
+                            </span>
+                    </td>
+                </tr>
+
+                <!-- Cuerpo del mensaje -->
+                <tr>
+                    <td style="padding: 32px;">
+                        <!-- Saludo opcional si pasas 'nombreUsuario' en el Context -->
+                        <p th:if="${nombreUsuario != null}" style="margin: 0 0 12px 0; font-size: 15px; color: #6b7280;">
+                            Hola, <strong th:text="${nombreUsuario}" style="color: #111827;">Usuario</strong>:
+                        </p>
+
+                        <!-- Título / Asunto -->
+                        <h1 th:text="${asunto}" style="margin: 0 0 16px 0; font-size: 22px; line-height: 1.3; font-weight: 700; color: #111827;">
+                            Aviso de TicketYa
+                        </h1>
+
+                        <!-- Mensaje principal -->
+                        <p th:text="${mensaje}" style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #374151; white-space: pre-line;">
+                            Tenés una novedad en TicketYa.
+                        </p>
+
+                        <!-- Botón de acción opcional (solo se renderiza si envías 'urlAccion') -->
+                        <table th:if="${urlAccion != null}" role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 28px 0 8px 0;">
+                            <tr>
+                                <td style="border-radius: 8px; background-color: #f97316;">
+                                    <a th:href="${urlAccion}" target="_blank" style="display: inline-block; padding: 12px 24px; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px;" th:text="${textoBoton != null ? textoBoton : 'Ver detalle en TicketYa'}">
+                                        Ver detalle en TicketYa
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Pie de página -->
+                <tr>
+                    <td style="background-color: #f9fafb; padding: 20px 32px; border-top: 1px solid #e5e7eb; text-align: center;">
+                        <p style="margin: 0 0 6px 0; font-size: 13px; color: #6b7280;">
+                            Este es un mensaje automático enviado por <strong>TicketYa</strong>. Por favor, no respondas a este correo.
+                        </p>
+                        <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                            &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span> TicketYa. Todos los derechos reservados.
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
