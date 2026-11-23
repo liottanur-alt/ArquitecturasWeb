@@ -7,11 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
-  Mail,
-  LockKeyhole,
-  Eye,
-  EyeOff,
-  ShieldCheck,
+  UserRound,
   CircleAlert,
   Check,
 } from "@lucide/astro";
@@ -25,9 +21,9 @@ import {
       content="width=device-width, initial-scale=1"
     /><meta
       name="description"
-      content="Ingresá a tu cuenta TicketYa y encontrá tu próximo gran momento."
+      content="Elegí un perfil de demostración de TicketYa. Esta selección no autentica."
     /><meta name="theme-color" content="#2055f5" /><title>
-      Ingresar — TicketYa
+      Elegir perfil — TicketYa
     </title><link rel="preconnect" href="https://fonts.googleapis.com" /><link
       rel="preconnect"
       href="https://fonts.gstatic.com"
@@ -76,95 +72,30 @@ import {
           >ticket<span>ya</span><span class="brand-dot">®</span></a
         >
         <div class="login-form-content">
-          <span class="eyebrow">QUÉ BUENO TENERTE DE VUELTA</span><h2
+          <span class="eyebrow">PERFILES DE DEMOSTRACIÓN</span><h2
             id="login-title"
           >
-            Tu próximo plan<br />empieza acá.
+            Elegí un perfil<br />para explorar.
           </h2><p class="login-subtitle">
-            Ingresá a tu cuenta y viví lo que viene.
+            Seleccionar un perfil no autentica al usuario ni concede permisos. Los datos del perfil se consultan en el servidor.
           </p>
-          <div
-            id="registration-success"
-            class="login-success"
-            role="status"
-            hidden
-          >
-            <Check size={18} /><p>
-              ¡Tu cuenta ya está creada! Ingresá con tu email y contraseña.
-            </p>
-          </div><form id="login-form" aria-labelledby="login-title">
+          <form id="login-form" aria-labelledby="login-title">
             <div class="login-field">
-              <label for="email">Email</label><div class="login-input">
-                <Mail size={18} /><input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autocomplete="username"
-                  placeholder="vos@ejemplo.com"
-                  required
-                  maxlength="254"
-                  autocapitalize="none"
-                  spellcheck="false"
-                />
-              </div>
-            </div><div class="login-field">
-              <label for="password">Contraseña</label><div class="login-input">
-                <LockKeyhole size={18} /><input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autocomplete="current-password"
-                  placeholder="Tu contraseña"
-                  required
-                /><button
-                  id="toggle-password"
-                  type="button"
-                  aria-label="Mostrar contraseña"
-                  aria-pressed="false"
-                  aria-controls="password"
-                  ><Eye size={18} class="show-password-icon" /><EyeOff
-                    size={18}
-                    class="hide-password-icon"
-                  /></button>
-              </div>
+              <label for="demo-profile">Perfil de demostración</label>
+              <div class="login-input"><select id="demo-profile" required disabled aria-describedby="profile-selection-note"><option value="">Cargando perfiles…</option></select></div>
             </div>
-            <div
-              id="login-error"
-              class="login-error"
-              role="alert"
-              tabindex="-1"
-              hidden
-            >
-              <CircleAlert size={18} /><p id="login-error-text"></p>
-            </div><p
-              id="login-status"
-              class="sr-only"
-              role="status"
-              aria-live="polite"
-            >
-            </p>
-            <button
-              id="login-submit"
-              class="button button-blue login-submit"
-              type="submit"
-              ><span id="submit-label">Ingresar a mi cuenta</span><ArrowRight
-                size={19}
-              /><span class="submit-spinner" aria-hidden="true"></span></button>
-          </form><p class="auth-switch">
-            ¿Todavía no tenés cuenta? <a id="register-link" href="/registro/"
-              >Creá tu cuenta <ArrowUpRight size={14} /></a>
-          </p>
+            <p id="profile-selection-note" class="login-subtitle">Se guardará solo el ID seleccionado en esta pestaña. No se inicia una sesión autenticada.</p>
+            <div id="login-error" class="login-error" role="alert" tabindex="-1" hidden><CircleAlert size={18} /><p id="login-error-text"></p></div>
+            <p id="login-status" class="login-subtitle" role="status" aria-live="polite"></p>
+            <button id="retry-profiles" class="browse-without-account" type="button" hidden>Reintentar carga de perfiles</button>
+            <button id="login-submit" class="button button-blue login-submit" type="submit" disabled><span>Usar este perfil de demostración</span><ArrowRight size={19} /></button>
+          </form>
+          <p class="auth-switch">¿Necesitás un perfil? <a id="register-link" href="/registro/">Crear perfil <ArrowUpRight size={14}/></a></p>
           <div class="login-divider">
             <span></span> EL MEJOR PLAN ES ESTAR AHÍ <span></span>
           </div><a href="/#explorar" class="browse-without-account"
-            >Seguir explorando sin ingresar <ArrowUpRight size={16} /></a
-          ><a href="/perfil/?demo=1" class="browse-without-account"
-            >Ver perfil de ejemplo <ArrowUpRight size={16} /></a
-          ><div class="login-assurance">
-            <ShieldCheck size={17} /><span
-              >Tu contraseña es solo tuya.<br />Nunca la guardamos en este
-              navegador.</span>
-          </div>
+            >Seguir explorando sin seleccionar perfil <ArrowUpRight size={16} /></a
+          ><div class="login-assurance"><UserRound size={17} /><span>Sin contraseña ni token.<br />El perfil seleccionado no prueba tu identidad.</span></div>
         </div>
         <footer class="login-footer">
           <span>© 2026 TicketYa</span><span

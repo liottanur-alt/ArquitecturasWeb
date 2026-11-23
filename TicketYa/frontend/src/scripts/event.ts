@@ -1,100 +1,155 @@
-import gsap from 'gsap';
-import { getCart, saveDraft, cartLink } from './cart';
-import type { Sector } from '../data/events';
+import { initPurchase } from './purchase-ui';
+import { selectionContext } from './selection-api';
+import { getCart, saveDraft } from './cart';
+import { getSelectedProfileId } from './session';
+import { eventLink, positiveId, reconcileDraft, type Draft, type Availability } from './selection-data';
 
-const event: { id: number; sectors: Sector[]; maxTickets: number } = JSON.parse(document.querySelector('#event-data')!.textContent!);
-const selected = new Map<string, { quantity: number; seats: string[] }>(event.sectors.map(s => [s.id, { quantity: 0, seats: [] }]));
-const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-const money = (n: number) => '$ ' + n.toLocaleString('es-AR');
-const count = () => [...selected.values()].reduce((n, s) => n + s.quantity, 0);
-const message = document.querySelector<HTMLElement>('#selection-message')!;
-const review = document.querySelector<HTMLButtonElement>('#review-selection')!;
-const dialog = document.querySelector<HTMLDialogElement>('#review-dialog')!;
-function update() {
-  const entries = event.sectors.filter(s => selected.get(s.id)!.quantity > 0);
-  const container = document.querySelector<HTMLElement>('#summary-items')!;
-  container.replaceChildren();
-  let total = 0;
-  for (const sector of entries) {
-    const value = selected.get(sector.id)!;
-    total += value.quantity * sector.price;
-    const item = document.createElement('div'); item.className = 'summary-item';
-    const heading = document.createElement('strong'); heading.textContent = sector.name;
-    const detail = document.createElement('span'); detail.textContent = sector.type === 'numerado'
-      ? value.seats.map(s => { const [row, seat] = s.split('-'); return `Fila ${row} · ${seat}`; }).join(' / ')
-      : `${value.quantity} ${value.quantity === 1 ? 'entrada' : 'entradas'} · Ubicación libre`;
-    const price = document.createElement('span'); price.className = 'summary-item-price'; price.textContent = `${value.quantity} × ${money(sector.price)}`;
-    item.append(heading, detail, price); container.append(item);
-  }
-  document.querySelector<HTMLElement>('#summary-empty')!.hidden = entries.length > 0;
-  document.querySelector('#ticket-count')!.textContent = `(${count()})`;
-  document.querySelector('#subtotal')!.textContent = money(total);
-  document.querySelector('#total')!.textContent = money(total);
-  review.disabled = count() === 0;
-  document.querySelector<HTMLElement>('#clear-selection')!.hidden = count() === 0;
-  event.sectors.forEach(sector => {
-    const value = selected.get(sector.id)!;
-    const output = document.querySelector(`[data-quantity="${sector.id}"]`);
-    if (output) output.textContent = String(value.quantity);
-    const minus = document.querySelector<HTMLButtonElement>(`[data-minus="${sector.id}"]`);
-    const plus = document.querySelector<HTMLButtonElement>(`[data-plus="${sector.id}"]`);
-    if (minus) minus.disabled = value.quantity === 0;
-    if (plus) plus.disabled = count() >= event.maxTickets || value.quantity >= sector.available;
-    document.querySelectorAll<HTMLButtonElement>(`[data-seat-sector="${sector.id}"]`).forEach(button => {
-      const isSelected = value.seats.includes(button.dataset.seat!);
-      button.setAttribute('aria-pressed', String(isSelected));
-      button.classList.toggle('is-selected', isSelected);
-    });
-  });
-  document.querySelector('#review-items')!.replaceChildren(...[...container.childNodes].map(node => node.cloneNode(true)));
-  document.querySelector('#review-total')!.textContent = money(total);
+const params = new URLSearchParams(location.search);
+const eventId = Number(params.get('id'));
+const requestedSector = params.has('sector') ? Number(params.get('sector')) : undefined;
+const owner = getSelectedProfileId();
+const byId = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+const dialog = byId<HTMLDialogElement>('review-dialog');
+const quantity = byId<HTMLInputElement>('quantity');
+const review = byId<HTMLButtonElement>('review-selection');
+const save = byId<HTMLButtonElement>('save-cart');
+const message = byId('selection-message');
+const amount = (value: number) => value.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+let context: Awaited<ReturnType<typeof selectionContext>> | null = null;
+let selectedSector: number | undefined;
+let draft: Draft | null = null;
+let busy = false, restored = false;
+let purchaseUI: ReturnType<typeof initPurchase> | undefined;
+const sector = () => context?.sectors.find(value => value.idSector === selectedSector);
+function newDraft(current: Availability, count: number, ids: number[] = []): Draft | null {
+  return count ? { eventId, sectorId: current.idSector, type: current.tipo, quantity: count, seatIds: ids, updatedAt: new Date().toISOString() } : null;
 }
-document.querySelectorAll<HTMLButtonElement>('[data-sector]').forEach(button => button.addEventListener('click', () => {
-  const id = button.dataset.sector!;
-  document.querySelectorAll<HTMLButtonElement>('[data-sector]').forEach(b => { const active = b === button; b.classList.toggle('selected', active); b.setAttribute('aria-pressed', String(active)); });
-  document.querySelectorAll<HTMLElement>('[data-panel]').forEach(panel => {
-    panel.hidden = panel.dataset.panel !== id;
-    if (!panel.hidden && !reduced.matches) gsap.fromTo(panel, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: .35, clearProps: 'all' });
-  });
-  message.textContent = '';
-}));
-document.querySelectorAll<HTMLButtonElement>('[data-plus]').forEach(button => button.addEventListener('click', () => {
-  const id = button.dataset.plus!, value = selected.get(id)!, sector = event.sectors.find(s => s.id === id)!;
-  if (count() >= event.maxTickets || value.quantity >= sector.available) return;
-  value.quantity++; message.textContent = `${count()} de ${event.maxTickets} entradas seleccionadas.`; update();
-}));
-document.querySelectorAll<HTMLButtonElement>('[data-minus]').forEach(button => button.addEventListener('click', () => {
-  const value = selected.get(button.dataset.minus!)!;
-  value.quantity = Math.max(0, value.quantity - 1); message.textContent = `${count()} de ${event.maxTickets} entradas seleccionadas.`; update();
-}));
-document.querySelectorAll<HTMLButtonElement>('[data-seat]').forEach(button => button.addEventListener('click', () => {
-  if (button.disabled) return;
-  const value = selected.get(button.dataset.seatSector!)!, seat = button.dataset.seat!;
-  if (value.seats.includes(seat)) value.seats = value.seats.filter(s => s !== seat);
-  else {
-    if (count() >= event.maxTickets) { message.textContent = `Podés elegir hasta ${event.maxTickets} entradas en total. Quitá una para cambiar tu selección.`; return; }
-    value.seats.push(seat);
-    if (!reduced.matches) gsap.fromTo(button, { scale: .8 }, { scale: 1, duration: .3, ease: 'back.out(2)' });
-  }
-  value.quantity = value.seats.length; message.textContent = `${count()} de ${event.maxTickets} entradas seleccionadas.`; update();
-}));
-document.querySelector('#clear-selection')!.addEventListener('click', () => {
-  selected.forEach(value => { value.quantity = 0; value.seats = []; }); message.textContent = 'Selección vacía. Podés empezar de nuevo.'; update();
-});
-review.addEventListener('click', () => { if (count() > 0) dialog.showModal(); });
-document.querySelector('#close-review')!.addEventListener('click', () => dialog.close());
-document.querySelector('#keep-choosing')!.addEventListener('click', () => dialog.close());
-dialog.addEventListener('click', e => { const r = dialog.getBoundingClientRect(); if (e.target === dialog && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) dialog.close(); });
-
-if (new URLSearchParams(location.search).get('carrito') === '1') {
-  const draft = getCart().find(d => d.eventId === event.id);
-  if (draft) { draft.selection.forEach(item => selected.set(item.sectorId, { quantity: item.quantity, seats: [...item.seats] })); const first = draft.selection[0]; document.querySelector<HTMLButtonElement>(`[data-sector="${first.sectorId}"]`)?.click(); message.textContent = 'Recuperamos tu selección del carrito. Revisá tus ubicaciones antes de continuar.'; }
+function summary() {
+  const current = sector();
+  const count = draft?.quantity || 0;
+  const text = !draft ? 'Elegí una cantidad o asientos de un sector.' : 'Sector #' + draft.sectorId + ' · ' + count + ' entradas' + (draft.type === 'NUMERADO' ? ' · IDs de asientos: ' + draft.seatIds.join(', ') : ' · CAMPO');
+  byId('summary-items').textContent = text;
+  byId('total').textContent = current && count ? amount(current.precio * count) : '—';
+  byId('review-items').textContent = text + (current && count ? ' · Importe consultado: ' + amount(current.precio * count) : '');
+  review.disabled = busy || !context?.open || !draft || !current || current.cancelado;
+  save.disabled = review.disabled || owner === null;
+  byId('choose-profile').hidden = owner !== null;
+  byId<HTMLAnchorElement>('choose-profile').href = '/login/?volver=' + encodeURIComponent(eventLink(eventId, selectedSector));
+  byId('view-cart').hidden = true;
+  purchaseUI?.refresh();
 }
-document.querySelector('#save-cart')!.addEventListener('click', () => {
-  if (count() === 0) return;
-  try { saveDraft({ eventId: event.id, selection: [...selected.entries()].filter(([, value]) => value.quantity > 0).map(([sectorId, value]) => ({ sectorId, quantity: value.quantity, seats: [...value.seats] })), updatedAt: new Date().toISOString() }); document.querySelector('#save-cart-status')!.textContent = 'Selección guardada en este navegador. Todavía no se reservaron entradas.'; const link = document.querySelector<HTMLAnchorElement>('#view-cart')!; link.href = cartLink(); link.hidden = false; }
-  catch { document.querySelector('#save-cart-status')!.textContent = 'No pudimos guardar la selección en este navegador. No se modificó tu compra.'; }
+function paintSector() {
+  const current = sector();
+  byId('sector-panel').hidden = !current;
+  document.querySelectorAll<HTMLButtonElement>('[data-sector]').forEach(button => {
+    const active = Number(button.dataset.sector) === selectedSector; button.classList.toggle('selected', active); button.setAttribute('aria-pressed', String(active));
+  });
+  if (!current) { summary(); return; }
+  byId('sector-title').textContent = 'Sector #' + current.idSector;
+  byId('sector-kind').textContent = current.tipo === 'CAMPO' ? 'Ubicación libre · CAMPO' : 'Asientos numerados · NUMERADO';
+  byId('sector-availability').textContent = current.cancelado ? 'Inventario cancelado' : current.disponibles + ' disponibles al consultar';
+  byId('campo-selector').hidden = current.tipo !== 'CAMPO'; byId('numbered-selector').hidden = current.tipo !== 'NUMERADO';
+  quantity.value = String(draft?.quantity || 0); quantity.max = String(Math.min(current.disponibles, 1000));
+  quantity.disabled = busy || !context?.open || current.cancelado || current.disponibles === 0;
+  const seats = byId('seat-list'); seats.replaceChildren();
+  current.asientos.forEach(seat => {
+    const button = document.createElement('button'); button.className = 'real-seat'; button.dataset.seat = String(seat.idAsiento);
+    button.textContent = 'Fila ' + seat.fila + ' · ' + seat.columna + ' · #' + seat.idAsiento;
+    button.setAttribute('aria-pressed', String(!!draft?.seatIds.includes(seat.idAsiento)));
+    button.disabled = busy || !context?.open || current.cancelado || seat.estado !== 'DISPONIBLE';
+    button.title = seat.estado; seats.append(button);
+  });
+  summary();
+}
+function paint() {
+  if (!context) return;
+  document.title = context.event.title + ' — TicketYa';
+  const bindings = { 'event-title': context.event.title, 'event-breadcrumb': context.event.title, 'event-category': context.event.category,
+    'event-artists': context.event.artist, 'event-date': context.event.fullDate, 'event-location': context.event.location,
+    'event-description': context.event.description, 'summary-event': context.event.title };
+  for (const [id, value] of Object.entries(bindings)) byId(id).textContent = value;
+  byId('event-content').hidden = false; byId('event-state').hidden = true;
+  byId('availability-status').textContent = !context.open ? 'Este evento no admite selección para compra por su estado o fecha.'
+    : !context.sectors.length ? 'Este evento no tiene sectores configurados.' : 'Disponibilidad consultada. Guardar no reserva lugares.';
+  const list = byId('sector-list'); list.replaceChildren();
+  context.sectors.forEach(current => {
+    const button = document.createElement('button'); button.className = 'sector-option'; button.dataset.sector = String(current.idSector);
+    const name = document.createElement('span'); name.className = 'sector-name'; name.textContent = 'Sector #' + current.idSector + ' · ' + current.tipo;
+    const price = document.createElement('span'); price.className = 'sector-price'; price.textContent = amount(current.precio) + ' por entrada';
+    button.disabled = busy; button.append(name, price); list.append(button);
+  });
+  paintSector();
+}
+async function load() {
+  if (busy) return; busy = true; review.disabled = true; save.disabled = true;
+  byId('event-state').hidden = false; byId('event-state').setAttribute('aria-busy', 'true'); byId('event-content').hidden = true;
+  byId('retry-event').hidden = true; byId('event-error').textContent = ''; byId('event-state-title').textContent = 'Cargando evento y disponibilidad…';
+  try {
+    if (!positiveId(eventId) || (requestedSector !== undefined && !positiveId(requestedSector))) throw new Error('El enlace no contiene un ID válido. Volvé al catálogo.');
+    const previous = draft;
+    context = await selectionContext(eventId);
+    selectedSector = selectedSector ?? requestedSector ?? context.sectors[0]?.idSector;
+    let saved = previous;
+    if (!saved && !restored && params.get('carrito') === '1') {
+      try { saved = getCart().find(item => item.eventId === eventId && item.sectorId === selectedSector) || null; }
+      catch (cause) { message.textContent = cause instanceof Error ? cause.message : 'No pudimos leer el carrito.'; }
+    }
+    restored = true;
+    const available = sector();
+    if (saved) {
+      const result = context.open && available ? reconcileDraft(saved, available) : { draft: null, changed: true };
+      draft = result.draft;
+      message.textContent = result.changed ? 'La disponibilidad cambió: quitamos asientos o cantidades no disponibles. Revisá y guardá nuevamente la selección.' : 'Selección recuperada y contrastada con disponibilidad actual. Guardar no reserva lugares.';
+    } else draft = null;
+    busy = false; paint();
+  } catch (cause) {
+    context = null; draft = null; byId('event-state-title').textContent = 'No pudimos consultar el evento.';
+    byId('event-error').textContent = cause instanceof Error ? cause.message : 'Revisá la conexión.'; byId('retry-event').hidden = false;
+  } finally { busy = false; byId('event-state').setAttribute('aria-busy', 'false'); }
+}
+byId('retry-event').addEventListener('click', load);
+byId('refresh-availability').addEventListener('click', () => { dialog.close(); load(); });
+byId('sector-list').addEventListener('click', event => {
+  const button = (event.target as Element).closest<HTMLElement>('[data-sector]'); if (!button || busy) return;
+  if (selectedSector !== Number(button.dataset.sector)) { selectedSector = Number(button.dataset.sector); draft = null; message.textContent = 'Nuevo sector: se limpió la selección sin guardar. Cada selección corresponde a una compra por sector.'; }
+  paintSector();
 });
-
-update();
-if (!reduced.matches) gsap.from('.banner-content > *, .about-event, .booking-heading, .order-summary', { y: 20, opacity: 0, duration: .65, stagger: .06, ease: 'power3.out', clearProps: 'all' });
+quantity.addEventListener('input', () => {
+  const current = sector(); if (!current || busy || quantity.disabled) return;
+  const count = Number(quantity.value);
+  if (!Number.isInteger(count) || count < 0 || count > Math.min(current.disponibles, 1000)) { draft = null; message.textContent = 'Ingresá una cantidad entera dentro del cupo consultado.'; summary(); return; }
+  draft = newDraft(current, count); message.textContent = ''; summary();
+});
+byId('seat-list').addEventListener('click', event => {
+  const button = (event.target as Element).closest<HTMLButtonElement>('[data-seat]'), current = sector();
+  if (!button || button.disabled || !current || busy) return;
+  const id = Number(button.dataset.seat), ids = draft?.seatIds || [];
+  const values = ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id];
+  if (values.length > Math.min(current.disponibles, 1000)) { message.textContent = 'La selección supera el cupo consultado.'; return; }
+  draft = newDraft(current, values.length, values); message.textContent = ''; paintSector();
+});
+byId('clear-selection').addEventListener('click', () => { draft = null; message.textContent = 'Selección vacía.'; paintSector(); });
+review.addEventListener('click', () => { if (!review.disabled) { byId('save-cart-status').textContent = ''; dialog.showModal(); } });
+byId('close-review').addEventListener('click', () => dialog.close());
+save.addEventListener('click', async () => {
+  if (!draft || busy || owner === null || getSelectedProfileId() !== owner) return;
+  const selection = draft, previousPrice = sector()?.precio;
+  busy = true; save.disabled = true; review.disabled = true; byId('save-cart-status').textContent = 'Revalidando disponibilidad antes de guardar…';
+  try {
+    const fresh = await selectionContext(eventId, selection.sectorId), current = fresh.sectors[0];
+    const result = fresh.open ? reconcileDraft(selection, current) : { draft: null, changed: true };
+    context = { ...fresh, sectors: context!.sectors.map(value => value.idSector === current.idSector ? current : value) };
+    draft = result.draft;
+    if (result.changed || previousPrice !== current.precio) {
+      dialog.close(); message.textContent = 'Cambió el cupo, un asiento, el estado o el precio. Revisá la selección actualizada antes de guardarla.';
+    } else {
+      saveDraft({ ...selection, updatedAt: new Date().toISOString() }, owner);
+      byId('save-cart-status').textContent = 'Selección guardada solo en este navegador. No se reservaron lugares ni se creó una compra.';
+    }
+  } catch (cause) { byId('save-cart-status').textContent = cause instanceof Error ? cause.message : 'No pudimos verificar ni guardar la selección.'; }
+  finally { busy = false; paintSector(); if (dialog.open) byId('view-cart').hidden = !byId('save-cart-status').textContent?.startsWith('Selección guardada'); }
+});
+window.addEventListener('ticketya:profile', () => location.reload());
+window.addEventListener('pageshow', event => { if (getSelectedProfileId() !== owner) location.reload(); else if (event.persisted) { dialog.close(); load(); } });
+purchaseUI = initPurchase(owner, eventId, () => !busy && context?.open && !review.disabled ? draft : null, () => { dialog.close(); load(); });
+load();

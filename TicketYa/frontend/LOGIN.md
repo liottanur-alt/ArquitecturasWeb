@@ -1,48 +1,27 @@
-# Login del frontend
+# Selección de perfil de demostración
 
-Pantalla: `/login/`. El home y las paginas de evento muestran un acceso a la cuenta.
+/login/ reutiliza el diseño existente para elegir explícitamente
+un perfil de GET /usuarios. No hay contraseña, JWT, login ni autenticación.
+Se muestran carga, lista vacía, respuesta inválida, fallo de red y reintento.
+Confirmar guarda únicamente el ID en sessionStorage y vuelve al destino interno
+indicado por volver, o a /perfil/. No se aceptan destinos externos ni bucles al
+selector. La selección dura mientras exista el almacenamiento de la pestaña.
 
-## Conexion local
+Mi cuenta indica el ID y permite cambiar o quitar el perfil. Quitar no borra
+el usuario del servidor ni su carrito local. Los datos de sesión JWT anteriores
+se descartan. Si el servidor responde 404 al consultar el perfil, se quita la
+selección y se vuelve a elegir. Un fallo temporal conserva la selección.
 
-1. Iniciar MySQL y el microservicio de usuarios en el puerto 8004 desde su rama con JWT.
-2. Iniciar el API Gateway en el puerto 8080 desde su rama con las rutas de usuarios y auth.
-3. Ejecutar el frontend con `npm run dev` y abrir `http://localhost:4321/login/`.
+Seleccionar un perfil no autentica al usuario ni concede permisos.
+Consultar README.md para configurar el cliente API y el proxy.
 
-El frontend envia `POST /api/auth/login`. El proxy de desarrollo reenvia al Gateway
-como `POST http://localhost:8080/auth/login`. Esto evita CORS en desarrollo y
-mantiene el Gateway como punto de entrada. `GATEWAY_URL` en el entorno del proceso
-permite cambiar el destino del proxy antes de iniciar Astro.
-
-Body: `{ "email": "...", "password": "..." }`.
-Respuesta esperada: `{ "accessToken": "<JWT>", "tokenType": "Bearer", "expiresIn": 1800 }`.
-
-La cuenta de prueba del backend local es `admin@admin.com` / `1234`.
-No se precarga esa clave en el formulario. El login no se simula si el servicio
-no esta disponible. Si falta el backend o las rutas del Gateway en la rama actual,
-se muestra un mensaje de error al intentar ingresar.
-
-## Sesion
-
-El access token y su vencimiento se guardan en `sessionStorage`, junto con el email
-para mostrar la cuenta. No se guarda la password. La sesion visual se limpia al
-vencer el token o al cerrar sesion; no hay refresh token ni revocacion del JWT en
-el servidor. La validacion de firma, roles y autorizacion sigue siendo del backend.
-
-`/login/?volver=/eventos/1/` permite volver a una ruta interna tras ingresar.
-Se rechazan destinos externos. No se requieren cookies ni se envian credenciales
-de otras sesiones en el request.
-
-## Despliegue
-
-El proxy Vite funciona durante desarrollo. En hosting estatico configurar un proxy
-para `/api` hacia el Gateway, o definir `PUBLIC_API_BASE_URL` durante el build con
-la URL publica del Gateway y configurar CORS alli para el origen del frontend.
-No poner claves privadas o secretos JWT en variables `PUBLIC_*`.
-
-El registro esta en `/registro/` y envia `POST /api/auth/registro`. Solicita nombre,
-email, DNI (7 a 10 digitos), ciudad, password y confirmacion. Solo envia al backend
-nombre, email, DNI, ciudad y password; el servidor asigna CLIENTE. Password admite
-al menos 4 caracteres y hasta 72 bytes, en linea con el ejemplo de backend.
-Al confirmar el alta, vuelve al login con un aviso; no inicia sesion automaticamente.
-Los errores de duplicados (409), datos invalidos (400) y conexion se muestran en pantalla.
-La recuperacion de password todavia no tiene pantalla. El token no convierte la seleccion de entradas del boceto en una reserva real.
+/registro/ permite crear un perfil sin contraseña. Consulta GET /roles y exige
+un único CLIENTE con ID válido; no crea roles ni asume un ID. POST /usuarios
+envía nombre, email, dni, ciudad e idRol. Valida campos obligatorios y límites
+después de trim (100/254/20/100), formato de email y permite DNI no numérico.
+Los errores 409 se muestran como posible duplicado o conflicto concurrente.
+Si falta CLIENTE o falla la consulta se bloquea el alta y se ofrece reintentar.
+Tras una creación confirmada no se vuelve a enviar ni se cambia la selección:
+un enlace lleva al selector para elegir el perfil explícitamente. No autentica.
+Tras un fallo de conexión, revisar perfiles existentes antes de volver a enviar,
+ya que no hay idempotencia para crear usuarios.

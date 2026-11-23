@@ -9,10 +9,10 @@ export default defineConfig({
     plugins: [tailwindcss()],
     server: {
       proxy: {
-        '/api': {
+        '/gateway': {
           target: process.env.GATEWAY_URL || 'http://localhost:8080',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
+          rewrite: (path) => path.replace(/^\/gateway(?=\/|\?|$)/, '')
         }
       }
     }

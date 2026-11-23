@@ -1,34 +1,29 @@
-export type Session = { accessToken: string; expiresAt: number; email: string };
-const key = 'ticketya-session';
-export function clearSession() { try { sessionStorage.removeItem(key); } catch {} }
-export function getSession(): Session | null {
+// Esta selección es solo contexto de demostración, nunca una credencial.
+const key = 'ticketya-demo-profile-id';
+function validId(value: unknown): value is number { return Number.isSafeInteger(value) && Number(value) > 0; }
+export function getSelectedProfileId(): number | null {
   try {
-    const data = JSON.parse(sessionStorage.getItem(key) || 'null');
-    if (!data || typeof data.accessToken !== 'string' || !Number.isFinite(data.expiresAt)
-      || data.expiresAt <= Date.now() || typeof data.email !== 'string') { clearSession(); return null; }
-    return data;
-  } catch { clearSession(); return null; }
+    sessionStorage.removeItem('ticketya-session'); // Descartar sesiones JWT heredadas.
+    const raw = sessionStorage.getItem(key);
+    const id: unknown = raw === null ? null : JSON.parse(raw);
+    if (!validId(id)) { sessionStorage.removeItem(key); return null; }
+    return id;
+  } catch { return null; }
 }
-export function saveSession(response: unknown, email: string) {
-  const data = response as { accessToken?: unknown; tokenType?: unknown; expiresIn?: unknown };
-  if(!data || typeof data.accessToken !== 'string' || data.tokenType !== 'Bearer'
-      || typeof data.expiresIn !== 'number' || !Number.isFinite(data.expiresIn) || data.expiresIn <= 0) throw new Error('invalid-response');
-  let expiresAt = Date.now() + data.expiresIn * 1000;
-  try {
-    const part=data.accessToken.split('.')[1];
-    const claims=JSON.parse(atob(part.replace(/-/g,'+').replace(/_/g,'/')));
-    if(typeof claims.exp !== 'number' || !Number.isFinite(claims.exp))throw new Error();
-    expiresAt=Math.min(expiresAt,claims.exp*1000);
-  } catch { throw new Error('invalid-response'); }
-  if(expiresAt <= Date.now())throw new Error('invalid-response');
-  // El servidor valida la firma y los permisos. Acá solo se administra la sesión visual.
-  sessionStorage.setItem(key,JSON.stringify({accessToken:data.accessToken,expiresAt,email}));
+export function selectProfile(id: number) {
+  if (!validId(id)) throw new Error('El perfil debe tener un ID válido.');
+  sessionStorage.setItem(key, JSON.stringify(id));
+  window.dispatchEvent(new Event('ticketya:profile'));
+}
+export function clearSelectedProfile() {
+  sessionStorage.removeItem(key);
+  window.dispatchEvent(new Event('ticketya:profile'));
 }
 export function safeReturn(value: string | null) {
-  if(!value || !value.startsWith('/') || value.startsWith('//'))return '/';
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
   try {
-    const url=new URL(value,window.location.origin);
-    if(url.origin !== window.location.origin || /^\/(login|registro)\/?$/.test(url.pathname))return '/';
-    return url.pathname+url.search+url.hash;
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin || /^\/(login|registro)\/?$/.test(url.pathname)) return '/';
+    return url.pathname + url.search + url.hash;
   } catch { return '/'; }
 }

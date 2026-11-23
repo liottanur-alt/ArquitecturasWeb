@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# IDs e intentos de la carga local de demostración
+.demo-data.json

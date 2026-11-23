@@ -4,20 +4,20 @@ import { ArrowUpRight, LogOut, UserRound } from "@lucide/astro";
 
 <div class="account-widget">
   <a href="/login/" class="login-button" data-login-link
-    >Ingresar <ArrowUpRight size={16} /></a
+    >Elegir perfil <ArrowUpRight size={16} /></a
   >
   <details data-account-menu hidden>
     <summary class="login-button"><UserRound size={16} /> Mi cuenta</summary
     ><div class="account-popover">
-      <span>SESIÓN INICIADA</span><p data-account-email></p><nav
+      <span>PERFIL DE DEMOSTRACIÓN</span><p data-account-email></p><p>Seleccionar un perfil no autentica al usuario.</p><nav
         class="account-links"
         aria-label="Mi cuenta"
       >
-        <a href="/perfil/">Mi perfil</a><a href="/perfil/#compras"
+        <a href="/perfil/">Mi perfil</a><a href="/perfil/#recomendaciones">Recomendaciones</a><a href="/perfil/#compras"
           >Mis compras</a
         ><a href="/perfil/#entradas">Mis entradas</a><a href="/perfil/#carrito"
           >Mi carrito</a>
-      </nav><button data-logout><LogOut size={15} /> Cerrar sesión</button>
+      <a data-change-profile href="/login/?volver=/perfil/">Cambiar perfil</a></nav><button data-logout><LogOut size={15} /> Quitar perfil</button>
     </div>
   </details>
 </div>
@@ -85,11 +85,10 @@ import { ArrowUpRight, LogOut, UserRound } from "@lucide/astro";
   }
 </style>
 <script>
-  import { getSession, clearSession } from "../scripts/session";
-  let expiryTimer: ReturnType<typeof setTimeout>;
+  import { getSelectedProfileId, clearSelectedProfile } from "../scripts/session";
   function refresh() {
-    clearTimeout(expiryTimer);
-    const session = getSession();
+    const session = getSelectedProfileId();
+    document.querySelectorAll<HTMLAnchorElement>("[data-change-profile], [data-login-link]").forEach(link => { link.href = "/login/?volver=" + encodeURIComponent(location.pathname + location.search + location.hash); });
     document
       .querySelectorAll<HTMLElement>("[data-login-link]")
       .forEach((link) => {
@@ -102,19 +101,14 @@ import { ArrowUpRight, LogOut, UserRound } from "@lucide/astro";
         if (!session) menu.open = false;
       });
     document.querySelectorAll("[data-account-email]").forEach((el) => {
-      el.textContent = session?.email || "";
+      el.textContent = session ? `Perfil #${session}` : "";
     });
-    if (session)
-      expiryTimer = setTimeout(
-        refresh,
-        Math.min(session.expiresAt - Date.now() + 50, 2147483647),
-      );
+
   }
   document.querySelectorAll("[data-logout]").forEach((button) =>
     button.addEventListener("click", () => {
-      clearSession();
+      try { clearSelectedProfile(); } catch { window.alert("No pudimos quitar el perfil. Revisá el almacenamiento de esta pestaña."); }
       refresh();
-      window.dispatchEvent(new Event("ticketya:session"));
     }),
   );
   document.addEventListener("click", (e) =>
@@ -130,7 +124,7 @@ import { ArrowUpRight, LogOut, UserRound } from "@lucide/astro";
         .querySelectorAll<HTMLDetailsElement>("[data-account-menu]")
         .forEach((menu) => (menu.open = false));
   });
-  window.addEventListener("ticketya:session", refresh);
+  window.addEventListener("ticketya:profile", refresh);
   window.addEventListener("pageshow", refresh);
   document.addEventListener("visibilitychange", refresh);
   refresh();

@@ -70,10 +70,9 @@ import {
             </section>
             <div class="demo-banner" id="profile-demo" hidden>
                 <Info size={17} /><p>
-                    <strong>Perfil de demostración.</strong> Estos datos son ficticios.
-                    Podés explorar y editar el ejemplo sin crear una cuenta.
+                    <strong>Perfil de demostración.</strong> Seleccionar un perfil no autentica al usuario ni concede permisos. Los datos de este perfil vienen del servidor y los cambios se guardan allí.
                 </p><a href="/login/?volver=/perfil/"
-                    >Ingresar <ArrowUpRight size={15} /></a>
+                    >Cambiar perfil <ArrowUpRight size={15} /></a>
             </div>
             <div class="profile-grid">
                 <aside class="profile-sidebar">
@@ -91,6 +90,7 @@ import {
                         aria-label="Mi cuenta"
                         aria-orientation="vertical"
                     >
+                        <button id="tab-recomendaciones" role="tab" aria-selected="false" aria-controls="panel-recomendaciones" data-tab="recomendaciones" tabindex="-1"><Ticket size={18}/> Para vos <ArrowRight size={15}/></button>
                         <button
                             id="tab-datos"
                             role="tab"
@@ -107,7 +107,7 @@ import {
                             aria-controls="panel-compras"
                             data-tab="compras"
                             tabindex="-1"
-                            ><ShoppingBag size={18} /> Mis compras <span>3</span
+                            ><ShoppingBag size={18} /> Mis compras <span data-purchase-count>—</span
                             ></button
                         ><button
                             id="tab-entradas"
@@ -117,7 +117,7 @@ import {
                             data-tab="entradas"
                             tabindex="-1"
                             ><Ticket size={18} /> Mis entradas <span
-                                data-entry-count>5</span
+                                data-entry-count>—</span
                             ></button
                         ><button
                             id="tab-carrito"
@@ -137,6 +137,7 @@ import {
                         ><ArrowUpRight size={17} /></a>
                 </aside>
                 <div class="profile-panels">
+                    <section id="panel-recomendaciones" role="tabpanel" aria-labelledby="tab-recomendaciones" data-panel="recomendaciones" hidden><div class="profile-panel-heading"><span class="eyebrow">IDEAS PARA TU PRÓXIMO PLAN</span><h2>Recomendados para vos.</h2><p>Motivos y fuentes informados por el servidor para el perfil seleccionado.</p></div><div class="sample-note"><Info size={17}/><p>Una recomendación no garantiza cupo, incluso si la disponibilidad fue verificada al consultar. Revisá el detalle y la disponibilidad actual antes de comprar.</p></div><button id="reload-recommendations" class="text-link">Actualizar recomendaciones</button><p id="recommendation-status" role="status" aria-live="polite"></p><ul id="recommendation-warnings" role="status" aria-live="polite"></ul><p id="recommendation-verifications"></p><div id="recommendation-list"></div><p class="price-note">Podés editar tus preferencias y artistas favoritos en Mis datos. Seleccionar un perfil no autentica al usuario.</p></section>
                     <section
                         id="panel-datos"
                         role="tabpanel"
@@ -160,46 +161,45 @@ import {
                             <Info size={17} /><span id="profile-error-text"
                             ></span><button id="retry-profile" type="button"
                                 >Reintentar</button>
-                        </div><form id="profile-form">
+                        </div><form id="profile-form" novalidate>
                             <fieldset id="profile-fields" disabled>
                                 <div class="profile-field">
                                     <label for="nombre">Nombre completo</label
                                     ><div>
                                         <UserRound size={17} /><input
-                                            id="nombre"
+                                            id="nombre" aria-describedby="nombre-error"
                                             autocomplete="name"
                                             maxlength="100"
                                             required
-                                        />
+                                        /><span id="nombre-error" class="profile-field-error" aria-live="polite"></span>
                                     </div>
                                 </div><div class="profile-field">
                                     <label for="email">Email</label><div>
                                         <Mail size={17} /><input
-                                            id="email"
+                                            id="email" aria-describedby="email-error"
                                             type="email"
                                             autocomplete="email"
                                             maxlength="254"
                                             required
-                                        />
+                                        /><span id="email-error" class="profile-field-error" aria-live="polite"></span>
                                     </div>
                                 </div><div class="profile-fields-row">
                                     <div class="profile-field">
                                         <label for="dni">DNI</label><div>
                                             <IdCard size={17} /><input
-                                                id="dni"
-                                                inputmode="numeric"
+                                                id="dni" aria-describedby="dni-error"
                                                 maxlength="20"
                                                 required
-                                            />
+                                            /><span id="dni-error" class="profile-field-error" aria-live="polite"></span>
                                         </div>
                                     </div><div class="profile-field">
                                         <label for="ciudad">Ciudad</label><div>
                                             <MapPin size={17} /><input
-                                                id="ciudad"
+                                                id="ciudad" aria-describedby="ciudad-error"
                                                 autocomplete="address-level2"
                                                 maxlength="100"
                                                 required
-                                            />
+                                            /><span id="ciudad-error" class="profile-field-error" aria-live="polite"></span>
                                         </div>
                                     </div>
                                 </div><div class="profile-form-foot">
@@ -207,7 +207,7 @@ import {
                                     ><button
                                         class="button button-blue"
                                         id="save-profile"
-                                        >Guardar cambios <Check
+                                        ><span id="save-profile-label">Guardar cambios</span> <Check
                                             size={17}
                                         /></button>
                                 </div>
@@ -218,6 +218,9 @@ import {
                             >
                             </p>
                         </form>
+                    <section class="profile-panel-heading" aria-labelledby="preferences-heading"><h2 id="preferences-heading">Tus preferencias.</h2><p>Se guardan en el perfil del servidor. La ciudad preferida es independiente de la ciudad de tus datos personales.</p></section>
+                    <form id="preferences-form"><fieldset id="preferences-fields" disabled><legend>Tipos de evento preferidos</legend><div id="preferred-types" class="history-filters"></div><div class="profile-field"><label for="preferred-city">Ciudad preferida (opcional)</label><div><input id="preferred-city" maxlength="100" autocomplete="off"/></div></div><p>Guardar envía ambos campos completos. Sin tipos y con ciudad vacía se borran esas preferencias.</p><button class="button button-blue" type="submit">Guardar preferencias</button></fieldset><p id="preferences-status" role="status" aria-live="polite"></p></form><button id="reload-preferences" class="text-link">Recargar preferencias (descarta la edición)</button>
+                    <section aria-labelledby="artists-heading" class="profile-panel-heading"><h2 id="artists-heading">Artistas favoritos del servidor.</h2><p>Elegí artistas del catálogo. Son distintos de los eventos guardados con el corazón del inicio: esos eventos quedan solo en este navegador y no se envían al backend.</p><label for="artist-choice">Artista del catálogo</label><select id="artist-choice" disabled><option value="">Cargando catálogo…</option></select><button id="add-artist" class="text-link" disabled>Agregar artista favorito</button><ul id="favorite-artists"></ul><p id="artists-status" role="status" aria-live="polite"></p><button id="reload-artists" class="text-link">Recargar catálogo y artistas favoritos</button></section>
                     </section>
                     <section
                         id="panel-compras"
@@ -234,25 +237,16 @@ import {
                             </p>
                         </div><div class="sample-note">
                             <Info size={16} /><p>
-                                <strong>Historial de ejemplo.</strong> Las compras
-                                que ves acá son ficticias y no representan pagos ni
-                                entradas reales.
-                            </p>
-                        </div><div
-                            class="history-filters"
-                            role="group"
-                            aria-label="Filtrar compras"
-                        >
-                            <button
-                                data-history-filter="Todas"
-                                aria-pressed="true">Todas <span>3</span></button
-                            ><button
-                                data-history-filter="Confirmada"
-                                aria-pressed="false">Confirmadas</button
-                            ><button
-                                data-history-filter="Devuelta"
-                                aria-pressed="false">Devueltas</button>
-                        </div><div id="purchase-list"></div>
+                                Compras del perfil seleccionado. Pago y reintegros simulados; seleccionar un perfil no autentica al usuario.
+                            </p></div>
+                        <div class="history-filters" role="group" aria-label="Filtrar compras por estado">
+                        <button data-history-filter="" aria-pressed="true">Todas <span data-purchase-count>—</span></button>
+                        <button data-history-filter="PENDIENTE" aria-pressed="false">Pendientes</button>
+                        <button data-history-filter="APROBADA" aria-pressed="false">Aprobadas</button>
+                        <button data-history-filter="RECHAZADA" aria-pressed="false">Rechazadas</button>
+                        <button data-history-filter="EXPIRADA" aria-pressed="false">Expiradas</button>
+                        <button data-history-filter="CANCELADA" aria-pressed="false">Canceladas</button></div>
+                        <button id="refresh-history" class="text-link">Actualizar historial</button><p id="history-status" role="status" aria-live="polite"></p><div id="purchase-list"></div>
                     </section>
                     <section
                         id="panel-entradas"
@@ -270,44 +264,22 @@ import {
                         </div>
                         <div class="sample-note">
                             <Info size={16} /><p>
-                                <strong>Entradas y QR de demostración.</strong> No
-                                sirven para ingresar a eventos. Las solicitudes de
-                                devolución son ejemplos locales, sin reintegros reales.
-                            </p>
-                        </div>
+                                Entradas consultadas al servidor. El QR conserva la cadena original; verlo no registra ingreso ni garantiza acceso.
+                            </p></div><button id="refresh-tickets" class="text-link">Actualizar entradas</button>
                         <div class="ticket-stats">
                             <div>
                                 <strong id="valid-tickets">0</strong><span
-                                    >Válidas</span>
+                                    >Pagas sin escanear</span>
                             </div><div>
                                 <strong id="pending-tickets">0</strong><span
                                     >Devoluciones pendientes</span>
                             </div><div>
                                 <strong id="other-tickets">0</strong><span
-                                    >Utilizadas o devueltas</span>
+                                    >Escaneadas</span>
                             </div>
                         </div>
-                        <div
-                            class="history-filters ticket-filters"
-                            role="group"
-                            aria-label="Filtrar entradas"
-                        >
-                            <button
-                                data-ticket-filter="todas"
-                                aria-pressed="true">Todas</button
-                            ><button
-                                data-ticket-filter="valida"
-                                aria-pressed="false">Válidas</button
-                            ><button
-                                data-ticket-filter="pendiente"
-                                aria-pressed="false">Pendientes</button
-                            ><button
-                                data-ticket-filter="utilizada"
-                                aria-pressed="false">Utilizadas</button
-                            ><button
-                                data-ticket-filter="devuelta"
-                                aria-pressed="false">Devueltas</button>
-                        </div>
+                        <div class="history-filters ticket-filters" role="group" aria-label="Filtrar entradas">
+                        <button data-ticket-filter="" aria-pressed="true">Todas</button><button data-ticket-filter="PAGA" aria-pressed="false">Pagas</button><button data-ticket-filter="SOLICITUD_DEVOLUCION" aria-pressed="false">Devolución pendiente</button><button data-ticket-filter="DEVOLUCION_ACEPTADA" aria-pressed="false">Devolución aceptada</button><button data-ticket-filter="DEVOLUCION_RECHAZADA" aria-pressed="false">Devolución rechazada</button><button data-ticket-filter="EVENTO_CANCELADO" aria-pressed="false">Evento cancelado</button><button data-ticket-filter="scan:ESCANEADO" aria-pressed="false">Escaneadas</button><button data-ticket-filter="scan:NO_ESCANEADO" aria-pressed="false">Sin escanear</button></div>
                         <div
                             class="purchase-ticket-filter"
                             id="purchase-ticket-filter"
@@ -315,9 +287,9 @@ import {
                         >
                             <span id="purchase-ticket-label"></span><button
                                 id="clear-purchase-ticket"
-                                >Ver todas las compras <X size={13} /></button>
+                                >Ver todas mis entradas <X size={13} /></button>
                         </div>
-                        <div id="ticket-list"></div><div
+                        <div id="ticket-list"></div><section class="sample-note" aria-labelledby="refunds-heading"><div><h3 id="refunds-heading">Mis solicitudes de devolución</h3><button id="refresh-refunds" class="text-link">Consultar solicitudes y entradas</button><p id="refunds-status" role="status" aria-live="polite"></p><ul id="refund-list"></ul><p>Estados PENDIENTE, ACEPTADA y RECHAZADA según el servidor. Los reintegros son simulados. Tras un rechazo, el backend no admite usar el QR para ingreso.</p></div></section><div
                             id="tickets-empty"
                             class="profile-empty"
                             hidden
@@ -329,11 +301,7 @@ import {
                                 momento.
                             </p>
                         </div>
-                        <p class="refund-rule">
-                            <Info size={16} /> Podés solicitar la devolución de una
-                            entrada válida hasta 72 horas antes del evento. La aprobación
-                            corresponde al administrador.
-                        </p><p
+                        <p
                             id="tickets-status"
                             role="status"
                             aria-live="polite"
@@ -361,7 +329,7 @@ import {
                                     >No reservan lugares ni garantizan
                                     disponibilidad.</strong>
                             </p>
-                        </div><div id="cart-list"></div><div
+                        </div><button id="refresh-cart" class="text-link">Revalidar carrito</button><div id="cart-list"></div><div
                             id="cart-empty"
                             class="profile-empty"
                             hidden
@@ -382,8 +350,7 @@ import {
                                 <span>Total de tus selecciones</span><strong
                                     id="cart-total"></strong>
                             </div><p>
-                                Importes de ejemplo. Continuá cada evento para
-                                revisar sus ubicaciones.
+                                Cada selección se verifica por separado. Guardar no reserva lugares.
                             </p>
                         </div><p
                             id="cart-status"
@@ -416,87 +383,47 @@ import {
         </footer>
         <dialog id="purchase-dialog" aria-labelledby="purchase-title">
             <div class="dialog-head">
-                <span class="eyebrow">COMPRA DE EJEMPLO</span><button
+                <span class="eyebrow">DETALLE DE COMPRA</span><button
                     class="icon-button"
                     data-close-purchase
                     aria-label="Cerrar detalle"><X size={22} /></button>
             </div><div class="dialog-body">
-                <h2 id="purchase-title"></h2><p id="purchase-detail"></p><p
+                <p id="history-reservation-detail" role="status"></p><a id="history-resume-detail" class="text-link" hidden>Retomar pago simulado</a><button id="history-entry-detail" class="text-link" data-purchase-tickets>Ver entradas de esta compra</button><h2 id="purchase-title"></h2><p id="purchase-detail"></p><p
                     id="purchase-payment"
                 >
                 </p><div class="purchase-modal-total">
-                    <span>Importe de ejemplo</span><strong id="purchase-total"
+                    <span>Importe del servidor</span><strong id="purchase-total"
                     ></strong>
                 </div><p class="demo-note">
-                    Este comprobante es ficticio. No genera entradas ni códigos
-                    QR válidos para ingresar a un evento.
+                    Datos de la compra recibidos del servidor. El pago y los reintegros son simulados.
                 </p><button class="button button-blue" data-close-purchase
                     >Volver a mis compras <ArrowRight size={17} /></button>
             </div>
         </dialog>
         <dialog id="ticket-qr-dialog" aria-labelledby="qr-title">
             <div class="dialog-head">
-                <span class="eyebrow">TU ENTRADA · DEMOSTRACIÓN</span><button
+                <span class="eyebrow">TU ENTRADA</span><button
                     class="icon-button"
                     data-close-qr
                     aria-label="Cerrar QR"><X size={22} /></button>
             </div><div class="dialog-body ticket-qr-body">
-                <span class="qr-demo-badge">QR DE EJEMPLO · SIN VALIDEZ</span
+                <span class="qr-demo-badge">QR RECIBIDO DEL SERVIDOR</span
                 ><h2 id="qr-title"></h2><p id="qr-location"></p><p id="qr-date">
                 </p><div class="qr-frame">
                     <img
                         id="ticket-qr-image"
-                        alt="Código QR de demostración, no válido para ingresar"
+                        alt="Código QR de la entrada recibido del servidor"
                         hidden
                     /><p id="qr-loading" role="status">Preparando el QR…</p>
                 </div><strong id="qr-ticket-id" class="qr-ticket-id"></strong><p
                     class="demo-note"
                 >
-                    Este QR identifica una entrada ficticia del boceto. No tiene
-                    validez para ingresar a ningún evento.
+                    El QR representa la cadena exacta del servidor. Mostrarlo no consume la entrada. El personal de ingreso verifica su estado.
                 </p><button class="button button-blue" data-close-qr
                     >Volver a mis entradas <ArrowRight size={17} /></button>
             </div>
         </dialog>
-        <dialog id="ticket-refund-dialog" aria-labelledby="refund-title">
-            <div class="dialog-head">
-                <span class="eyebrow">DEVOLUCIÓN DE EJEMPLO</span><button
-                    class="icon-button"
-                    data-close-refund
-                    aria-label="Cerrar solicitud"><X size={22} /></button>
-            </div><div class="dialog-body">
-                <h2 id="refund-title">¿Cambiaron tus planes?</h2><p
-                    id="refund-event"
-                >
-                </p><p id="refund-seat"></p><div class="refund-amount">
-                    <span>Importe de la entrada</span><strong id="refund-amount"
-                    ></strong>
-                </div><form id="refund-form">
-                    <label for="refund-reason">Motivo de la solicitud</label
-                    ><select id="refund-reason" required
-                        ><option value="">Elegí un motivo</option><option
-                            >No puedo asistir</option
-                        ><option>Cambio de planes</option><option
-                            >Otro motivo</option
-                        ></select
-                    ><p class="demo-note">
-                        La solicitud quedará pendiente de aprobación. En este
-                        boceto se guarda solo en el navegador: no se reintegra
-                        dinero. El QR no se mostrará mientras la devolución esté
-                        pendiente.
-                    </p><p id="refund-error" role="alert" hidden></p><button
-                        class="button button-blue"
-                        id="confirm-refund"
-                        type="submit"
-                        >Solicitar devolución <ArrowRight size={17} /></button
-                    ><button
-                        class="refund-cancel"
-                        data-close-refund
-                        type="button">Conservar mi entrada</button>
-                </form>
-            </div>
-        </dialog>
-
+        <dialog id="ticket-refund-dialog" aria-labelledby="refund-title"><div class="dialog-head"><span class="eyebrow">SOLICITUD DE DEVOLUCIÓN</span><button class="icon-button" data-close-refund aria-label="Cerrar solicitud"><X size={22}/></button></div><div class="dialog-body"><h2 id="refund-title">Solicitar devolución</h2><p>Podés solicitar hasta 72 horas antes del inicio del evento, una entrada por solicitud. El servidor determina la elegibilidad. Enviar no implica aceptación ni reintegro.</p><p id="refund-message" role="status" aria-live="polite"></p><form id="refund-form"><label for="refund-description">Motivo</label><textarea id="refund-description" required rows="4"></textarea><button id="confirm-refund" class="button button-blue" type="submit" disabled>Enviar solicitud</button><button class="text-link" data-close-refund type="button">Volver sin enviar</button></form></div></dialog>
         <script>
             import "../scripts/profile";
         </script>

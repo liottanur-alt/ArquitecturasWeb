@@ -1,0 +1,37 @@
+---
+import '../../styles/global.css';
+import '../../styles/event.css';
+import AccountMenu from '../../components/AccountMenu.astro';
+import { ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, MapPin, Ticket, Check, X, Info, Armchair } from '@lucide/astro';
+---
+<!doctype html>
+<html lang="es-AR">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="description" content="Consultá el evento y elegí entradas de un sector. Guardar la selección no reserva lugares."/><title>Elegir entradas — TicketYa</title><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/></head>
+<body class="detail-page">
+<header class="site-header"><a href="/" class="brand"><span class="brand-symbol"><Ticket size={22}/></span>ticket<span>ya</span></a><a class="back-home" href="/#explorar"><ArrowLeft size={16}/> Seguir explorando</a><AccountMenu/></header>
+<main class="wrap detail-main">
+  <nav class="breadcrumbs"><a href="/">Inicio</a><span>/</span><span id="event-breadcrumb">Evento</span></nav>
+  <div id="event-state" class="empty-state" aria-busy="true"><h2 id="event-state-title">Cargando evento y disponibilidad…</h2><p id="event-error" role="alert"></p><button id="retry-event" class="button button-blue" hidden>Reintentar</button></div>
+  <div id="event-content" hidden>
+  <section class="event-banner" aria-labelledby="event-title"><img src="/event-placeholder.svg" alt="Imagen ilustrativa de respaldo"/><div class="banner-overlay"></div><div class="banner-content"><span class="event-pill" id="event-category"></span><h1 id="event-title"></h1><p id="event-artists"></p><div class="banner-meta"><span><CalendarDays size={16}/><span id="event-date"></span></span><span><MapPin size={16}/><span id="event-location"></span></span></div></div></section>
+  <div class="detail-layout"><div class="detail-content">
+    <section class="about-event"><span class="eyebrow">HAY QUE ESTAR AHÍ</span><h2>Tu lugar en esta historia.</h2><p id="event-description"></p><div class="event-facts"><span><Info size={17}/>Una selección por sector. El límite por cliente se valida al comprar.</span></div></section>
+    <section id="seleccion" class="booking-section" aria-labelledby="booking-title"><div class="booking-heading"><span class="step-circle">01</span><div><h2 id="booking-title">Elegí dónde vivirlo.</h2><p>Cambiar de sector limpia la selección que todavía no guardaste.</p></div></div>
+      <p id="availability-status" role="status" aria-live="polite"></p><button class="text-link" id="refresh-availability">Actualizar disponibilidad</button>
+      <div class="sector-list" id="sector-list" role="group" aria-label="Sectores del evento"></div>
+      <section class="sector-panel" id="sector-panel" hidden><div class="panel-heading"><div><h3 id="sector-title"></h3><p id="sector-kind"></p></div><span class="availability" id="sector-availability"></span></div>
+        <div class="general-selector" id="campo-selector" hidden><div class="general-illustration"><Ticket size={34}/><span>CAMPO</span><small>SIN NUMERAR</small></div><div class="quantity-info"><h4>¿Cuántas entradas querés?</h4><label for="quantity">Cantidad</label><input id="quantity" type="number" min="0" step="1" value="0"/><p>El cupo consultado puede cambiar antes de comprar.</p></div></div>
+        <div class="numbered-selector" id="numbered-selector" hidden><p class="seat-help">Elegí asientos disponibles por fila y columna. Se guardan sus IDs reales; la distribución visual no representa un plano físico.</p><div class="real-seat-list" id="seat-list" role="group" aria-label="Asientos del sector"></div></div>
+      </section>
+      <p class="selection-message" id="selection-message" role="status" aria-live="polite"></p>
+      <div class="booking-note"><Info size={18}/><p>Guardar en el carrito no reserva lugares. La disponibilidad es una consulta puntual; no garantiza cupo al comprar.</p></div>
+    </section>
+  </div><aside class="order-summary" aria-labelledby="summary-title"><div class="summary-top"><span class="eyebrow">UN PASO MÁS CERCA</span><Ticket size={24}/></div><h2 id="summary-title">Tu próximo momento.</h2><p class="summary-event" id="summary-event"></p><div id="summary-items"></div><div class="summary-total"><span>Importe según la consulta</span><strong id="total">—</strong></div><p class="price-note">Importe calculado con el precio recibido del inventario. El servidor confirma el importe al comprar. El contrato no informa moneda.</p><button class="button button-blue review-button" id="review-selection" disabled>Revisar selección <ArrowRight size={18}/></button><button id="clear-selection" class="clear-selection">Limpiar selección</button><a id="choose-profile" class="text-link" href="/login/" hidden>Elegir perfil de demostración para guardar</a><p class="price-note">Seleccionar un perfil no autentica al usuario. Guardar en carrito no crea compras ni reservas.</p></aside></div>
+  </div>
+  <section class="booking-note" id="purchase-panel"><div><a id="back-history" class="text-link" href="/perfil/#compras" hidden>Volver a mis compras</a><h2>Compra y reserva</h2><p id="purchase-status" role="status" aria-live="polite">Todavía no se creó una compra.</p><p id="reservation-status" role="status"></p><p id="reservation-clock"></p><h3>Pago de demostración · SIMULADO</h3><p>Estos botones simulan un resultado. No se solicita tarjeta ni se cobra dinero real.</p><p id="payment-state" role="status" aria-live="polite"></p><button id="approve-payment" class="text-link" disabled>Simular pago aprobado</button><button id="reject-payment" class="text-link" disabled>Simular pago rechazado</button><p id="payment-entries-status" role="status"></p><ul id="payment-entries"></ul><button id="recover-purchase" class="text-link" hidden>Recuperar intento / consultar estado</button><button id="new-purchase" class="text-link" hidden>Preparar un intento nuevo con otra selección</button><p>Crear compra solicita una reserva. El pago se procesa solo con los botones de simulación; seleccionar un perfil no autentica.</p></div></section>
+</main>
+<footer class="site-footer wrap"><a class="brand" href="/">ticket<span>ya</span></a><p>Hay que estar ahí.</p><span>© 2026 TicketYa</span></footer>
+<dialog id="review-dialog" aria-labelledby="review-title"><div class="dialog-head"><span class="eyebrow">UNA SELECCIÓN · UN SECTOR</span><button class="icon-button" id="close-review" aria-label="Cerrar resumen"><X size={22}/></button></div><div class="dialog-body"><h2 id="review-title">Revisá tu selección.</h2><div id="review-items"></div><p class="demo-note">Guardar no reserva asientos ni cupo. Crear compra es una acción separada que solicita una reserva; no procesa el pago.</p><button class="button button-blue" id="create-purchase">Crear compra y reservar (simulado)</button><button class="button button-blue" id="save-cart">Guardar en carrito <Ticket size={18}/></button><p id="save-cart-status" role="status" aria-live="polite"></p><a id="view-cart" class="text-link" href="/perfil/#carrito" hidden>Ver mi carrito <ArrowRight size={16}/></a></div></dialog>
+<noscript><p class="wrap">Activá JavaScript para consultar el evento y su disponibilidad.</p></noscript>
+<script>import '../../scripts/event';</script>
+</body></html>

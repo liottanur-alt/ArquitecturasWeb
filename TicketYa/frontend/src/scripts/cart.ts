@@ -1,26 +1,31 @@
-import { catalog } from '../data/events';
-import { getSession } from './session';
-export type Draft = { eventId: number; selection: { sectorId: string; quantity: number; seats: string[] }[]; updatedAt: string };
-function owner() { const session = getSession(); if (!session) return 'invitado'; try { const sub = JSON.parse(atob(session.accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub; return /^\d+$/.test(sub) ? `usuario-${sub}` : `email-${session.email.toLowerCase()}`; } catch { return `email-${session.email.toLowerCase()}`; } }
-const key = () => `ticketya-carrito-${owner()}`;
-export function normalizeDraft(value: unknown): Draft | null {
-    if (!value || typeof value !== 'object') return null; const v = value as Draft; const event = catalog.find(e => e.id === v.eventId); if (!event || !Array.isArray(v.selection)) return null;
-    let total = 0; const used = new Set<string>(); const selection: Draft['selection'] = [];
-    for (const item of v.selection) {
-        if (!item || used.has(item.sectorId)) return null; used.add(item.sectorId); const sector = event.sectors.find(s => s.id === item.sectorId);
-        if (!sector || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > Math.min(event.maxTickets, sector.available) || !Array.isArray(item.seats)) return null;
-        if (sector.type === 'general' && item.seats.length !== 0) return null;
-        if (sector.type === 'numerado') {
-            if (item.seats.length !== item.quantity || new Set(item.seats).size !== item.seats.length) return null;
-            for (const seat of item.seats) { if (typeof seat !== 'string' || !/^\w-\d+$/.test(seat)) return null; const [row, n] = seat.split('-'); if (row < 'A' || row >= String.fromCharCode(65 + sector.rows!) || Number(n) < 1 || Number(n) > sector.columns! || sector.occupied!.includes(seat)) return null; }
-        }
-        total += item.quantity; selection.push({ sectorId: sector.id, quantity: item.quantity, seats: [...item.seats] });
-    }
-    if (total === 0 || total > event.maxTickets) return null;
-    return { eventId: event.id, selection, updatedAt: typeof v.updatedAt === 'string' && !Number.isNaN(Date.parse(v.updatedAt)) ? v.updatedAt : new Date().toISOString() };
+import { getSelectedProfileId } from './session';
+import { normalizeDraft, type Draft } from './selection-data';
+export { normalizeDraft } from './selection-data';
+export type { Draft } from './selection-data';
+// Versión nueva: los borradores de ejemplo con sectores de texto no se importan.
+function key(profileId = getSelectedProfileId()) {
+  if (profileId === null) throw new Error('Elegí un perfil de demostración para guardar la selección.');
+  return 'ticketya-carrito-v2-perfil-' + profileId;
 }
-export function getCart(): Draft[] { try { const values: unknown = JSON.parse(localStorage.getItem(key()) || '[]'); if (!Array.isArray(values)) return []; const unique = new Set<number>(); return values.slice(0, 30).map(normalizeDraft).filter((v): v is Draft => !!v && !unique.has(v.eventId) && !!unique.add(v.eventId)); } catch { return []; } }
-export function saveDraft(value: Draft) { const draft = normalizeDraft(value); if (!draft) throw new Error('Seleccion invalida'); const items = getCart().filter(d => d.eventId !== draft.eventId); localStorage.setItem(key(), JSON.stringify([draft, ...items])); }
-export function removeDraft(id: number) { localStorage.setItem(key(), JSON.stringify(getCart().filter(d => d.eventId !== id))); }
-export function seedDemoCart() { if (getSession()) return; try { if (localStorage.getItem(key()) !== null) return; saveDraft({ eventId: 1, selection: [{ sectorId: 'campo', quantity: 2, seats: [] }], updatedAt: new Date().toISOString() }); saveDraft({ eventId: 2, selection: [{ sectorId: 'platea', quantity: 1, seats: ['A-1'] }], updatedAt: new Date().toISOString() }); } catch { } }
-export function cartLink() { return getSession() ? '/perfil/#carrito' : '/perfil/?demo=1#carrito'; }
+export function getCart(): Draft[] {
+  if (getSelectedProfileId() === null) return [];
+  const raw: unknown = JSON.parse(localStorage.getItem(key()) || '[]');
+  if (!Array.isArray(raw)) throw new Error('El carrito local no tiene un formato válido.');
+  const used = new Set<string>();
+  return raw.slice(0, 100).map(normalizeDraft).filter((value): value is Draft => {
+    if (!value) return false;
+    const id = value.eventId + ':' + value.sectorId;
+    if (used.has(id)) return false; used.add(id); return true;
+  });
+}
+export function saveDraft(value: Draft, expectedProfileId = getSelectedProfileId()) {
+  if (expectedProfileId === null || getSelectedProfileId() !== expectedProfileId) throw new Error('El perfil cambió. Volvé a revisar la selección.');
+  const draft = normalizeDraft(value); if (!draft) throw new Error('Selección inválida.');
+  const items = getCart().filter(item => item.eventId !== draft.eventId || item.sectorId !== draft.sectorId);
+  if (items.length >= 100) throw new Error('El carrito está lleno. Quitá una selección antes de guardar otra.');
+  localStorage.setItem(key(expectedProfileId), JSON.stringify([draft, ...items]));
+}
+export function removeDraft(eventId: number, sectorId: number) {
+  localStorage.setItem(key(), JSON.stringify(getCart().filter(item => item.eventId !== eventId || item.sectorId !== sectorId)));
+}
+export function cartLink() { return '/perfil/#carrito'; }

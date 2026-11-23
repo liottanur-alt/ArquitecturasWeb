@@ -1,58 +1,100 @@
+import { initRefunds } from './refunds';
 import QRCode from 'qrcode';
-import {catalog} from '../data/events';
-import {demoTickets,type DemoTicket,type TicketStatus} from '../data/tickets';
-import {canRefund,getRefunds,requestRefund,statusOf} from './refunds';
-
-const money=(n:number)=>'$ '+n.toLocaleString('es-AR');
-const esc=(s:unknown)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-const date=(value:string)=>new Intl.DateTimeFormat('es-AR',{dateStyle:'long',timeStyle:'short',timeZone:'America/Argentina/Buenos_Aires'}).format(new Date(value));
-const labels:Record<TicketStatus,string>={valida:'Válida',utilizada:'Utilizada',pendiente:'Devolución pendiente',devuelta:'Devuelta'};
-export function initTickets(){
- let filter='todas',purchase:string|null=null,activeRefund:string|null=null,qrVersion=0,activeQr:string|null=null;
- const qrDialog=document.querySelector<HTMLDialogElement>('#ticket-qr-dialog')!;
- const refundDialog=document.querySelector<HTMLDialogElement>('#ticket-refund-dialog')!;
- const status=document.querySelector<HTMLElement>('#tickets-status')!;
- function paint(){
-  const refunds=getRefunds();const statuses=demoTickets.map(statusOf);
-  document.querySelector('#valid-tickets')!.textContent=String(statuses.filter(s=>s==='valida').length);
-  document.querySelector('#pending-tickets')!.textContent=String(statuses.filter(s=>s==='pendiente').length);
-  document.querySelector('#other-tickets')!.textContent=String(statuses.filter(s=>s==='utilizada'||s==='devuelta').length);
-  document.querySelectorAll('[data-entry-count]').forEach(e=>e.textContent=String(demoTickets.length));
-  const items=demoTickets.filter(t=>(filter==='todas'||statusOf(t)===filter)&&(!purchase||t.purchaseId===purchase));
-  const list=document.querySelector('#ticket-list')!;
-  list.innerHTML=items.map(ticket=>{
-   const e=catalog.find(e=>e.id===ticket.eventId)!;const state=statusOf(ticket);const eligible=canRefund(ticket);const request=refunds.find(r=>r.ticketId===ticket.id);
-   return `<article class="entry-card" data-ticket-id="${ticket.id}"><div class="entry-photo"><img src="${esc(e.image)}" alt="" loading="lazy"/><span>ENTRADA DE EJEMPLO</span></div><div class="entry-content"><div class="entry-topline"><span>${esc(ticket.purchaseId)}</span><span class="entry-badge status-${state}">${labels[state]}</span></div><h3>${esc(e.title)}</h3><p class="entry-date">${esc(date(ticket.eventAt))}</p><p class="entry-location">${esc(e.venue)} · ${esc(e.city)}</p><div class="entry-seat"><strong>${esc(ticket.sector)}</strong><span>${esc(ticket.seat)}</span></div><div class="entry-footer"><span class="entry-id">${ticket.id}</span><strong>${money(ticket.price)}</strong></div><div class="entry-actions"><button class="entry-qr" data-qr="${ticket.id}" ${state!=='valida'?'disabled':''}>${state==='valida'?'▦ Ver QR de ejemplo':labels[state]}</button><button class="entry-refund" data-refund="${ticket.id}" ${!eligible?'disabled':''}>Solicitar devolución</button></div><p class="entry-note">${state==='pendiente'?`Solicitud de ejemplo enviada el ${esc(date(request!.requestedAt))}. Pendiente de aprobación.`:state==='utilizada'?'Esta entrada de ejemplo ya fue utilizada.':state==='devuelta'?'Devolución finalizada en este ejemplo.':!eligible?'El plazo de devolución finalizó: faltan menos de 72 horas para el evento.':'Devolución disponible hasta 72 horas antes del evento.'}</p></div></article>`;
-  }).join('');
-  document.querySelector<HTMLElement>('#tickets-empty')!.hidden=items.length>0;
-  document.querySelector<HTMLElement>('#purchase-ticket-filter')!.hidden=!purchase;
-  document.querySelector('#purchase-ticket-label')!.textContent=purchase?`Entradas de ${purchase}`:'';
-  list.querySelectorAll<HTMLButtonElement>('[data-qr]').forEach(b=>b.addEventListener('click',()=>showQr(b.dataset.qr!)));
-  list.querySelectorAll<HTMLButtonElement>('[data-refund]').forEach(b=>b.addEventListener('click',()=>openRefund(b.dataset.refund!)));
-  if(activeQr&&statusOf(demoTickets.find(t=>t.id===activeQr)!)!=='valida')qrDialog.close();
- }
- async function showQr(id:string){
-  const ticket=demoTickets.find(t=>t.id===id);if(!ticket||statusOf(ticket)!=='valida')return;
-  const e=catalog.find(e=>e.id===ticket.eventId)!;activeQr=id;const version=++qrVersion;
-  document.querySelector('#qr-title')!.textContent=e.title;
-  document.querySelector('#qr-location')!.textContent=`${ticket.sector} · ${ticket.seat}`;
-  document.querySelector('#qr-date')!.textContent=date(ticket.eventAt);
-  document.querySelector('#qr-ticket-id')!.textContent=ticket.id;
-  const img=document.querySelector<HTMLImageElement>('#ticket-qr-image')!;img.hidden=true;img.removeAttribute('src');
-  const loading=document.querySelector<HTMLElement>('#qr-loading')!;loading.textContent='Preparando el QR…';loading.hidden=false;qrDialog.showModal();
-  try{const url=await QRCode.toDataURL(`TICKETYA-DEMO|${id}|SIN-VALIDEZ-PARA-INGRESAR`,{width:320,margin:4,errorCorrectionLevel:'M',color:{dark:'#172039',light:'#ffffff'}});if(qrVersion!==version||!qrDialog.open)return;img.src=url;img.hidden=false;loading.hidden=true;}
-  catch{if(qrVersion===version)loading.textContent='No pudimos preparar el QR de ejemplo. Cerrá la ventana y volvé a intentarlo.';}
- }
- function openRefund(id:string){const ticket=demoTickets.find(t=>t.id===id);if(!ticket||!canRefund(ticket)){paint();status.textContent='Esta entrada no cumple las condiciones para solicitar una devolución.';return;}activeRefund=id;const e=catalog.find(e=>e.id===ticket.eventId)!;document.querySelector('#refund-event')!.textContent=e.title;document.querySelector('#refund-seat')!.textContent=`${ticket.sector} · ${ticket.seat}`;document.querySelector('#refund-amount')!.textContent=money(ticket.price);document.querySelector<HTMLFormElement>('#refund-form')!.reset();document.querySelector<HTMLElement>('#refund-error')!.hidden=true;document.querySelector<HTMLButtonElement>('#confirm-refund')!.disabled=false;refundDialog.showModal();}
- document.querySelectorAll<HTMLButtonElement>('[data-ticket-filter]').forEach(button=>button.addEventListener('click',()=>{filter=button.dataset.ticketFilter!;document.querySelectorAll('[data-ticket-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));paint();}));
- document.querySelector('#clear-purchase-ticket')!.addEventListener('click',()=>{purchase=null;paint();});
- document.addEventListener('click',e=>{const target=(e.target as HTMLElement).closest<HTMLButtonElement>('[data-purchase-tickets]');if(!target)return;purchase=target.dataset.purchaseTickets!;filter='todas';document.querySelectorAll<HTMLElement>('[data-ticket-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.ticketFilter==='todas')));document.querySelector<HTMLDialogElement>('#purchase-dialog')!.close();document.querySelector<HTMLButtonElement>('[data-tab="entradas"]')!.click();paint();});
- document.querySelector<HTMLFormElement>('#refund-form')!.addEventListener('submit',e=>{
-  e.preventDefault();if(!activeRefund)return;const button=document.querySelector<HTMLButtonElement>('#confirm-refund')!;if(button.disabled)return;button.disabled=true;
-  try{requestRefund(activeRefund,document.querySelector<HTMLSelectElement>('#refund-reason')!.value);activeRefund=null;refundDialog.close();paint();status.textContent='Solicitud de devolución de ejemplo guardada. Queda pendiente de aprobación del administrador; no se realizó ningún reintegro.';}
-  catch(cause){const error=document.querySelector<HTMLElement>('#refund-error')!;error.textContent=cause instanceof Error&&cause.message==='not-eligible'?'El plazo o estado de esta entrada ya no permite solicitar la devolución.':'No pudimos guardar la solicitud en este navegador. No se confirmó ninguna devolución.';error.hidden=false;button.disabled=false;paint();}
- });
- document.querySelectorAll('[data-close-qr]').forEach(b=>b.addEventListener('click',()=>qrDialog.close()));qrDialog.addEventListener('close',()=>{qrVersion++;activeQr=null;});
- document.querySelectorAll('[data-close-refund]').forEach(b=>b.addEventListener('click',()=>refundDialog.close()));refundDialog.addEventListener('close',()=>activeRefund=null);
- window.addEventListener('storage',()=>paint());document.addEventListener('visibilitychange',()=>{if(!document.hidden)paint();});setInterval(paint,60000);paint();
+import { api } from './api';
+import { getSelectedProfileId } from './session';
+import { parseEntry, parseEntries, qrEligible, filterEntry, type Entry } from './entry-data';
+import { parsePurchase } from './history-data';
+import { mapCatalog } from './catalog-data';
+export function initTickets() {
+  const selectedOwner = getSelectedProfileId(); if (selectedOwner === null) return;
+  const owner: number = selectedOwner;
+  const list = document.querySelector<HTMLElement>('#ticket-list')!;
+  const status = document.querySelector<HTMLElement>('#tickets-status')!;
+  const dialog = document.querySelector<HTMLDialogElement>('#ticket-qr-dialog')!;
+  const refresh = document.querySelector<HTMLButtonElement>('#refresh-tickets')!;
+  const image = document.querySelector<HTMLImageElement>('#ticket-qr-image')!;
+  let entries: Entry[] = [], filter = '', version = 0, qrVersion = 0;
+  const refunds = initRefunds(owner, () => { load(); });
+  const param = new URLSearchParams(location.search).get('compra');
+  let purchaseId: number | null = param === null ? null : Number(param);
+  const events = new Map<number, ReturnType<typeof mapCatalog>[number]>(), sectors = new Map<number,string>(), seats = new Map<number,string>();
+  const text = (tag: string, value: string, className = '') => { const node = document.createElement(tag); node.textContent = value; node.className = className; return node; };
+  const sectorName = (entry: Entry) => (sectors.get(entry.idSector) || 'Sector') + ' #' + entry.idSector;
+  const seatName = (entry: Entry) => entry.idAsiento === null ? 'Sin asiento asignado' : (seats.get(entry.idAsiento) || 'Asiento') + ' #' + entry.idAsiento;
+  function paint() {
+    if (getSelectedProfileId() !== owner) return;
+    list.replaceChildren();
+    document.querySelectorAll('[data-entry-count]').forEach(node => node.textContent = String(entries.length));
+    document.querySelector('#valid-tickets')!.textContent = String(entries.filter(qrEligible).length);
+    document.querySelector('#pending-tickets')!.textContent = String(entries.filter(e => e.estadoEntrada === 'SOLICITUD_DEVOLUCION').length);
+    document.querySelector('#other-tickets')!.textContent = String(entries.filter(e => e.estadoQr === 'ESCANEADO').length);
+    document.querySelector<HTMLElement>('#purchase-ticket-filter')!.hidden = purchaseId === null;
+    document.querySelector('#purchase-ticket-label')!.textContent = purchaseId === null ? '' : 'Entradas de la compra #' + purchaseId;
+    const visible = entries.filter(entry => filterEntry(entry, filter));
+    for (const entry of visible) {
+      const event = events.get(entry.idEvento), card = document.createElement('article'); card.className = 'entry-card';
+      const photo = document.createElement('div'); photo.className = 'entry-photo'; const img = document.createElement('img'); img.src = '/event-placeholder.svg'; img.alt = 'Imagen ilustrativa de respaldo'; img.loading = 'lazy'; photo.append(img);
+      const content = document.createElement('div'); content.className = 'entry-content';
+      content.append(text('div', 'Entrada #' + entry.id + ' · ' + entry.estadoEntrada + ' · ' + entry.estadoQr, 'entry-topline'), text('h3', event?.title || 'Evento #' + entry.idEvento), text('p', event?.fullDate || 'Fecha no disponible', 'entry-date'), text('p', event?.location || 'Lugar no disponible', 'entry-location'), text('p', sectorName(entry) + ' · ' + seatName(entry), 'entry-seat'), text('p', entry.precio.toLocaleString('es-AR', { minimumFractionDigits: 2 }) + ' · importe del servidor (sin moneda informada)', 'entry-footer'));
+      const button = text('button', qrEligible(entry) ? 'Ver QR' : 'QR no disponible para este estado', 'entry-qr') as HTMLButtonElement; button.disabled = !qrEligible(entry); button.addEventListener('click', () => showQr(entry.id)); content.append(button);
+      const refund = text('button', 'Solicitar devolución', 'entry-refund'); refund.addEventListener('click', () => refunds.open(entry)); content.append(refund);
+      const refundStatus = refunds.describe(entry); if (refundStatus) content.append(text('p', refundStatus, 'entry-note'));
+      if (entry.estadoEntrada === 'DEVOLUCION_RECHAZADA') content.append(text('p', 'El backend no admite registrar ingreso tras una devolución rechazada. Consultá al organizador.', 'entry-note'));
+      content.append(text('p', 'Ver el QR no registra uso. El ingreso y la validez se verifican en el servidor.', 'entry-note'));
+      card.append(photo, content); list.append(card);
+    }
+    document.querySelector<HTMLElement>('#tickets-empty')!.hidden = visible.length > 0;
+  }
+  async function load() {
+    const current = ++version; qrVersion++; if (dialog.open) dialog.close(); image.removeAttribute('src'); image.hidden = true;
+    entries = []; document.querySelectorAll('[data-entry-count], #valid-tickets, #pending-tickets, #other-tickets').forEach(node => node.textContent = '—'); list.replaceChildren(); events.clear(); sectors.clear(); seats.clear(); refresh.disabled = true; list.setAttribute('aria-busy','true');
+    document.querySelector<HTMLElement>('#tickets-empty')!.hidden = true; status.textContent = 'Consultando entradas del servidor…';
+    const valid = () => current === version && getSelectedProfileId() === owner;
+    try {
+      if (purchaseId !== null) {
+        if (!Number.isSafeInteger(purchaseId) || purchaseId <= 0) throw new Error('ID de compra inválido. Podés volver a todas las entradas.');
+        const p = parsePurchase((await api('/compras/' + purchaseId, { cache: 'no-store' })).data, owner);
+        if (p.id !== purchaseId) throw new Error('La compra consultada no coincide.');
+      }
+      const data = parseEntries((await api(purchaseId === null ? '/entradas/cliente/' + owner : '/entradas/compra/' + purchaseId, { cache: 'no-store' })).data, owner);
+      if (!valid()) return; entries = data; paint();
+      await Promise.all([
+        ...[...new Set(data.map(e => e.idEvento))].map(async id => { try { const mapped = mapCatalog([(await api('/api/eventos/' + id)).data])[0]; if (valid() && mapped.id === id) events.set(id, mapped); } catch {} }),
+        ...[...new Set(data.map(e => e.idSector))].map(async id => { try { const { data: sector } = await api<{id:number;nombre:string}>('/sectores/' + id); if (valid() && sector?.id === id && typeof sector.nombre === 'string') sectors.set(id, sector.nombre); } catch {} }),
+        ...data.filter(e => e.idAsiento !== null).map(async e => { try { const { data: seat } = await api<{id:number;idSector:number;fila:string;columna:string}>('/asientos/' + e.idAsiento); if (valid() && seat?.id === e.idAsiento && seat.idSector === e.idSector && typeof seat.fila === 'string' && typeof seat.columna === 'string') seats.set(seat.id, 'Fila ' + seat.fila + ' · ' + seat.columna); } catch {} })
+      ]);
+      if (valid()) { paint(); status.textContent = 'Entradas del servidor' + (purchaseId === null ? ' para este perfil.' : ' para esta compra.') + ' Actualizá para consultar cambios. Esta vista no registra escaneos.'; }
+    } catch (cause) { if (valid()) { status.textContent = cause instanceof Error ? cause.message : 'No pudimos consultar las entradas.'; document.querySelectorAll('[data-entry-count]').forEach(node => node.textContent = '—'); } }
+    finally { if (valid()) { refresh.disabled = false; list.removeAttribute('aria-busy'); document.querySelector<HTMLElement>('#purchase-ticket-filter')!.hidden = purchaseId === null; } }
+  }
+  async function showQr(id: number) {
+    const current = ++qrVersion, dataVersion = version;
+    image.hidden = true; image.removeAttribute('src');
+    for (const id of ['qr-title','qr-location','qr-date','qr-ticket-id']) document.getElementById(id)!.textContent = '';
+    const loading = document.querySelector<HTMLElement>('#qr-loading')!; loading.textContent = 'Verificando entrada y preparando QR…'; loading.hidden = false; dialog.showModal();
+    const valid = () => current === qrVersion && dataVersion === version && dialog.open && getSelectedProfileId() === owner;
+    try {
+      const entry = parseEntry((await api('/entradas/' + id, { cache: 'no-store' })).data, owner);
+      if (!valid()) return;
+      const original = entries.find(e => e.id === id);
+      if (!original || entry.id !== id || entry.idEvento !== original.idEvento || entry.idSector !== original.idSector || entry.idAsiento !== original.idAsiento) throw new Error('La entrada recibida no coincide con la elegida.');
+      entries = entries.map(value => value.id === id ? entry : value); paint();
+      document.querySelector('#qr-title')!.textContent = events.get(entry.idEvento)?.title || 'Evento #' + entry.idEvento;
+      document.querySelector('#qr-location')!.textContent = sectorName(entry) + ' · ' + seatName(entry);
+      document.querySelector('#qr-date')!.textContent = events.get(entry.idEvento)?.fullDate || 'Fecha no disponible';
+      document.querySelector('#qr-ticket-id')!.textContent = 'Entrada #' + entry.id + ' · ' + entry.estadoEntrada + ' · ' + entry.estadoQr;
+      if (!qrEligible(entry)) throw new Error('El estado actual de la entrada no permite mostrar el QR para ingreso.');
+      const url = await QRCode.toDataURL(entry.qr, { width: 320, margin: 4, errorCorrectionLevel: 'M', color: { dark: '#172039', light: '#ffffff' } });
+      if (!valid()) return; image.src = url; image.hidden = false; loading.hidden = true;
+    } catch (cause) { if (valid()) loading.textContent = cause instanceof Error ? cause.message : 'No pudimos preparar el QR.'; }
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-ticket-filter]').forEach(button => button.addEventListener('click', () => { filter = button.dataset.ticketFilter || ''; document.querySelectorAll('[data-ticket-filter]').forEach(node => node.setAttribute('aria-pressed', String(node === button))); paint(); }));
+  document.querySelector('#clear-purchase-ticket')!.addEventListener('click', () => { purchaseId = null; const url = new URL(location.href); url.searchParams.delete('compra'); history.replaceState(null,'',url.pathname + url.search + '#entradas'); load(); });
+  document.addEventListener('click', event => { const target = (event.target as Element).closest<HTMLElement>('[data-purchase-tickets]'); if (!target) return; purchaseId = Number(target.dataset.purchaseTickets); filter = ''; document.querySelectorAll('[data-ticket-filter]').forEach(node => node.setAttribute('aria-pressed', String(!(node as HTMLElement).dataset.ticketFilter))); document.querySelector<HTMLDialogElement>('#purchase-dialog')!.close(); document.querySelector<HTMLButtonElement>('[data-tab="entradas"]')!.click(); load(); });
+  document.querySelectorAll('[data-close-qr]').forEach(button => button.addEventListener('click', () => dialog.close()));
+  dialog.addEventListener('close', () => { qrVersion++; image.hidden = true; image.removeAttribute('src'); });
+  refresh.addEventListener('click', load);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && getSelectedProfileId() === owner) load(); else { qrVersion++; if (dialog.open) dialog.close(); } });
+  window.addEventListener('pageshow', event => { if (event.persisted) load(); });
+  load();
 }
