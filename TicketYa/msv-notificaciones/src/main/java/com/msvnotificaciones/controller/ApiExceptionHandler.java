@@ -11,6 +11,6 @@ public class ApiExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail integridad(DataIntegrityViolationException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
-                "La operacion viola una restriccion: datos duplicados o relaciones existentes");
+                "El registro ya existe o entra en conflicto con otro aviso. Revisá los datos antes de reintentar.");
     }
 }

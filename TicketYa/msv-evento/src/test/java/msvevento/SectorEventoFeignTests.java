@@ -10,6 +10,8 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -91,6 +93,50 @@ class SectorEventoFeignTests {
         evento.setEstadoPublicacion(EstadoPublicacion.BORRADOR);
         evento.setEstado(EstadoEvento.EN_CURSO);
         return evento;
+    }
+
+    @Test
+    void ordenaPorPrecioGlobalAntesDePaginar() {
+        var caro = borrador();
+        var barato = borrador();
+        barato.setId(8L);
+        var sinPrecio = borrador();
+        sinPrecio.setId(9L);
+        var repo = mock(EventoRepository.class);
+        when(repo.buscarConFiltros(null, null, null, null, null, null, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(caro, sinPrecio, barato)));
+        var sectores = mock(SectorEventoClient.class);
+        when(sectores.preciosMinimos(any())).thenReturn(java.util.Map.of(
+                7L, new java.math.BigDecimal("200"), 8L, new java.math.BigDecimal("100")));
+        var servicio = new EventoService(repo, mock(LugarRepository.class), mock(ArtistaRepository.class),
+                sectores, mock(ApplicationEventPublisher.class));
+
+        assertThat(servicio.buscarEventos(null, null, null, null, null, null, 0, 1, "precio,asc", null))
+                .extracting("id").containsExactly(8L);
+        assertThat(servicio.buscarEventos(null, null, null, null, null, null, 0, 3, "precio,desc", null))
+                .extracting("id").containsExactly(7L, 8L, 9L);
+    }
+
+    @Test
+    void relevanciaPriorizaNombreParticipantesYDescripcion() {
+        var exacto = borrador();
+        exacto.setNombre("Canción");
+        var participante = borrador();
+        participante.setId(8L);
+        participante.getParticipantes().getFirst().setNombre("La Cancion");
+        var descripcion = borrador();
+        descripcion.setId(9L);
+        descripcion.setDescripcion("Presenta su nueva canción");
+        var sinCoincidencia = borrador();
+        sinCoincidencia.setId(10L);
+        var repo = mock(EventoRepository.class);
+        when(repo.buscarConFiltros(null, null, null, "Tandil", null, null, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(descripcion, participante, exacto, sinCoincidencia)));
+        var servicio = new EventoService(repo, mock(LugarRepository.class), mock(ArtistaRepository.class),
+                cliente, mock(ApplicationEventPublisher.class));
+
+        assertThat(servicio.buscarEventos(null, null, null, "Tandil", null, null, 0, 10, "relevancia", "CANCION"))
+                .extracting("id").containsExactly(7L, 8L, 9L);
     }
 
     @Test

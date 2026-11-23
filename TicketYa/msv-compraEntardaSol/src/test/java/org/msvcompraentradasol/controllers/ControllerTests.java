@@ -196,11 +196,25 @@ class ControllerTests {
 
     @Test
     void marcarEntradaUsadaDevuelve200() throws Exception {
-        when(entradaService.marcarUsada(1L)).thenReturn(entrada("ESCANEADO"));
+        when(entradaService.marcarUsada(1L, 7L)).thenReturn(entrada("ESCANEADO"));
 
-        perform(patch("/entradas/1/uso"))
+        perform(patch("/entradas/1/uso").param("idEvento", "7"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estadoQr").value("ESCANEADO"));
+    }
+
+    @Test
+    void escanearQrRequiereEventoYRechazaElEventoIncorrecto() throws Exception {
+        when(entradaService.marcarUsadaPorQr("qr", 7L))
+                .thenThrow(new IllegalStateException("La entrada no corresponde a este evento"));
+
+        perform(patch("/entradas/qr/qr/uso"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detalle").value("Falta el parámetro «idEvento»."));
+        perform(patch("/entradas/qr/qr/uso").param("idEvento", "abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detalle").value("El valor de «idEvento» tiene un formato incorrecto."));
+        perform(patch("/entradas/qr/qr/uso").param("idEvento", "7")).andExpect(status().isConflict());
     }
 
     @Test

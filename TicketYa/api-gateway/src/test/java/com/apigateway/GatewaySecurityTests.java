@@ -60,7 +60,10 @@ class GatewaySecurityTests extends GatewayTestSupport {
 
     @Test
     void tokenAusenteInvalidoVencidoOReloIncorrectoNoPermiteAcceso() throws Exception {
-        assertEquals(401, call("GET", "/compras/1", null, null, null).statusCode());
+        var sinSesion = call("GET", "/compras/1", null, null, null);
+        assertEquals(401, sinSesion.statusCode());
+        assertTrue(sinSesion.body().contains("Iniciá sesión"));
+        assertTrue(sinSesion.headers().firstValue("WWW-Authenticate").isPresent());
         assertEquals(401, call("GET", "/compras/1", "Bearer invalido", null, null).statusCode());
         assertEquals(401, call("GET", "/compras/1", bearer(token("msv-usuario", "7", -60, "CLIENTE")),
                 null, null).statusCode());
@@ -75,7 +78,9 @@ class GatewaySecurityTests extends GatewayTestSupport {
         String cliente = bearer(token("7", "CLIENTE"));
         String admin = bearer(token("1", "ADMINISTRADOR"));
         for (String path : new String[]{"/roles", "/usuarios"}) {
-            assertEquals(403, call("GET", path, cliente, null, null).statusCode());
+            var rechazado = call("GET", path, cliente, null, null);
+            assertEquals(403, rechazado.statusCode());
+            assertTrue(rechazado.body().contains("Tu cuenta no tiene permiso"));
             assertEquals(200, call("GET", path, admin, null, null).statusCode());
         }
         assertEquals(403, call("POST", "/usuarios", cliente, "{}", null).statusCode());

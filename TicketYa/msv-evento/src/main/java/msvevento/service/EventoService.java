@@ -6,6 +6,7 @@ import msvevento.client.SectorEventoClient;
 import msvevento.dto.ArtistaResponseDTO;
 import msvevento.dto.EventoRequestDTO;
 import msvevento.dto.EventoResponseDTO;
+import msvevento.dto.EventosPorIdsRequest;
 import msvevento.dto.LugarResponseDTO;
 import msvevento.dto.SectorEventoResponseDTO;
 import msvevento.entity.*;
@@ -29,7 +30,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -468,7 +472,7 @@ public class EventoService {
 
     // Buscar eventos aplicando filtros
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "eventos-busqueda")
+    @Cacheable(cacheNames = "eventos-busqueda", condition = "!#p8.trim().startsWith('precio')")
     public List<EventoResponseDTO> buscarEventos(
             TipoEvento tipo,
             Long idOrganizador,
@@ -478,7 +482,8 @@ public class EventoService {
             LocalDateTime fechaHasta,
             int pagina,
             int tamanio,
-            String ordenar
+            String ordenar,
+            String texto
     ) {
 
         // Validar el campo por el que se quiere ordenar
@@ -486,7 +491,7 @@ public class EventoService {
 
         String campoOrden = partesOrden[0].trim();
 
-        if (!List.of("fechaHora", "nombre").contains(campoOrden)) {
+        if (!List.of("fechaHora", "nombre", "precio", "relevancia").contains(campoOrden)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Campo de ordenamiento no valido"
@@ -494,7 +499,7 @@ public class EventoService {
         }
 
         // Determinar la dirección del ordenamiento
-        Sort.Direction direccion = Sort.Direction.ASC;
+        Sort.Direction direccion = "relevancia".equals(campoOrden) ? Sort.Direction.DESC : Sort.Direction.ASC;
 
         if (partesOrden.length > 1) {
             try {
@@ -509,12 +514,14 @@ public class EventoService {
             }
         }
 
-        // Crear la configuración de paginación y ordenamiento
-        Pageable pageable = PageRequest.of(
-                pagina,
-                tamanio,
-                Sort.by(direccion, campoOrden)
-        );
+        String consulta = CiudadNormalizada.de(texto);
+        PageRequest paginaSolicitada = PageRequest.of(pagina, tamanio);
+        if (!consulta.isEmpty() || "precio".equals(campoOrden) || "relevancia".equals(campoOrden)) {
+            var candidatos = eventoRepository.buscarConFiltros(tipo, idOrganizador, idParticipante,
+                    ciudad, fechaDesde, fechaHasta, Pageable.unpaged()).getContent();
+            return ordenarBusqueda(candidatos, consulta, campoOrden, direccion, paginaSolicitada);
+        }
+        Pageable pageable = paginaSolicitada.withSort(Sort.by(direccion, campoOrden).and(Sort.by("id")));
 
         // Buscar eventos en el repositorio
         Page<Evento> eventos = eventoRepository.buscarConFiltros(
@@ -533,6 +540,62 @@ public class EventoService {
                 .map(this::convertirAResponseDTO)
                 .toList();
     }
+
+    private List<EventoResponseDTO> ordenarBusqueda(List<Evento> candidatos, String consulta, String campo,
+                                                     Sort.Direction direccion, Pageable pagina) {
+        var coincidencias = candidatos.stream()
+                .map(evento -> new Coincidencia(evento, relevancia(evento, consulta)))
+                .filter(resultado -> consulta.isEmpty() || resultado.relevancia() > 0)
+                .toList();
+        if (coincidencias.isEmpty()) {
+            return List.of();
+        }
+
+        Comparator<Coincidencia> orden;
+        if ("precio".equals(campo)) {
+            Map<Long, BigDecimal> precios;
+            try {
+                precios = sectorEventoClient.preciosMinimos(new EventosPorIdsRequest(
+                        coincidencias.stream().map(resultado -> resultado.evento().getId()).toList()));
+            } catch (FeignException exception) {
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "No se pudieron consultar los precios");
+            }
+            Comparator<BigDecimal> ordenPrecio = direccion.isAscending()
+                    ? Comparator.naturalOrder() : Comparator.reverseOrder();
+            orden = Comparator.comparing(resultado -> precios.get(resultado.evento().getId()),
+                    Comparator.nullsLast(ordenPrecio));
+        } else {
+            orden = switch (campo) {
+                case "nombre" -> Comparator.comparing(resultado -> resultado.evento().getNombre());
+                case "fechaHora" -> Comparator.comparing(resultado -> resultado.evento().getFechaHora());
+                default -> Comparator.comparingInt(Coincidencia::relevancia);
+            };
+            if (direccion.isDescending()) {
+                orden = orden.reversed();
+            }
+        }
+
+        return coincidencias.stream()
+                .sorted(orden.thenComparing(resultado -> resultado.evento().getFechaHora())
+                        .thenComparing(resultado -> resultado.evento().getId()))
+                .skip(pagina.getOffset())
+                .limit(pagina.getPageSize())
+                .map(resultado -> convertirAResponseDTO(resultado.evento()))
+                .toList();
+    }
+
+    private int relevancia(Evento evento, String consulta) {
+        if (consulta.isEmpty()) return 0;
+        String nombre = CiudadNormalizada.de(evento.getNombre());
+        if (nombre.equals(consulta)) return 5;
+        if (nombre.startsWith(consulta)) return 4;
+        if (nombre.contains(consulta)) return 3;
+        if (evento.getParticipantes().stream().anyMatch(
+                artista -> CiudadNormalizada.de(artista.getNombre()).contains(consulta))) return 2;
+        return CiudadNormalizada.de(evento.getDescripcion()).contains(consulta) ? 1 : 0;
+    }
+
+    private record Coincidencia(Evento evento, int relevancia) {}
 
     // Convertir entidad a ResponseDTO
     private EventoResponseDTO convertirAResponseDTO(Evento evento) {

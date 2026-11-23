@@ -96,7 +96,7 @@ class EntradaServiceTests {
     void marcarUsadaCambiaElEstadoDelQr() {
         Entrada entrada = crearEntrada(11L);
 
-        EntradaResponseDTO respuesta = entradaService.marcarUsada(entrada.getId());
+        EntradaResponseDTO respuesta = entradaService.marcarUsada(entrada.getId(), entrada.getIdEvento());
 
         assertThat(respuesta.estadoQr()).isEqualTo("ESCANEADO");
         assertThat(entradaRepository.findById(entrada.getId()).orElseThrow().getEstadoqr())
@@ -104,12 +104,29 @@ class EntradaServiceTests {
     }
 
     @Test
+    void rechazaEntradaDeOtroEventoYPermiteEscanearlaEnElCorrecto() {
+        Entrada entrada = crearEntrada(11L);
+        Long otroEvento = entrada.getIdEvento() + 1;
+
+        assertThatThrownBy(() -> entradaService.marcarUsadaPorQr(entrada.getQr(), otroEvento))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("La entrada no corresponde a este evento");
+        assertThatThrownBy(() -> entradaService.marcarUsada(entrada.getId(), otroEvento))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("La entrada no corresponde a este evento");
+        assertThat(entradaRepository.findById(entrada.getId()).orElseThrow().getEstadoqr())
+                .isEqualTo(Estadoqr.NO_ESCANEADO);
+        assertThat(entradaService.marcarUsadaPorQr(entrada.getQr(), entrada.getIdEvento()).estadoQr())
+                .isEqualTo("ESCANEADO");
+    }
+
+    @Test
     void marcarUsadaPorQrFuncionaUnaSolaVez() {
         Entrada entrada = crearEntrada(11L);
 
-        entradaService.marcarUsadaPorQr(entrada.getQr());
+        entradaService.marcarUsadaPorQr(entrada.getQr(), entrada.getIdEvento());
 
-        assertThatThrownBy(() -> entradaService.marcarUsadaPorQr(entrada.getQr()))
+        assertThatThrownBy(() -> entradaService.marcarUsadaPorQr(entrada.getQr(), entrada.getIdEvento()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("utilizada");
     }
@@ -127,7 +144,7 @@ class EntradaServiceTests {
                 resultados.add(pool.submit(() -> {
                     inicio.await();
                     try {
-                        entradaService.marcarUsadaPorQr(qr);
+                        entradaService.marcarUsadaPorQr(qr, entrada.getIdEvento());
                         return "ok";
                     } catch (IllegalStateException exception) {
                         return exception.getMessage();
@@ -154,7 +171,7 @@ class EntradaServiceTests {
         entrada.setEstadoEntrada(EstadoEntrada.DEVOLUCION_ACEPTADA);
         entradaRepository.save(entrada);
 
-        assertThatThrownBy(() -> entradaService.marcarUsada(entrada.getId()))
+        assertThatThrownBy(() -> entradaService.marcarUsada(entrada.getId(), entrada.getIdEvento()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("vigente");
     }

@@ -12,12 +12,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ProblemDetail conflictoConcurrente(OptimisticLockingFailureException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
-                "El usuario cambio durante la operacion. Consultalo nuevamente y reintenta");
+                "El perfil se actualizó durante la operación. Volvé a cargarlo y guardá los cambios de nuevo.");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail integridad(DataIntegrityViolationException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
-                "La operacion viola una restriccion: datos duplicados o relaciones existentes");
+                "Los datos coinciden con un registro existente o todavía están en uso. Revisá los datos antes de reintentar.");
     }
 }

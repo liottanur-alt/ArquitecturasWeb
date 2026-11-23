@@ -135,6 +135,7 @@ public class EventoController {
             @RequestParam(required = false) Long idOrganizador,
             @RequestParam(required = false) Long idParticipante,
             @RequestParam(required = false) String ciudad,
+            @RequestParam(required = false) String q,
             @RequestParam(required = false)
             LocalDateTime fechaDesde,
             @RequestParam(required = false)
@@ -154,7 +155,8 @@ public class EventoController {
                         fechaHasta,
                         pagina,
                         tamanio,
-                        ordenar
+                        ordenar,
+                        q
                 )
         );
     }

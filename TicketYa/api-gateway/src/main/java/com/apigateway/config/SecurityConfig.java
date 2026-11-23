@@ -1,5 +1,10 @@
 package com.apigateway.config;
 
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
+
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -53,6 +58,16 @@ public class SecurityConfig {
         authorities.setAuthorityPrefix("ROLE_");
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authorities);
+        var bearer = new BearerTokenAuthenticationEntryPoint();
+        var permisos = new BearerTokenAccessDeniedHandler();
+        AuthenticationEntryPoint iniciarSesion = (request, response, error) -> {
+            bearer.commence(request, response, error);
+            response.sendError(response.getStatus());
+        };
+        AccessDeniedHandler accesoDenegado = (request, response, error) -> {
+            permisos.handle(request, response, error);
+            response.sendError(response.getStatus());
+        };
 
         return http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -74,7 +89,11 @@ public class SecurityConfig {
                         .hasAnyRole("PERSONAL_ACCESO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/solicitudes/{id}/resolver").hasRole("ADMINISTRADOR")
                         .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
+                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(iniciarSesion)
+                        .accessDeniedHandler(accesoDenegado))
+                .oauth2ResourceServer(oauth -> oauth.authenticationEntryPoint(iniciarSesion)
+                        .accessDeniedHandler(accesoDenegado)
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
                 .build();
     }
 

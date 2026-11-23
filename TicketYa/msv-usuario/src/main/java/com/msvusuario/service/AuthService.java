@@ -81,13 +81,13 @@ public class AuthService {
     public TokenResponse login(LoginRequest request) {
         if (request == null || request.email() == null || request.password() == null
                 || request.password().getBytes(StandardCharsets.UTF_8).length > 72) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales invalidas");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El correo o la contraseña son incorrectos.");
         }
         Usuario usuario = usuarios.findByEmailIgnoreCase(request.email().trim()).orElse(null);
         String hash = usuario == null || usuario.getPasswordHash() == null ? dummyHash : usuario.getPasswordHash();
         boolean valido = passwords.matches(request.password(), hash);
         if (usuario == null || usuario.getPasswordHash() == null || !valido) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales invalidas");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El correo o la contraseña son incorrectos.");
         }
         Instant ahora = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder().issuer(issuer).subject(usuario.getId().toString())

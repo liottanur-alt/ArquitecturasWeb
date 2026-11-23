@@ -81,12 +81,12 @@ class ComprasRoutesTests extends GatewayTestSupport {
         assertEquals("POST /compras|{\"idCliente\":2}", compra.body());
 
         var uso = client.send(HttpRequest.newBuilder(
-                        URI.create("http://localhost:" + port + "/entradas/1/uso"))
+                        URI.create("http://localhost:" + port + "/entradas/qr/qr/uso?idEvento=7"))
                 .header("Authorization", auth)
                 .method("PATCH", HttpRequest.BodyPublishers.noBody()).build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(200, uso.statusCode());
-        assertEquals("PATCH /entradas/1/uso|", uso.body());
+        assertEquals("PATCH /entradas/qr/qr/uso?idEvento=7|", uso.body());
     }
 
     @Test

@@ -70,18 +70,26 @@ public class EntradaService {
     }
 
     @Transactional
-    public EntradaResponseDTO marcarUsada(Long idEntrada) {
-        return toResponse(marcar(obtener(idEntrada)));
+    public EntradaResponseDTO marcarUsada(Long idEntrada, Long idEvento) {
+        Entrada entrada = entradaRepository.findByIdParaActualizar(idEntrada)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
+        return toResponse(marcar(entrada, idEvento));
     }
 
     @Transactional
-    public EntradaResponseDTO marcarUsadaPorQr(String qr) {
+    public EntradaResponseDTO marcarUsadaPorQr(String qr, Long idEvento) {
         Entrada entrada = entradaRepository.findByQrParaActualizar(qr)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
-        return toResponse(marcar(entrada));
+        return toResponse(marcar(entrada, idEvento));
     }
 
-    private Entrada marcar(Entrada entrada) {
+    private Entrada marcar(Entrada entrada, Long idEvento) {
+        if (idEvento == null || idEvento <= 0) {
+            throw new IllegalArgumentException("El ID del evento debe ser positivo");
+        }
+        if (!idEvento.equals(entrada.getIdEvento())) {
+            throw new IllegalStateException("La entrada no corresponde a este evento");
+        }
         if (entrada.getEstadoEntrada() != EstadoEntrada.PAGA) {
             throw new IllegalStateException("La entrada no está vigente");
         }

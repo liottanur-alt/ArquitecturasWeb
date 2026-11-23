@@ -117,6 +117,27 @@ class InventarioIntegrationTests {
         return inventario.consultarLote(new DisponibilidadLoteRequest(List.of(evento))).getFirst().disponible();
     }
 
+    @Test void lotePreciosDevuelveElSectorMasBaratoPorEvento() throws Exception {
+        var evento = preparar(TipoSector.CAMPO, 2, 4);
+        var otro = preparar(TipoSector.CAMPO, 2, 4);
+        var sector = new SectorRequest();
+        sector.setIdLugar(1L);
+        sector.setNombre("Sector de menor precio");
+        sector.setTipo(TipoSector.CAMPO);
+        sector.setCapacidadTotal(2);
+        inventario.configurarSector(evento.evento(),
+                new SectorEventoRequest(sectores.crear(sector).id(), new BigDecimal("900.00"), 2));
+        String consulta = "{\"idsEventos\":[%d,%d,99999]}".formatted(evento.evento(), otro.evento());
+
+        mvc.perform(post("/interno/inventario/precios-minimos")
+                        .header(HttpHeaders.AUTHORIZATION, JwtTestSupport.bearer(JwtTestSupport.servicio()))
+                        .contentType("application/json").content(consulta))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$['" + evento.evento() + "']").value(900))
+                .andExpect(jsonPath("$['" + otro.evento() + "']").value(1500))
+                .andExpect(jsonPath("$['99999']").doesNotExist());
+    }
+
     @Test void loteCampoDescuentaReservasVigentesYLiberaVencidasSinCrearReservas() {
         Escenario e = preparar(TipoSector.CAMPO, 2, 4);
         assertThat(disponible(e.evento())).isTrue();

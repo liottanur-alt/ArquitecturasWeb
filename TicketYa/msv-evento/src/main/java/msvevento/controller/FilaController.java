@@ -50,16 +50,16 @@ public class FilaController {
     private Long clienteInterno() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof JwtAuthenticationToken jwt) || !jwt.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Se requiere token de servicio");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Esta operación solo está disponible para servicios autorizados.");
         }
         Object claim = jwt.getToken().getClaims().get("usuarioId");
         if (claim == null) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El token de servicio requiere el claim usuarioId");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No pudimos identificar al cliente del turno.");
         }
         try {
             return claim instanceof Number numero ? numero.longValue() : Long.valueOf(claim.toString());
         } catch (NumberFormatException exception) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El claim usuarioId debe ser numerico");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No pudimos identificar al cliente del turno.");
         }
     }
 
@@ -70,7 +70,7 @@ public class FilaController {
         try {
             return Long.parseLong(principal.getName());
         } catch (NumberFormatException exception) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El subject JWT debe identificar al cliente por ID");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Volvé a iniciar sesión para usar la fila.");
         }
     }
 }

@@ -22,5 +22,9 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
     @Query("select e from Entrada e where e.qr = :qr")
     Optional<Entrada> findByQrParaActualizar(@Param("qr") String qr);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select e from Entrada e where e.id = :id")
+    Optional<Entrada> findByIdParaActualizar(@Param("id") Long id);
+
     boolean existsByCompra_Id(Long idCompra);
 }

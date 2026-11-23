@@ -1901,8 +1901,16 @@
             "example": 10
           },
           {
+            "name": "q",
+            "in": "query",
+            "description": "Texto opcional para buscar por nombre, participantes o descripción",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
             "name": "ordenar",
             "in": "query",
+            "description": "Precio mínimo configurado por evento o relevancia del texto q. Sin texto, la relevancia usa la fecha como desempate.",
             "required": false,
             "schema": {
               "type": "string",
@@ -1911,7 +1919,11 @@
                 "fechaHora,asc",
                 "fechaHora,desc",
                 "nombre,asc",
-                "nombre,desc"
+                "nombre,desc",
+                "precio,asc",
+                "precio,desc",
+                "relevancia,asc",
+                "relevancia,desc"
               ]
             },
             "example": "fechaHora,asc"

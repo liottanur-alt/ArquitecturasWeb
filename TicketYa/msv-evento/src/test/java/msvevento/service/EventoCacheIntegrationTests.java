@@ -102,7 +102,7 @@ class EventoCacheIntegrationTests {
     void losCambiosDeEstadoInvalidanCatalogoBusquedaYDetalle() {
         eventoService.listarEventosPublicos();
         eventoService.buscarEventoPublicado(eventoId);
-        eventoService.buscarEventos(null, null, null, null, null, null, 0, 10, "fechaHora,asc");
+        eventoService.buscarEventos(null, null, null, null, null, null, 0, 10, "fechaHora,asc", null);
 
         eventoService.actualizarAgotamiento(eventoId, true);
 
@@ -111,7 +111,7 @@ class EventoCacheIntegrationTests {
         assertThat(eventoService.listarEventosPublicos())
                 .singleElement().extracting(evento -> evento.getEstado().name()).isEqualTo("AGOTADO");
         assertThat(eventoService.buscarEventoPublicado(eventoId).getEstado()).isEqualTo(EstadoEvento.AGOTADO);
-        assertThat(eventoService.buscarEventos(null, null, null, null, null, null, 0, 10, "fechaHora,asc"))
+        assertThat(eventoService.buscarEventos(null, null, null, null, null, null, 0, 10, "fechaHora,asc", null))
                 .singleElement().extracting(evento -> evento.getEstado().name()).isEqualTo("AGOTADO");
     }
 

@@ -103,7 +103,7 @@ class CancelacionEventoFeignIntegrationTests {
         HttpResponse<String> respuesta = cancelar();
 
         assertThat(respuesta.statusCode()).isEqualTo(HttpStatus.BAD_GATEWAY.value());
-        assertThat(respuesta.body()).contains("Un servicio requerido devolvió un error");
+        assertThat(respuesta.body()).contains("No pudimos completar la operación");
         assertThat(patchesEventos.get()).isPositive();
         assertThat(cancelacionesInventario).hasValue(0);
         assertThat(aplicacion.getBean(CompraRepository.class).findById(idCompra).orElseThrow()

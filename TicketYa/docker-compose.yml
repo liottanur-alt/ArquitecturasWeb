@@ -15,7 +15,7 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_AUTH: ${SMTP_AUTH:-false}
       SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
-      SMTP_FROM: ${SMTP_FROM:-no-reply@ticketya.local}
+      SMTP_FROM: ${SMTP_FROM:-${SMTP_USERNAME:-no-reply@ticketya.local}}
     depends_on:
       mysql-notificaciones:
         condition: service_healthy
