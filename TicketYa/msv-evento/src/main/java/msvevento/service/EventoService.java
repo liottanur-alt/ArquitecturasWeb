@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -106,6 +107,7 @@ public class EventoService {
 
         evento.setNombre(dto.getNombre());
         evento.setDescripcion(dto.getDescripcion());
+        evento.setImagenUrl(normalizarImagen(dto.getImagenUrl()));
         evento.setTipo(dto.getTipo());
         evento.setIdOrganizador(dto.getIdOrganizador());
         evento.setFechaHora(dto.getFechaHora());
@@ -162,6 +164,9 @@ public class EventoService {
 
         evento.setNombre(dto.getNombre());
         evento.setDescripcion(dto.getDescripcion());
+        if (dto.getImagenUrl() != null) {
+            evento.setImagenUrl(normalizarImagen(dto.getImagenUrl()));
+        }
         evento.setTipo(dto.getTipo());
         evento.setFechaHora(dto.getFechaHora());
         evento.setDemanda(dto.isDemanda());
@@ -592,6 +597,9 @@ public class EventoService {
         if (nombre.contains(consulta)) return 3;
         if (evento.getParticipantes().stream().anyMatch(
                 artista -> CiudadNormalizada.de(artista.getNombre()).contains(consulta))) return 2;
+        var lugar = evento.getLugar();
+        if (lugar != null && (CiudadNormalizada.de(lugar.getNombre()).contains(consulta)
+                || CiudadNormalizada.de(lugar.getCiudad()).contains(consulta))) return 1;
         return CiudadNormalizada.de(evento.getDescripcion()).contains(consulta) ? 1 : 0;
     }
 
@@ -618,8 +626,31 @@ public class EventoService {
                 lugar,
                 evento.getEstado(),
                 evento.getEstadoPublicacion(),
-                evento.isDemanda()
+                evento.isDemanda(),
+                evento.getImagenUrl()
         );
+    }
+
+    private String normalizarImagen(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        String ruta = valor.strip();
+        if (ruta.length() > 2048 || ruta.indexOf('\\') >= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL de imagen inválida");
+        }
+        try {
+            URI uri = URI.create(ruta);
+            boolean local = ruta.startsWith("/") && !ruta.startsWith("//");
+            boolean web = ("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))
+                    && uri.getHost() != null && uri.getUserInfo() == null;
+            if (local || web) {
+                return ruta;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // URI mal formada.
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL de imagen inválida");
     }
 
     // Convertir Artista a ArtistaResponseDTO

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapCatalog, catalogDate } from '../src/scripts/catalog-data.ts';
+import { mapCatalog, catalogDate, setEventImage } from '../src/scripts/catalog-data.ts';
 
 const event = { id: 702, nombre: 'Festival real', descripcion: 'Descripción', tipo: 'FESTIVAL', fechaHora: '2030-12-20T21:30:00',
   participantes: [{ id: 81, nombre: 'Artista' }], lugar: { nombre: 'Sala', ciudad: 'Tandil', direccion: 'Calle 1' }, estado: 'AGOTADO', demanda: true };
@@ -25,6 +25,20 @@ test('fecha local conserva día, año y hora sin depender de la zona del equipo'
   for (const value of [null, '', '2030-02-31T12:00:00', '2030-01-01T25:00:00', '2030-01-01T12:00:00Z']) {
     assert.equal(catalogDate(value).fullDate, 'Fecha no informada');
   }
+});
+test('usa la imagen opcional de la API y recupera la ilustración si falla', () => {
+  for (const url of ['/eventos-destacados/recital.png', 'https://example.com/teatro.webp']) {
+    assert.equal(mapCatalog([{ ...event, imagenUrl: url }])[0].image, url);
+  }
+  for (const url of [null, 'javascript:alert(1)', '//example.com/imagen.png', '/\\example.com/imagen.png']) {
+    assert.equal(mapCatalog([{ ...event, imagenUrl: url }])[0].image, '/event-placeholder.svg');
+  }
+  const image = {};
+  setEventImage(image, '/eventos-destacados/recital.png');
+  assert.equal(image.src, '/eventos-destacados/recital.png');
+  image.onerror();
+  assert.equal(image.src, '/event-placeholder.svg');
+  assert.equal(image.onerror, null);
 });
 test('distingue vacío, respuesta inválida y campos sin informar', () => {
   assert.deepEqual(mapCatalog([]), []);

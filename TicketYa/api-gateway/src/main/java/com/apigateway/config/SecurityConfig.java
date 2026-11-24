@@ -95,6 +95,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/entradas/qr/**")
                         .hasAnyRole("PERSONAL_ACCESO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/solicitudes/{id}/resolver").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/compras/eventos/{id}/cancelacion").hasRole("ADMINISTRADOR")
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(iniciarSesion)
                         .accessDeniedHandler(accesoDenegado))

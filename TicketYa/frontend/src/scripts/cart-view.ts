@@ -1,14 +1,17 @@
 import { getCart, removeDraft } from './cart';
-import { getSelectedProfileId } from './session';
+import { setEventImage } from './catalog-data';
+import { getAuthenticatedUserId } from './session';
 import { selectionContext } from './selection-api';
 import { eventLink, reconcileDraft } from './selection-data';
 export function initCart() {
   let version = 0;
+  const owner = getAuthenticatedUserId();
   const list = document.querySelector<HTMLElement>('#cart-list')!;
   const status = document.querySelector<HTMLElement>('#cart-status')!;
   const text = (tag: string, value: string, className = '') => { const el = document.createElement(tag); el.textContent = value; el.className = className; return el; };
   async function render() {
-    const currentVersion = ++version, owner = getSelectedProfileId();
+    if (owner === null || getAuthenticatedUserId() !== owner) return;
+    const currentVersion = ++version;
     list.replaceChildren(); document.querySelector<HTMLElement>('#cart-total-box')!.hidden = true;
     status.textContent = 'Consultando disponibilidad actual del carrito…';
     try {
@@ -17,7 +20,8 @@ export function initCart() {
       document.querySelector<HTMLElement>('#cart-empty')!.hidden = items.length > 0;
       await Promise.all(items.map(async draft => {
         const card = document.createElement('article'); card.className = 'purchase-card cart-card';
-        const img = document.createElement('img'); img.src = '/event-placeholder.svg'; img.alt = 'Imagen ilustrativa de respaldo';
+        const img = document.createElement('img'); img.alt = ''; img.loading = 'lazy';
+        setEventImage(img, '/event-placeholder.svg');
         const content = document.createElement('div'); content.className = 'purchase-info';
         const title = text('h3', 'Evento #' + draft.eventId);
         const details = text('p', 'Sector #' + draft.sectorId + ' · ' + draft.quantity + ' entradas · ' + draft.type + (draft.seatIds.length ? ' · IDs: ' + draft.seatIds.join(', ') : ''));
@@ -27,15 +31,16 @@ export function initCart() {
         const footer = document.createElement('div'); footer.className = 'purchase-bottom'; footer.append(price, link);
         const remove = document.createElement('button'); remove.className = 'remove-draft'; remove.textContent = 'Quitar del carrito';
         remove.addEventListener('click', () => {
-          if (getSelectedProfileId() !== owner) { status.textContent = 'El perfil cambió. Volvé a cargar el carrito.'; return; }
+          if (getAuthenticatedUserId() !== owner) return;
           try { removeDraft(draft.eventId, draft.sectorId); render(); }
           catch (cause) { status.textContent = cause instanceof Error ? cause.message : 'No pudimos actualizar el carrito.'; }
         });
         content.append(text('span', 'SELECCIÓN LOCAL · NO RESERVADA', 'cart-badge'), title, details, validation, footer, remove); card.append(img, content); list.append(card);
         try {
           const fresh = await selectionContext(draft.eventId, draft.sectorId);
-          if (currentVersion !== version || getSelectedProfileId() !== owner) return;
+          if (currentVersion !== version || getAuthenticatedUserId() !== owner) return;
           title.textContent = fresh.event.title;
+          setEventImage(img, fresh.event.image);
           const current = fresh.sectors[0];
           const result = fresh.open ? reconcileDraft(draft, current) : { draft: null, changed: true };
           if (result.changed) {
@@ -46,12 +51,12 @@ export function initCart() {
             price.textContent = (current.precio * draft.quantity).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + ' (importe consultado)';
           }
         } catch (cause) {
-          if (currentVersion !== version || getSelectedProfileId() !== owner) return;
+          if (currentVersion !== version || getAuthenticatedUserId() !== owner) return;
           validation.textContent = 'Sin verificar: ' + (cause instanceof Error ? cause.message : 'No se pudo consultar disponibilidad.');
           price.textContent = 'Importe sin verificar';
         }
       }));
-      if (currentVersion === version && getSelectedProfileId() === owner) status.textContent = 'Carrito local separado por perfil. Cada selección corresponde a un sector. Guardar no reserva lugares; el servidor valida límites y disponibilidad al comprar.';
+      if (currentVersion === version && getAuthenticatedUserId() === owner) status.textContent = 'Carrito guardado en este navegador. Guardar una selección no reserva lugares.';
     } catch (cause) {
       status.textContent = cause instanceof Error ? cause.message : 'No pudimos leer el carrito local.';
       document.querySelector('#cart-count')!.textContent = '—'; document.querySelector<HTMLElement>('#cart-empty')!.hidden = true;

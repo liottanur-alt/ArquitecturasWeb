@@ -109,6 +109,31 @@ class SolicitudServiceTests {
     }
 
     @Test
+    void entradaUtilizadaNoAdmiteDevolucion() {
+        entrada.setEstadoqr(Estadoqr.ESCANEADO);
+        entradaRepository.save(entrada);
+
+        assertThatThrownBy(() -> crearSolicitud(solicitud(entrada.getId(), ID_CLIENTE)))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
+                    assertThat(exception.getStatusCode().value()).isEqualTo(400);
+                    assertThat(exception.getReason()).contains("ya fue utilizada");
+                });
+    }
+
+    @Test
+    void entradaSinCompraAprobadaNoAdmiteDevolucion() {
+        Compra compra = entrada.getCompra();
+        compra.setEstadoCompra(EstadoCompra.RECHAZADA);
+        compraRepository.save(compra);
+
+        assertThatThrownBy(() -> crearSolicitud(solicitud(entrada.getId(), ID_CLIENTE)))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
+                    assertThat(exception.getStatusCode().value()).isEqualTo(400);
+                    assertThat(exception.getReason()).contains("compra aprobada");
+                });
+    }
+
+    @Test
     void crearSolicitudDeEntradaInexistenteDevuelve404() {
         assertThatThrownBy(() -> crearSolicitud(solicitud(999L, ID_CLIENTE)))
                 .isInstanceOf(ResponseStatusException.class)
@@ -128,7 +153,7 @@ class SolicitudServiceTests {
         assertThatThrownBy(() -> crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         ))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("72 horas");
     }
 
@@ -148,7 +173,7 @@ class SolicitudServiceTests {
         assertThatThrownBy(() -> crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         ))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("no admite");
     }
 
@@ -160,8 +185,8 @@ class SolicitudServiceTests {
         assertThatThrownBy(() -> crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         ))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("nueva solicitud");
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("pendiente o aceptada");
     }
 
     @Test
@@ -172,8 +197,8 @@ class SolicitudServiceTests {
         assertThatThrownBy(() -> crearSolicitud(
                 solicitud(entrada.getId(), ID_CLIENTE)
         ))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("no está disponible");
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("estado de la entrada");
     }
 
     @Test
@@ -298,7 +323,7 @@ class SolicitudServiceTests {
         assertThatThrownBy(() -> solicitudService.resolverSolicitud(
                 creada.id(), 9L, EstadoSolicitud.ACEPTADA
         ))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("otro resultado");
     }
 
@@ -334,8 +359,8 @@ class SolicitudServiceTests {
         assertThatThrownBy(() -> solicitudService.resolverSolicitud(
                 creada.id(), 9L, EstadoSolicitud.ACEPTADA
         ))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("evento fue cancelado");
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("devolución pendiente");
     }
 
     @Test

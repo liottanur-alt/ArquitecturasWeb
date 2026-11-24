@@ -1,0 +1,64 @@
+---
+import { Ticket, CalendarDays, ShieldCheck, ScanLine, ArrowUpRight } from '@lucide/astro';
+import SiteHeader from './SiteHeader.astro';
+import SiteFooter from './SiteFooter.astro';
+import '../styles/global.css';
+import '../styles/operations.css';
+
+interface Props { title: string; description?: string; mode?: 'organizer' | 'admin' | 'access' }
+const { title, description, mode } = Astro.props;
+const Icon = mode ? { organizer: CalendarDays, admin: ShieldCheck, access: ScanLine }[mode] : Ticket;
+---
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — TicketYa</title>
+  </head>
+  <body class="ops-shell" data-ops={mode}>
+    <a class="skip-link" href="#operaciones">Ir al contenido</a>
+    <SiteHeader />
+    <main class="wrap ops-main" id="operaciones">
+      <div class="ops-masthead">
+        <div>
+          <h1>{title}</h1>
+          {description && <p>{description}</p>}
+        </div>
+        <span class="ops-masthead-icon"><Icon size={38} stroke-width={1.5} aria-hidden="true" /></span>
+      </div>
+      <slot />
+      <noscript>Activá JavaScript para usar este panel.</noscript>
+    </main>
+    <SiteFooter />
+  </body>
+</html>
+<script>
+  const errors = new WeakMap<HTMLElement, HTMLElement>();
+  let nextErrorId = 0;
+  const main = document.querySelector('#operaciones');
+  main?.addEventListener('invalid', event => {
+    const field = event.target;
+    if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return;
+    let error = errors.get(field);
+    if (!error) {
+      error = document.createElement('span');
+      error.className = 'field-error';
+      error.id = 'ops-field-error-' + ++nextErrorId;
+      error.setAttribute('aria-live', 'polite');
+      field.after(error);
+      field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), error.id].filter(Boolean).join(' '));
+      errors.set(field, error);
+    }
+    field.setAttribute('aria-invalid', 'true');
+    error.textContent = field.validationMessage;
+  }, true);
+  main?.addEventListener('input', event => {
+    const field = event.target;
+    if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return;
+    const error = errors.get(field);
+    if (!error) return;
+    error.textContent = field.validationMessage;
+    if (field.validity.valid) field.removeAttribute('aria-invalid');
+  });
+</script>

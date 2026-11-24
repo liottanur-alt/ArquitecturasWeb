@@ -26,4 +26,5 @@ public class EventoRequestDTO {
     private EstadoEvento estado;
     private EstadoPublicacion estadoPublicacion;
     private boolean demanda;
+    private String imagenUrl;
 }

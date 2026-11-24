@@ -49,7 +49,7 @@ public class CompraController {
             @PathVariable Long id,
             @RequestParam boolean aprobado
     ) {
-        return ResponseEntity.ok(compraService.procesarPago(id, aprobado));
+        return ResponseEntity.ok(compraService.procesarPago(id, aprobado, SecurityConfig.authenticatedUserId()));
     }
 
     @PostMapping("/eventos/{idEvento}/cancelacion")

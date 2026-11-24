@@ -1,6 +1,6 @@
 # Integración frontend con TicketYa
 
-Esta guía describe el código disponible en este checkout. Incluye los contratos expuestos por el Gateway y distingue los contratos internos y las funciones incompletas. Se basa en controladores, DTO, servicios, repositorios, dependencias y configuración, no en funcionalidades previstas en historias de usuario.
+Esta guía conserva el relevamiento original de los contratos. Para las rutas que usa el frontend actual, consultá también [el entorno de integración](../frontend/ENTORNO_INTEGRACION.md).
 
 **Verificación:** revisión estática. No se ejecutaron solicitudes contra el backend durante esta generación. Todos los ejemplos son **ilustrativos**, con datos ficticios, derivados de los contratos; no representan respuestas verificadas ni recursos que necesariamente existan. No se incluyen credenciales ni tokens reales.
 
@@ -12,7 +12,7 @@ En todas las tablas, **G** representa la URL configurable del Gateway sin barra 
 
 | Prefijos/rutas publicados | Destino local predeterminado | Variable del Gateway |
 | --- | --- | --- |
-| `/usuarios`, `/usuarios/**`, `/roles`, `/roles/**` | Usuarios: `http://localhost:8004` | `MSVC_USUARIOS_URL` |
+| `/auth/login`, `/auth/registro`, `/usuarios`, `/usuarios/**`, `/roles`, `/roles/**` | Usuarios: `http://localhost:8004` | `MSVC_USUARIOS_URL` |
 | `/api/eventos`, `/api/eventos/**`, `/api/lugares`, `/api/lugares/**`, `/api/artistas`, `/api/artistas/**` | Eventos: `http://localhost:8005` | `MSVC_EVENTOS_URL` |
 | `/sectores`, `/sectores/**`, `/asientos`, `/asientos/**`, `/reservas`, `/reservas/**`, `/eventos/*/inventario`, `/eventos/*/inventario/**`, `/eventos/*/sectores`, `/eventos/*/sectores/**` | SectorAsiento: `http://localhost:8002` | `MSVC_SECTORES_URL` |
 | `/compras`, `/compras/**`, `/entradas`, `/entradas/**`, `/solicitudes`, `/solicitudes/**` | Compras: `http://localhost:8003` | `MSVC_COMPRAS_URL` |
@@ -29,7 +29,7 @@ Si se configura CORS, también deberán exponerse los headers que la UI necesite
 
 ### Convenciones aplicables a todos los endpoints
 
-- Headers: `Accept: application/json` recomendado; `Content-Type: application/json` cuando haya cuerpo JSON. Los adicionales se indican por operación. No se requiere token.
+- Usá `Accept: application/json` y, cuando haya cuerpo JSON, `Content-Type: application/json`. Las operaciones protegidas requieren `Authorization: Bearer <accessToken>`.
 - Todos los parámetros `{...}` de ruta son obligatorios. IDs: enteros `Long`; en Sectores/Asientos/Inventario/Reservas los servicios exigen positividad. Otros módulos no aplican esa validación de forma uniforme.
 - `—` significa sin cuerpo o sin parámetros adicionales. Los nombres de cuerpos/respuestas remiten a los esquemas de cada sección. Una lista es un array, incluso vacío. Los PUT de datos reemplazan los campos copiados por el servicio, no son PATCH.
 - `201` devuelve el objeto creado; `204` no tiene cuerpo. No intentar parsear JSON en un `204`.
@@ -41,21 +41,9 @@ Si se configura CORS, también deberán exponerse los headers que la UI necesite
 
 ## 2. Autenticación y autorización
 
-`POST G/usuarios` crea un perfil, no una cuenta autenticada: no recibe contraseña ni devuelve token. No hay endpoints implementados de login, logout, refresh, recuperación de contraseña o verificación de email. `/auth/login` no está publicado por el Gateway.
+El Gateway publica `POST G/auth/registro` para crear una cuenta cliente y `POST G/auth/login` para iniciar sesión. El login devuelve `accessToken`, `tokenType` y `expiresIn`. El frontend envía el token al consultar catálogo, inventario y demás rutas protegidas.
 
-No hay validación JWT, firma, claims, expiración, revocación ni renovación. No se puede indicar duración del token o un flujo de refresh existente. Enviar `Authorization: Bearer <token>` es la convención ilustrada en el helper de integración, pero **hoy no autentica ni concede permisos**. No incluir un token ficticio como si fuera emitido por el servidor.
-
-Roles existentes como datos: `CLIENTE`, `ORGANIZADOR`, `ADMINISTRADOR`, `PERSONAL_ACCESO`. **Todos los endpoints de las tablas están disponibles sin rol verificado**, incluyendo pagos, mutación de roles, cancelación, devoluciones y QR. No hay una matriz de permisos aplicada por endpoint.
-
-Comprobaciones puntuales implementadas:
-
-| Operaciones | Comprobación |
-| --- | --- |
-| PUT evento; PATCH publicar/finalizar | `X-Organizador-Id` obligatorio, debe coincidir con el organizador guardado; si difiere, 403 |
-| GET `/api/eventos/mis-eventos` | Header `X-Organizador-Id` obligatorio utilizado como filtro |
-| POST `/solicitudes` | `idCliente` del cuerpo debe coincidir con el de la entrada; si difiere, 403 |
-
-Son IDs proporcionados por el cliente, no identidad autenticada. `idAdministrador` positivo no prueba que exista ni tenga ese rol. Ocultar botones en la UI no reemplaza autorización del servidor.
+El Gateway valida el JWT y aplica permisos por operación para los roles `CLIENTE`, `ORGANIZADOR`, `ADMINISTRADOR` y `PERSONAL_ACCESO`. Para las operaciones de organizador, el Gateway completa `X-Organizador-Id` desde la identidad autenticada. Consultá [la colección por roles](../TicketYa-roles.postman_collection.json) para ejecutar solicitudes autenticadas.
 
 ## 3. Usuarios, roles, preferencias y favoritos
 
@@ -398,7 +386,7 @@ Headers comunes y correlation opcional; sin query ni paginación. IDs de ruta ob
 | GET | `/solicitudes/cliente/{idCliente}` | Por cliente, ID ascendente; — | 200 Solicitud[] | Infraestructura |
 | PUT | `/solicitudes/{id}/resolver` | Resolver; SolicitudResolucion | 200 Solicitud | 400 estado/DTO, 404, 409 decisión/entrada/inventario, 502, 503 |
 
-SolicitudRequest ilustrativo: `{"idEntrada":50,"idCliente":7,"descripcion":"No podré asistir"}`. Obligatorios IDs positivos, descripción no blanca sin máximo explícito en DTO. Entrada propia del cliente indicado, PAGA o DEVOLUCION_RECHAZADA, sin solicitud PENDIENTE/ACEPTADA. Evento no CANCELADO/FINALIZADO y al menos **72 h** antes de inicio. No excluye explícitamente QR ya escaneado. No rechaza sólo por publicación suspendida.
+SolicitudRequest ilustrativo: `{"idEntrada":50,"idCliente":7,"descripcion":"No podré asistir"}`. Obligatorios IDs positivos, descripción no blanca sin máximo explícito en DTO. Titular autenticado de entrada y compra, orden APROBADA, entrada PAGA y QR NO_ESCANEADO. Evento no CANCELADO/FINALIZADO y al menos **72 h** antes de inicio. No rechaza sólo por publicación suspendida.
 
 Crear deja solicitud PENDIENTE y entrada SOLICITUD_DEVOLUCION: no libera ni reintegra. SolicitudResolucion ilustrativa: `{"idAdministrador":8,"estadoSolicitud":"ACEPTADA"}`. Ambos obligatorios; administrador positivo, sin verificar rol. Sólo acepta ACEPTADA/RECHAZADA aunque enum contenga PENDIENTE/CANCELADA. Igual decisión repetida devuelve resultado; distinta → 409.
 
@@ -611,7 +599,6 @@ Error de red/CORS rechaza fetch sin Response y sin status HTTP accesible. Un 503
 | POST | `/interno/eventos/recomendaciones/por-ids` | Eventos |
 | POST | `/interno/inventario/disponibilidad` | SectorAsiento |
 | POST | `/api/sucesos` | Notificaciones, registrar suceso |
-| GET | `/api/notificaciones/clientes/{idCliente}` | Notificaciones, últimas 100 por fecha descendente |
 | GET | `/api/bitacora` | Notificaciones, query obligatoria idEvento |
 | GET | `/api/reportes/eventos/{idEvento}` | Notificaciones, agregados de sucesos |
 | POST | `/api/logs` | Notificaciones, registrar log |
@@ -619,9 +606,7 @@ Error de red/CORS rechaza fetch sin Response y sin status HTTP accesible. Un 503
 
 Usuarios consume los cinco contratos internos de recomendaciones por Feign. Frontend usa `/usuarios/{id}/recomendaciones...`.
 
-El checkout incluye `msv-notificaciones`, puerto por defecto **8006**, pero el Gateway no contiene rutas para él y el Compose raíz no lo incorpora como aplicación. Tiene configuración/Compose propios. No presentar sus URLs como disponibles desde G ni incorporarlas a un flujo frontend como dependencia ya conectada.
-
-En Notificaciones, POST sucesos persiste suceso con clave idempotente y publica evento local; tras commit un listener asíncrono crea registro de notificación. Puede guardar estado OMITIDA sin destinatario o ENVIADA con plantilla para COMPRA_CONFIRMADA, DEVOLUCION_APROBADA, EVENTO_CANCELADO. **ENVIADA en ese código no prueba envío de email externo**: el listener guarda un registro y no invoca un proveedor de correo. No se encontraron productores de esos sucesos desde Compras/Eventos en los servicios revisados. Por tanto, no afirmar que una compra o cancelación dispara automáticamente este módulo. Reportes calculan a partir de sucesos registrados, no directamente de ventas/inventario.
+La bandeja se publica vía Gateway bajo `/api/notificaciones`. Sigue el [contrato de notificaciones](../DOCS_NOTIFICACIONES.md).
 
 No hay ruta Gateway para `/openapi.json` de cada servicio ni OpenAPI agregada. Actuator de proveedores no se reenvía. El Gateway incluye Actuator y Compose consulta `GET G/actuator/health`; es salud operativa, no garantía de que todos los flujos/dependencias funcionen. Forma mínima ilustrativa: `{"status":"UP"}`.
 
@@ -649,7 +634,6 @@ No hay ruta Gateway para `/openapi.json` de cada servicio ni OpenAPI agregada. A
 | Sin transacción distribuida | Fallas entre servicios pueden dejar cambios parciales; reconciliar antes de declarar rollback |
 | Compra PENDIENTE puede tener reserva VENCIDA | Consultar ambos estados; no hay sincronización automática al leer compra |
 | Pago/reintegro simulados, sin moneda/catálogo de medios | No presentar cobro real ni confirmación por webhook inexistente |
-| Notificaciones presente pero no en Gateway ni conectada a productores de compra/evento | No prometer avisos automáticos ni reportes de ventas completos |
 | demanda sin fila virtual | No hay turnos/posición/espera consultables |
 
 El OpenAPI estático de Eventos contiene una descripción que dice que el catálogo no está en Gateway; `application.yml` sí lo enruta y es la fuente priorizada aquí. Los tests de rutas del Gateway usan backends simulados: un test de transporte de un método/ruta no demuestra que el controlador real lo implemente. Por ejemplo, inventario se configura mediante PUT, no GET.

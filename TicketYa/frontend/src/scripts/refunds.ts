@@ -1,6 +1,6 @@
 import { api, ApiError } from './api';
 import { parseEntry, type Entry } from './entry-data';
-import { getSelectedProfileId } from './session';
+import { getAuthenticatedUserId } from './session';
 import { parseRefunds, refundRule, type RefundRequest } from './refund-data';
 export function initRefunds(owner: number, updateEntries: () => void) {
   const status = document.querySelector<HTMLElement>('#refunds-status')!;
@@ -13,7 +13,7 @@ export function initRefunds(owner: number, updateEntries: () => void) {
   let requests: RefundRequest[] = [], ready = false, busy = false, version = 0;
   let selected: Entry | null = null, selectedEvent: unknown = null;
   const key = (id: number) => 'ticketya-refund-uncertain-' + owner + '-' + id;
-  const currentOwner = () => getSelectedProfileId() === owner;
+  const currentOwner = () => getAuthenticatedUserId() === owner;
   function unresolved(id: number) {
     const raw = localStorage.getItem(key(id)); if (!raw) return false;
     const baseline = JSON.parse(raw) as number[];
@@ -28,12 +28,14 @@ export function initRefunds(owner: number, updateEntries: () => void) {
     status.textContent = requests.length ? 'Solicitudes del perfil actualizadas desde el servidor.' : 'Este perfil no tiene solicitudes de devolución.';
   }
   async function load() {
+    if (!currentOwner()) return;
     const token = ++version; ready = false; status.textContent = 'Consultando solicitudes de devolución…';
     try { const data = parseRefunds((await api('/solicitudes/cliente/' + owner, { cache: 'no-store' })).data, owner); if (token !== version || !currentOwner()) return; requests = data; ready = true; paint(); }
     catch (cause) { if (token === version && currentOwner()) { status.textContent = cause instanceof Error ? cause.message : 'No pudimos consultar las solicitudes.'; list.replaceChildren(); } }
   }
   async function open(entry: Entry) {
     if (busy || !currentOwner()) return;
+    message.setAttribute('role', 'status');
     selected = null; description.value = ''; submit.disabled = true; message.textContent = 'Verificando entrada, plazo y solicitudes…'; dialog.showModal();
     const token = ++version;
     try {
@@ -50,8 +52,13 @@ export function initRefunds(owner: number, updateEntries: () => void) {
       document.querySelector('#refund-title')!.textContent = 'Devolución de la entrada #' + fresh.id;
       message.textContent = rule.message;
       if (unresolved(fresh.id)) { message.textContent += ' Hay un envío con resultado incierto. Consultá solicitudes antes de volver a enviar; no se repetirá automáticamente.'; return; }
+      const start = (event as { fechaHora?: string } | null)?.fechaHora;
+      if (!start || !Number.isFinite(Date.parse(start + '-03:00'))) {
+        message.textContent = 'No pudimos confirmar la fecha del evento. Volvé a consultar antes de solicitar la devolución.';
+        return;
+      }
       submit.disabled = !rule.allowed;
-    } catch (cause) { message.textContent = cause instanceof Error ? cause.message : 'No pudimos verificar la entrada.'; }
+    } catch (cause) { if (token === version && currentOwner() && dialog.open) message.textContent = cause instanceof Error ? cause.message : 'No pudimos verificar la entrada.'; }
   }
   form.addEventListener('submit', async event => {
     event.preventDefault(); if (busy || !selected || submit.disabled || !ready || !currentOwner()) return;
@@ -68,6 +75,7 @@ export function initRefunds(owner: number, updateEntries: () => void) {
       confirmed = true; localStorage.removeItem(key(entryId));
       if (currentOwner()) { requests = [...requests.filter(r => r.id !== result.id), result]; paint(); message.textContent = 'Solicitud #' + result.id + ' · ' + result.estadoSolicitud + '. Crear la solicitud no confirma un reintegro.'; }
     } catch (cause) {
+      message.setAttribute('role', 'alert');
       if (cause instanceof ApiError && [400,403,404,409].includes(cause.status)) { localStorage.removeItem(key(entryId)); message.textContent = cause.message + ' · Se consultarán los estados actuales; no se confirmó ninguna aceptación.'; }
       else message.textContent = confirmed ? 'Solicitud recibida, pero falló su actualización local. Consultá las solicitudes.' : (cause instanceof Error ? cause.message : 'No se pudo leer el resultado.') + (sent ? ' Resultado incierto: consultá las solicitudes antes de volver a enviar.' : ' No se envió otra solicitud.');
     } finally {

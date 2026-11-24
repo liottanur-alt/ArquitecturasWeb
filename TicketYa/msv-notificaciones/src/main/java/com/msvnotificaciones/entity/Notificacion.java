@@ -22,6 +22,8 @@ public class Notificacion {
     private EstadoNotificacion estado;
     @Column(name = "fecha_creacion", nullable = false)
     private Instant fechaCreacion;
+    @Column(name = "fecha_lectura")
+    private Instant fechaLectura;
 
     protected Notificacion() {}
 
@@ -43,6 +45,6 @@ public class Notificacion {
     public String getAsunto() { return asunto; }
     public String getMensaje() { return mensaje; }
     public EstadoNotificacion getEstado() { return estado; }
-    public void setEstado(EstadoNotificacion estado) { this.estado = estado; }
     public Instant getFechaCreacion() { return fechaCreacion; }
+    public Instant getFechaLectura() { return fechaLectura; }
 }

@@ -1,17 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseHistory, parsePurchase, pendingReservation, resumeLink, seedResume } from '../src/scripts/history-data.ts';
+import { parseHistory, resumeLink, seedResume } from '../src/scripts/history-data.ts';
 const purchase = { id: 40, idCliente: 7, idEvento: 700, idSector: 55, idReserva: 30, estadoCompra: 'PENDIENTE', cantidadEntradas: 2, medioDePago: 'SIMULADO', descripcion: 'Pendiente', claveIdempotencia: 'original', precioUnitario: 2500, importeTotal: 5000, idsAsientos: [1234, 9876] };
 test('historial conserva estados e importes del servidor y rechaza otro perfil o respuesta inválida', () => {
   assert.deepEqual(parseHistory([purchase], 7), [purchase]);
   assert.deepEqual(parseHistory([], 7), []);
   for (const value of [null, [purchase, purchase], [{ ...purchase, idCliente: 8 }], [{ ...purchase, importeTotal: null }]]) assert.throws(() => parseHistory(value, 7));
   assert.equal(resumeLink(purchase), '/eventos/?id=700&compra=40#purchase-panel');
-});
-test('PENDIENTE puede tener reserva VENCIDA y no se transforma el estado de compra', () => {
-  const r = pendingReservation({ id: 30, idCliente: 7, idEvento: 700, idSector: 55, estado: 'VENCIDA', venceEn: '2030-01-01T00:00:00Z' }, purchase);
-  assert.equal(r.estado, 'VENCIDA'); assert.equal(purchase.estadoCompra, 'PENDIENTE');
-  assert.throws(() => pendingReservation({ ...r, idSector: 99 }, purchase));
 });
 test('retomar conserva decisión e idempotencia y no reemplaza otro intento incierto', () => {
   const data = new Map();

@@ -1,4 +1,6 @@
----
+---import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+
 import "../styles/global.css";
 import "../styles/login.css";
 import "../styles/register.css";
@@ -7,9 +9,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
-  UserRound,
   CircleAlert,
-  Check,
 } from "@lucide/astro";
 ---
 
@@ -21,9 +21,9 @@ import {
       content="width=device-width, initial-scale=1"
     /><meta
       name="description"
-      content="Elegí un perfil de demostración de TicketYa. Esta selección no autentica."
+      content="Iniciá sesión en TicketYa."
     /><meta name="theme-color" content="#2055f5" /><title>
-      Elegir perfil — TicketYa
+      Iniciar sesión — TicketYa
     </title><link rel="preconnect" href="https://fonts.googleapis.com" /><link
       rel="preconnect"
       href="https://fonts.gstatic.com"
@@ -34,19 +34,13 @@ import {
     /></head
   >
   <body class="login-page">
+    <SiteHeader />
     <main class="login-layout">
       <section class="login-story" aria-label="Hay que estar ahí">
         <img
           src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1400&q=85"
           alt=""
-        /><div class="story-shade"></div><a
-          href="/"
-          class="brand story-brand"
-          aria-label="TicketYa, inicio"
-          ><span class="brand-symbol"><Ticket size={23} /></span>ticket<span
-            >ya</span
-          ><span class="brand-dot">®</span></a
-        ><div class="story-content">
+        /><div class="story-shade"></div><div class="story-content">
           <span class="eyebrow"
             ><span class="live-dot"></span> EN VIVO SE SIENTE DISTINTO</span
           ><h1>
@@ -68,41 +62,27 @@ import {
       <section class="login-form-side" aria-labelledby="login-title">
         <a href="/" class="login-back"
           ><ArrowLeft size={16} /> Volver a explorar</a
-        ><a href="/" class="brand mobile-login-brand"
-          >ticket<span>ya</span><span class="brand-dot">®</span></a
         >
         <div class="login-form-content">
-          <span class="eyebrow">PERFILES DE DEMOSTRACIÓN</span><h2
-            id="login-title"
-          >
-            Elegí un perfil<br />para explorar.
-          </h2><p class="login-subtitle">
-            Seleccionar un perfil no autentica al usuario ni concede permisos. Los datos del perfil se consultan en el servidor.
-          </p>
-          <form id="login-form" aria-labelledby="login-title">
+          <h2 id="login-title">Iniciá sesión</h2>
+          <form id="login-form" method="post" aria-labelledby="login-title">
             <div class="login-field">
-              <label for="demo-profile">Perfil de demostración</label>
-              <div class="login-input"><select id="demo-profile" required disabled aria-describedby="profile-selection-note"><option value="">Cargando perfiles…</option></select></div>
+              <label for="login-email">Email</label>
+              <div class="login-input"><input id="login-email" name="email" type="email" autocomplete="username" maxlength="254" required /></div>
             </div>
-            <p id="profile-selection-note" class="login-subtitle">Se guardará solo el ID seleccionado en esta pestaña. No se inicia una sesión autenticada.</p>
+            <div class="login-field">
+              <label for="login-password">Contraseña</label>
+              <div class="login-input"><input id="login-password" name="password" type="password" autocomplete="current-password" required /></div>
+            </div>
             <div id="login-error" class="login-error" role="alert" tabindex="-1" hidden><CircleAlert size={18} /><p id="login-error-text"></p></div>
             <p id="login-status" class="login-subtitle" role="status" aria-live="polite"></p>
-            <button id="retry-profiles" class="browse-without-account" type="button" hidden>Reintentar carga de perfiles</button>
-            <button id="login-submit" class="button button-blue login-submit" type="submit" disabled><span>Usar este perfil de demostración</span><ArrowRight size={19} /></button>
+            <button id="login-submit" class="button button-blue login-submit" type="submit"><span id="login-submit-label">Iniciar sesión</span><ArrowRight size={19} /><span class="submit-spinner" aria-hidden="true"></span></button>
           </form>
-          <p class="auth-switch">¿Necesitás un perfil? <a id="register-link" href="/registro/">Crear perfil <ArrowUpRight size={14}/></a></p>
-          <div class="login-divider">
-            <span></span> EL MEJOR PLAN ES ESTAR AHÍ <span></span>
-          </div><a href="/#explorar" class="browse-without-account"
-            >Seguir explorando sin seleccionar perfil <ArrowUpRight size={16} /></a
-          ><div class="login-assurance"><UserRound size={17} /><span>Sin contraseña ni token.<br />El perfil seleccionado no prueba tu identidad.</span></div>
+          <p class="auth-switch">¿Todavía no tenés cuenta? <a id="register-link" href="/registro/">Crear cuenta <ArrowUpRight size={14}/></a></p>
         </div>
-        <footer class="login-footer">
-          <span>© 2026 TicketYa</span><span
-            >Hay que estar ahí. <Check size={12} /></span>
-        </footer>
       </section>
     </main>
+    <SiteFooter />
     <script>
       import "../scripts/login";
     </script>

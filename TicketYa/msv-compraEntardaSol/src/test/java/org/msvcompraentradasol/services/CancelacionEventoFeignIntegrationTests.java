@@ -39,7 +39,7 @@ import org.springframework.http.HttpStatus;
 class CancelacionEventoFeignIntegrationTests {
 
     private static final long ID_EVENTO = 7L;
-    private static final String TOKEN = JwtTestSupport.bearer(JwtTestSupport.token("101", "CLIENTE"));
+    private static final String TOKEN_ADMIN = JwtTestSupport.bearer(JwtTestSupport.token("102", "ADMINISTRADOR"));
     private static final AtomicReference<String> solicitudEventos = new AtomicReference<>();
     private static final AtomicInteger patchesEventos = new AtomicInteger();
     private static final AtomicInteger cancelacionesInventario = new AtomicInteger();
@@ -81,7 +81,7 @@ class CancelacionEventoFeignIntegrationTests {
     void elPatchLlegaAEventosYLaCancelacionTermina() throws Exception {
         Long idCompra = sembrarCompraAprobadaConEntrada();
 
-        HttpResponse<String> respuesta = cancelar();
+        HttpResponse<String> respuesta = cancelar(TOKEN_ADMIN);
 
         assertThat(respuesta.statusCode()).isEqualTo(HttpStatus.OK.value());
         assertThat(solicitudEventos.get()).isEqualTo("PATCH /api/eventos/" + ID_EVENTO + "/cancelar");
@@ -100,7 +100,7 @@ class CancelacionEventoFeignIntegrationTests {
         Long idCompra = sembrarCompraAprobadaConEntrada();
         estadoEventos.set(500);
 
-        HttpResponse<String> respuesta = cancelar();
+        HttpResponse<String> respuesta = cancelar(TOKEN_ADMIN);
 
         assertThat(respuesta.statusCode()).isEqualTo(HttpStatus.BAD_GATEWAY.value());
         assertThat(respuesta.body()).contains("No pudimos completar la operación");
@@ -110,11 +110,19 @@ class CancelacionEventoFeignIntegrationTests {
                 .getEstadoCompra()).isEqualTo(EstadoCompra.APROBADA);
     }
 
-    private HttpResponse<String> cancelar() throws Exception {
+    @Test
+    void clienteNoPuedeCancelarUnEvento() throws Exception {
+        String cliente = JwtTestSupport.bearer(JwtTestSupport.token("101", "CLIENTE"));
+        assertThat(cancelar(cliente).statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(patchesEventos).hasValue(0);
+        assertThat(cancelacionesInventario).hasValue(0);
+    }
+
+    private HttpResponse<String> cancelar(String token) throws Exception {
         return HTTP.send(HttpRequest.newBuilder(
                         URI.create("http://127.0.0.1:" + puerto + "/compras/eventos/" + ID_EVENTO + "/cancelacion"))
                         .timeout(Duration.ofSeconds(20))
-                        .header(HttpHeaders.AUTHORIZATION, TOKEN)
+                        .header(HttpHeaders.AUTHORIZATION, token)
                         .POST(HttpRequest.BodyPublishers.noBody())
                         .build(),
                 HttpResponse.BodyHandlers.ofString());

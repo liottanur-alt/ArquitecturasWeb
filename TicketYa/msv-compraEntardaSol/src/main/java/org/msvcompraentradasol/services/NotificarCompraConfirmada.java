@@ -35,4 +35,13 @@ public class NotificarCompraConfirmada {
     }
 
     public record CompraConfirmada(CompraResponseDTO compra, String nombreEvento) {}
+
+    @TransactionalEventListener
+    public void notificarResolucion(NotificacionCompraClient.Suceso suceso) {
+        try {
+            notificaciones.registrar(suceso);
+        } catch (RuntimeException e) {
+            log.warn("No se pudo registrar el aviso {} ({})", suceso.claveIdempotencia(), e.getClass().getSimpleName());
+        }
+    }
 }

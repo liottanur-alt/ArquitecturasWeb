@@ -1,3 +1,5 @@
+import { clearSession, getSession, safeReturn } from './session.ts';
+
 /** Base de transporte; las rutas recibidas conservan el contrato del Gateway. */
 const baseURL = (import.meta.env?.PUBLIC_API_BASE_URL || '/gateway').replace(/\/+$/, '');
 
@@ -12,7 +14,7 @@ export class ApiError extends Error {
     const message = typeof payload === 'string' ? payload :
       [object.detail, object.error, object.message, object.detalle, object.title]
         .find((value): value is string => typeof value === 'string' && value.trim().length > 0);
-    super(message || `HTTP ${response.status}`);
+    super(message || (response.status === 403 ? 'No tenés permisos para esta operación.' : `HTTP ${response.status}`));
     this.name = 'ApiError';
     this.status = response.status;
     this.payload = payload;
@@ -35,7 +37,7 @@ export class ApiConnectionError extends Error {
 
 type ApiOptions = Omit<RequestInit, 'body' | 'credentials'> & { body?: unknown };
 
-/** Sin tokens, cookies ni reintentos automáticos de operaciones. */
+/** Envía la sesión de la pestaña al Gateway y conserva el resultado de cada operación. */
 export async function api<T = unknown>(path: string, { body, headers, signal, ...options }: ApiOptions = {}) {
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\') || /[\r\n#]/.test(path)
     || path.split('?')[0].split('/').some(segment => ['.', '..'].includes(decodeURIComponent(segment)))) {
@@ -43,6 +45,11 @@ export async function api<T = unknown>(path: string, { body, headers, signal, ..
   }
   const requestHeaders = new Headers(headers);
   requestHeaders.set('Accept', 'application/json');
+  const endpoint = path.split('?')[0];
+  const isPublic = endpoint === '/auth/login' || endpoint === '/auth/registro' || endpoint === '/actuator/health';
+  const session = isPublic ? null : getSession();
+  requestHeaders.delete('Authorization');
+  if (session) requestHeaders.set('Authorization', 'Bearer ' + session.accessToken);
   if (body !== undefined) requestHeaders.set('Content-Type', 'application/json');
   const requestBody = body === undefined ? undefined : JSON.stringify(body);
   let response: Response;
@@ -56,6 +63,17 @@ export async function api<T = unknown>(path: string, { body, headers, signal, ..
   } catch (cause) { throw new ApiConnectionError(cause); }
   let data: unknown = text || null;
   if (text) { try { data = JSON.parse(text); } catch { /* También se admite texto de errores del proxy. */ } }
+  if (response.status === 401 && !isPublic && typeof window !== 'undefined') {
+    const current = getSession();
+    if (!current || current.accessToken === session?.accessToken) {
+      if (current) clearSession();
+      const { pathname, search, hash } = window.location;
+      const returnTo = safeReturn(pathname + search + hash);
+      if (!/^\/(login|registro)\/?$/.test(pathname)) {
+        window.location.replace('/login/?volver=' + encodeURIComponent(returnTo));
+      }
+    }
+  }
   if (!response.ok) throw new ApiError(response, data);
   return { data: data as T | null, status: response.status, headers: response.headers };
 }

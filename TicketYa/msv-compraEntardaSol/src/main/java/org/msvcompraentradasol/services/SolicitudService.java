@@ -17,11 +17,15 @@ import org.msvcompraentradasol.entities.Entrada;
 import org.msvcompraentradasol.entities.Solicitud;
 import org.msvcompraentradasol.enums.EstadoEntrada;
 import org.msvcompraentradasol.enums.EstadoSolicitud;
+import org.msvcompraentradasol.enums.EstadoCompra;
+import org.msvcompraentradasol.enums.Estadoqr;
 import org.msvcompraentradasol.feigns.EventoClientFeign;
+import org.msvcompraentradasol.feigns.NotificacionCompraClient;
 import org.msvcompraentradasol.feigns.ReservaClientFeign;
 import org.msvcompraentradasol.repositories.EntradaRepository;
 import org.msvcompraentradasol.repositories.SolicitudRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,32 +41,30 @@ public class SolicitudService {
     private final EventoClientFeign eventoClient;
     private final ReservaClientFeign reservaClient;
     private final PagoSimuladoService pagoSimuladoService;
+    private final ApplicationEventPublisher eventos;
 
     public SolicitudService(
             SolicitudRepository solicitudRepository,
             EntradaRepository entradaRepository,
             EventoClientFeign eventoClient,
             ReservaClientFeign reservaClient,
-            PagoSimuladoService pagoSimuladoService
+            PagoSimuladoService pagoSimuladoService,
+            ApplicationEventPublisher eventos
     ) {
         this.solicitudRepository = solicitudRepository;
         this.entradaRepository = entradaRepository;
         this.eventoClient = eventoClient;
         this.reservaClient = reservaClient;
         this.pagoSimuladoService = pagoSimuladoService;
+        this.eventos = eventos;
     }
 
     @Transactional
     public SolicitudResponseDTO crearSolicitud(SolicitudRequestDTO dto, Long idCliente) {
-        Entrada entrada = entradaRepository.findById(dto.getIdEntrada())
+        Entrada entrada = entradaRepository.findByIdParaActualizar(dto.getIdEntrada())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
 
-        if (!Objects.equals(entrada.getIdCliente(), idCliente)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "La entrada no pertenece al cliente indicado"
-            );
-        }
+        validarCompraYTitular(entrada, idCliente);
         if (solicitudRepository.existsByEntrada_IdAndEstadoSolicitud(
                 dto.getIdEntrada(),
                 EstadoSolicitud.PENDIENTE
@@ -70,14 +72,13 @@ public class SolicitudService {
                 dto.getIdEntrada(),
                 EstadoSolicitud.ACEPTADA
         )) {
-            throw new IllegalStateException("No se puede realizar una nueva solicitud");
+            throw estadoInvalido("La entrada ya tiene una solicitud pendiente o aceptada");
         }
-        if (entrada.getEstadoEntrada() != EstadoEntrada.PAGA
-                && entrada.getEstadoEntrada() != EstadoEntrada.DEVOLUCION_RECHAZADA) {
-            throw new IllegalStateException("La entrada no está disponible para solicitar una devolución");
+        if (entrada.getEstadoEntrada() != EstadoEntrada.PAGA) {
+            throw estadoInvalido("El estado de la entrada no permite solicitar una devolución");
         }
         if (entrada.getIdEvento() == null) {
-            throw new IllegalStateException("La entrada no tiene un evento asociado");
+            throw estadoInvalido("La entrada no tiene un evento asociado");
         }
 
         EventoFechaResponseDTO evento = obtenerEvento(entrada.getIdEvento());
@@ -138,25 +139,22 @@ public class SolicitudService {
             throw new IllegalArgumentException("Estado de resolución inválido");
         }
 
-        Solicitud solicitud = solicitudRepository.findById(idSolicitud)
+        Solicitud solicitud = solicitudRepository.findByIdParaResolver(idSolicitud)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Solicitud no encontrada"
                 ));
 
-        if (solicitud.getEstadoSolicitud() == estado) {
-            return SolicitudResponseDTO.from(solicitud);
-        }
+        if (solicitud.getEntrada() == null) throw estadoInvalido("La solicitud no tiene una entrada asociada");
+        Entrada entrada = entradaRepository.findByIdParaActualizar(solicitud.getEntrada().getId())
+                .orElseThrow(() -> estadoInvalido("La solicitud no tiene una entrada asociada"));
+        validarCompraYTitular(entrada, solicitud.getIdCliente());
+        if (solicitud.getEstadoSolicitud() == estado) return SolicitudResponseDTO.from(solicitud);
         if (solicitud.getEstadoSolicitud() != EstadoSolicitud.PENDIENTE) {
-            throw new IllegalStateException("La solicitud ya fue resuelta con otro resultado");
+            throw estadoInvalido("La solicitud ya fue resuelta con otro resultado");
         }
-
-        Entrada entrada = solicitud.getEntrada();
-        if (entrada == null) {
-            throw new IllegalStateException("La solicitud no tiene una entrada asociada");
-        }
-        if (entrada.getEstadoEntrada() == EstadoEntrada.EVENTO_CANCELADO) {
-            throw new IllegalStateException("El evento fue cancelado y el reintegro ya fue procesado");
+        if (entrada.getEstadoEntrada() != EstadoEntrada.SOLICITUD_DEVOLUCION) {
+            throw estadoInvalido("La entrada no tiene una devolución pendiente");
         }
 
         solicitud.setIdAdministrador(idAdministrador);
@@ -166,15 +164,12 @@ public class SolicitudService {
         if (estado == EstadoSolicitud.RECHAZADA) {
             entrada.setEstadoEntrada(EstadoEntrada.DEVOLUCION_RECHAZADA);
             entradaRepository.save(entrada);
-            return SolicitudResponseDTO.from(solicitudRepository.save(solicitud));
+            return guardarResolucion(solicitud, entrada);
         }
 
-        if (entrada.getEstadoEntrada() != EstadoEntrada.SOLICITUD_DEVOLUCION) {
-            throw new IllegalStateException("La entrada no está en solicitud de devolución");
-        }
         Compra compra = entrada.getCompra();
         if (compra == null || compra.getIdReserva() == null) {
-            throw new IllegalStateException("La compra no tiene una reserva asociada");
+            throw estadoInvalido("La compra no tiene una reserva asociada");
         }
 
         List<Long> idAsientos = entrada.getIdAsiento() == null
@@ -216,7 +211,35 @@ public class SolicitudService {
         entrada.setEstadoEntrada(EstadoEntrada.DEVOLUCION_ACEPTADA);
         entradaRepository.save(entrada);
 
-        return SolicitudResponseDTO.from(solicitudRepository.save(solicitud));
+        return guardarResolucion(solicitud, entrada);
+    }
+
+    private SolicitudResponseDTO guardarResolucion(Solicitud solicitud, Entrada entrada) {
+        SolicitudResponseDTO respuesta = SolicitudResponseDTO.from(solicitudRepository.save(solicitud));
+        boolean aceptada = solicitud.getEstadoSolicitud() == EstadoSolicitud.ACEPTADA;
+        eventos.publishEvent(new NotificacionCompraClient.Suceso(
+                "devolucion-resuelta-" + respuesta.id(), aceptada ? "DEVOLUCION_APROBADA" : "DEVOLUCION_RECHAZADA",
+                entrada.getIdEvento(), entrada.getCompra().getId(), entrada.getIdCliente(), null, 1L,
+                aceptada ? entrada.getPrecio() : null, "Entrada #" + entrada.getId() + "."));
+        return respuesta;
+    }
+
+    private void validarCompraYTitular(Entrada entrada, Long idCliente) {
+        Compra compra = entrada.getCompra();
+        if (!Objects.equals(entrada.getIdCliente(), idCliente)
+                || (compra != null && !Objects.equals(compra.getIdCliente(), idCliente))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "La entrada o compra no pertenece al solicitante");
+        }
+        if (compra == null || compra.getEstadoCompra() != EstadoCompra.APROBADA) {
+            throw estadoInvalido("La entrada requiere una compra aprobada");
+        }
+        if (entrada.getEstadoqr() != Estadoqr.NO_ESCANEADO) {
+            throw estadoInvalido("La entrada ya fue utilizada o su QR no está disponible para devolución");
+        }
+    }
+
+    private ResponseStatusException estadoInvalido(String mensaje) {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, mensaje);
     }
 
     private EventoFechaResponseDTO obtenerEvento(Long idEvento) {
@@ -233,13 +256,13 @@ public class SolicitudService {
 
     private void validarEventoParaDevolucion(EventoFechaResponseDTO evento) {
         if (evento.estado() != null && ESTADOS_EVENTO_SIN_DEVOLUCION.contains(evento.estado())) {
-            throw new IllegalStateException("El evento no admite solicitudes de devolución");
+            throw estadoInvalido("El evento no admite solicitudes de devolución");
         }
         if (evento.fechaHora() == null) {
-            throw new IllegalStateException("El evento no tiene una fecha configurada");
+            throw estadoInvalido("El evento no tiene una fecha configurada");
         }
         if (evento.fechaHora().isBefore(LocalDateTime.now(ZONA_EVENTOS).plusHours(72))) {
-            throw new IllegalStateException(
+            throw estadoInvalido(
                     "La devolución debe solicitarse al menos 72 horas antes del evento"
             );
         }

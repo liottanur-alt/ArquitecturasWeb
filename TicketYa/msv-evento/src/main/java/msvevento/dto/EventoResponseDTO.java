@@ -9,6 +9,7 @@ import msvevento.entity.EstadoPublicacion;
 import msvevento.entity.TipoEvento;
 
 import java.time.LocalDateTime;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -16,6 +17,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventoResponseDTO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -3558115216547538520L;
 
     private Long id;
     private String nombre;
@@ -28,4 +32,5 @@ public class EventoResponseDTO implements Serializable {
     private EstadoEvento estado;
     private EstadoPublicacion estadoPublicacion;
     private boolean demanda;
+    private String imagenUrl;
 }

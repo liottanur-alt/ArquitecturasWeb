@@ -20,6 +20,10 @@ test('vacío es válido y no implica error; fuentes faltantes no se ocultan aunq
   assert.deepEqual(recommendationWarnings(response), []);
   assert.equal(recommendationWarnings({ ...response, fuentesNoDisponibles: ['PREFERENCIAS'] }).length, 1);
 });
+test('la ciudad puede llegar como null sin invalidar la recomendación', () => {
+  const payload = { ...response, recomendaciones: [{ ...response.recomendaciones[0], ciudad: null }] };
+  assert.equal(parseRecommendations(payload).recomendaciones[0].ciudad, null);
+});
 test('no interpreta flags ausentes o cadenas como verificación exitosa', () => {
   for (const value of [null, { ...response, historialVerificado: undefined }, { ...response, disponibilidadVerificada: 'false' }, { ...response, fuentesNoDisponibles: null }, { ...response, recomendaciones: [response.recomendaciones[0], response.recomendaciones[0]] }]) assert.throws(() => parseRecommendations(value));
 });

@@ -1,0 +1,20 @@
+---
+import { LockKeyhole, Ticket } from '@lucide/astro';
+import '../styles/site-shell.css';
+const year = new Date().getUTCFullYear();
+---
+<footer class="shell-footer">
+  <div class="shell-width">
+    <div class="shell-footer-grid">
+      <div class="shell-footer-brand">
+        <a href="/" class="shell-brand" aria-label="TicketYa, inicio"><span><Ticket size={21} aria-hidden="true" /></span>ticket<strong>ya</strong></a>
+        <p>Tu plataforma para encontrar eventos, comprar entradas y gestionar tus próximos planes.</p>
+        <span class="shell-trust"><LockKeyhole size={15} aria-hidden="true" /> Compra con sesión verificada</span>
+      </div>
+      <nav aria-label="Explorar"><h2>Explorar</h2><a href="/">Inicio</a><a href="/#explorar">Buscar eventos</a><a href="/#categorias">Categorías</a></nav>
+      <nav aria-label="Cuenta y gestión"><h2>Cuenta y gestión</h2><a href="/perfil/">Mi perfil</a><a href="/perfil/#entradas">Mis entradas</a><a href="/organizador/" data-shell-roles="ORGANIZADOR ADMINISTRADOR" hidden>Panel de organizador</a></nav>
+      <nav aria-label="Ayuda y condiciones"><h2>Ayuda</h2><a href="/ayuda/#condiciones">Condiciones de compra</a><a href="/ayuda/#devoluciones">Devoluciones y rechazos</a><a href="/ayuda/#contacto">Contacto</a></nav>
+    </div>
+    <div class="shell-footer-bottom"><span>© {year} TicketYa</span><a href="#inicio">Volver arriba ↑</a></div>
+  </div>
+</footer>

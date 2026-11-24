@@ -7,7 +7,8 @@ export function parseRefunds(value: unknown, owner: number): RefundRequest[] {
   return value;
 }
 export function refundRule(entry: Entry, requests: RefundRequest[], event: unknown, now = Date.now()) {
-  if (!['PAGA','DEVOLUCION_RECHAZADA'].includes(entry.estadoEntrada)) return { allowed: false, message: 'El estado actual de la entrada no permite solicitar devolución.' };
+  if (entry.estadoEntrada !== 'PAGA') return { allowed: false, message: 'El estado actual de la entrada no permite solicitar devolución.' };
+  if (entry.estadoQr !== 'NO_ESCANEADO') return { allowed: false, message: 'Una entrada utilizada no admite devolución.' };
   if (requests.some(r => r.idEntrada === entry.id && ['PENDIENTE','ACEPTADA'].includes(r.estadoSolicitud))) return { allowed: false, message: 'La entrada ya tiene una solicitud pendiente o aceptada.' };
   const e = event as { estado?: string; fechaHora?: string } | null;
   if (e && ['CANCELADO','FINALIZADO'].includes(e.estado || '')) return { allowed: false, message: 'El evento está cancelado o finalizado.' };

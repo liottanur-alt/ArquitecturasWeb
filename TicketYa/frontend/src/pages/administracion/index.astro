@@ -1,0 +1,83 @@
+---
+import OperationalLayout from '../../components/OperationalLayout.astro';
+import { RotateCcw, Users, CalendarDays, RefreshCw, ClipboardCheck } from '@lucide/astro';
+---
+
+<OperationalLayout title="Administración de TicketYa" mode="admin" description="Revisá devoluciones y consultá las cuentas y los eventos publicados.">
+  <p id="refund-admin-access" class="ops-status" role="status"></p>
+  <a id="refund-admin-login" href="/login/?volver=%2Fadministracion%2F" hidden>Iniciar sesión</a>
+
+  <nav id="admin-nav" class="ops-navigation" aria-label="Secciones de administración" hidden>
+    <button class="ops-tab" data-admin-view="refunds" aria-pressed="true"><RotateCcw size={18} aria-hidden="true" /> Devoluciones</button>
+    <button class="ops-tab" data-admin-view="users" aria-pressed="false"><Users size={18} aria-hidden="true" /> Usuarios y roles</button>
+    <button class="ops-tab" data-admin-view="events" aria-pressed="false"><CalendarDays size={18} aria-hidden="true" /> Eventos publicados</button>
+  </nav>
+  <section id="admin-directory" class="ops-section" hidden aria-labelledby="admin-directory-title">
+    <h2 id="admin-directory-title"></h2>
+    <label>Buscar por nombre o ID <input type="search" id="admin-filter" /></label>
+    <p id="admin-directory-status" class="ops-status" role="status"></p>
+    <div class="ops-table" tabindex="0" role="region" aria-labelledby="admin-directory-title"><table><thead id="admin-table-head"></thead><tbody id="admin-table-body"></tbody></table></div>
+    <div class="ops-actions"><button class="ops-button ops-secondary" id="admin-previous" disabled>Anterior</button><button class="ops-button ops-secondary" id="admin-next" disabled>Siguiente</button></div>
+  </section>
+  <div id="refund-admin" class="ops-split refund-workspace" hidden>
+    <section class="ops-section" aria-labelledby="refund-admin-list-title">
+      <div class="ops-section-heading">
+        <h2 id="refund-admin-list-title">Solicitudes pendientes</h2>
+        <button id="refund-admin-refresh" class="ops-button ops-secondary" type="button" aria-label="Actualizar pendientes" title="Actualizar pendientes"><RefreshCw size={17} aria-hidden="true" /></button>
+      </div>
+      <p id="refund-admin-list-status" class="ops-status" role="status"></p>
+      <ul id="refund-admin-list"></ul>
+    </section>
+
+    <section class="ops-section" aria-labelledby="refund-admin-detail-title">
+      <h2 class="ops-title-icon" id="refund-admin-detail-title"><ClipboardCheck size={21} aria-hidden="true" /> Detalle de la solicitud</h2>
+      <p id="refund-admin-detail-status" class="ops-status" role="status">Elegí una solicitud pendiente para consultar su entrada.</p>
+      <dl id="refund-admin-detail" hidden></dl>
+      <div class="ops-actions">
+        <button id="refund-admin-recheck" class="ops-button" type="button" hidden>Volver a consultar el detalle</button>
+      </div>
+      <form id="refund-admin-resolution" hidden>
+        <label for="refund-admin-decision">Resolución</label>
+        <select id="refund-admin-decision" required>
+          <option value="">Elegí una resolución</option>
+          <option value="ACEPTADA">Aceptar y procesar el reintegro simulado</option>
+          <option value="RECHAZADA">Rechazar la devolución</option>
+        </select>
+        <div class="ops-actions">
+          <button id="refund-admin-submit" class="ops-button" type="submit">Revisar resolución</button>
+        </div>
+      </form>
+      <p id="refund-admin-result" class="ops-status" role="status"></p>
+    </section>
+  </div>
+  <dialog id="admin-confirm" aria-labelledby="admin-confirm-title">
+    <div class="dialog-body">
+      <h2 id="admin-confirm-title">Confirmar resolución</h2>
+      <p id="admin-confirm-detail"></p>
+      <form method="dialog" class="ops-actions">
+        <button class="ops-button ops-secondary" value="cancel" autofocus>Volver</button>
+        <button class="ops-button" value="confirm">Confirmar</button>
+      </form>
+    </div>
+  </dialog>
+</OperationalLayout>
+
+<style>
+  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  #refund-admin-list :global(button) { width: 100%; justify-content: start; text-align: left; }
+  #refund-admin-list :global(button[aria-pressed="true"]) { border-color: var(--blue); background: #eaf0ff; }
+  dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; gap: .85rem; padding: 1rem; margin: 0; background: var(--canvas); border-radius: 12px; }
+  dl :global(dt) { color: var(--muted); font-size: .875rem; font-weight: 650; }
+  dl :global(dd) { margin: 0; overflow-wrap: anywhere; }
+  form { display: grid; gap: 8px; }
+  .refund-workspace h2 { margin: 0; }
+  @media (max-width: 480px) {
+    dl { grid-template-columns: minmax(0, 1fr); gap: .35rem; }
+    dl :global(dd:not(:last-child)) { margin-bottom: .5rem; }
+  }
+</style>
+
+<script>
+  import '../../scripts/refund-admin';
+  import '../../scripts/admin-directory';
+</script>

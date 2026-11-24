@@ -9,11 +9,26 @@ x-mysql-environment: &mysql-environment
   MYSQL_NOTIFICACIONES_PASSWORD: ${NOTIFICACIONES_DB_PASSWORD:-${DB_PASSWORD:-notificaciones_dev}}
 
 services:
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8081}:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ && wget -q -O /dev/null http://127.0.0.1/gateway/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
   notificaciones:
     build: ./msv-notificaciones
     restart: unless-stopped
     environment:
       SERVER_ADDRESS: 0.0.0.0
+      JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
       DB_URL: jdbc:mysql://mysql:3306/notificaciones
       DB_USERNAME: notificaciones_app
       DB_PASSWORD: ${NOTIFICACIONES_DB_PASSWORD:-${DB_PASSWORD:-notificaciones_dev}}
@@ -132,6 +147,7 @@ services:
       MSVC_EVENTOS_URL: http://eventos:8005
       MSVC_SECTORES_URL: http://sectores:8002
       MSVC_COMPRAS_URL: http://compras:8003
+      MSVC_NOTIFICACIONES_URL: http://notificaciones:8006
       JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
     ports:
       - "127.0.0.1:8080:8080"

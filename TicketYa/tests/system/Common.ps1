@@ -1,19 +1,30 @@
-#requires -Version 7.0
+#requires -Version 5.1
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 function Invoke-Api {
     param([string]$Method, [string]$Path, $Body = $null, [hashtable]$Headers = @{}, [int[]]$Expected = @(200))
-    $argsApi = @{ Uri = "$BaseUrl$Path"; Method = $Method; Headers = $Headers; SkipHttpErrorCheck = $true; TimeoutSec = 30 }
+    $argsApi = @{ Uri = "$BaseUrl$Path"; Method = $Method; Headers = $Headers; UseBasicParsing = $true; TimeoutSec = 30 }
+    if ($PSVersionTable.PSVersion.Major -ge 7) {
+        $argsApi.SkipHttpErrorCheck = $true
+    }
     if ($null -ne $Body) {
         $argsApi.ContentType = 'application/json; charset=utf-8'
         $argsApi.Body = $Body | ConvertTo-Json -Depth 20 -Compress
     }
     Write-Verbose "$Method $Path"
-    $response = Invoke-WebRequest @argsApi
-    if ([int]$response.StatusCode -notin $Expected) {
-        throw "$Method $Path : esperado $Expected, recibido $($response.StatusCode): $($response.Content)"
+    try {
+        $response = Invoke-WebRequest @argsApi
+        $statusCode = [int]$response.StatusCode
+        $content = [Text.Encoding]::UTF8.GetString($response.RawContentStream.ToArray())
+    } catch [System.Net.WebException] {
+        if ($null -eq $_.Exception.Response) { throw }
+        $statusCode = [int]$_.Exception.Response.StatusCode
+        $content = if ($null -ne $_.ErrorDetails) { $_.ErrorDetails.Message }
     }
-    if ($response.Content) { return ($response.Content | ConvertFrom-Json) }
+    if ($statusCode -notin $Expected) {
+        throw "$Method $Path : esperado $Expected, recibido ${statusCode}: $content"
+    }
+    if ($content) { return ($content | ConvertFrom-Json) }
 }
 function Assert-Equal($Actual, $Expected, [string]$Message) {
     if ($Actual -ne $Expected) { throw "$Message : esperado '$Expected', recibido '$Actual'" }

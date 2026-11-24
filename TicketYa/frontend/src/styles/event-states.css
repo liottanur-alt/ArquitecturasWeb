@@ -1,0 +1,28 @@
+.event-load-state[aria-busy="true"] {
+  animation: none;
+}
+
+.event-load-state[aria-busy="true"]::before {
+  content: "";
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto 1rem;
+  border: 3px solid var(--line);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: event-loading .75s linear infinite;
+}
+
+.event-load-state[data-mode="error"] {
+  border: 1px solid #edc8c3;
+  background: #fff5f4;
+}
+
+.event-load-state [role="alert"] { color: #8e2421; overflow-wrap: anywhere; }
+.event-load-state h2 { color: var(--ink); font-size: clamp(1.2rem, 3vw, 1.55rem); }
+
+@keyframes event-loading { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .event-load-state[aria-busy="true"]::before { animation: none; }
+}

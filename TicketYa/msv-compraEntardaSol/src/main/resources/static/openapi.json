@@ -959,6 +959,12 @@
             "nullable": true,
             "example": "SIM-..."
           },
+          "fechaCreacion": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Instante de creación de la compra. Puede ser nulo para compras anteriores al registro de fechas."
+          },
           "referenciaReintegro": {
             "type": "string",
             "nullable": true,

@@ -1,0 +1,46 @@
+---
+import { Menu, Ticket, X } from '@lucide/astro';
+import AccountMenu from './AccountMenu.astro';
+import '../styles/site-shell.css';
+
+const navigation = [
+  { href: '/', label: 'Explorar eventos', current: 'explorar' },
+  { href: '/perfil/#entradas', label: 'Mis entradas', current: 'entradas', session: true },
+  { href: '/organizador/', label: 'Organizador', current: 'organizador', roles: 'ORGANIZADOR ADMINISTRADOR' },
+  { href: '/administracion/', label: 'Administración', current: 'administracion', roles: 'ADMINISTRADOR' },
+  { href: '/acceso/', label: 'Acceso', current: 'acceso', roles: 'PERSONAL_ACCESO ADMINISTRADOR' },
+];
+---
+<div id="inicio" aria-hidden="true"></div>
+<header class="shell-header" data-shell-header>
+  <div class="shell-width shell-header-row">
+    <a href="/" class="shell-brand" aria-label="TicketYa, inicio"><span><Ticket size={21} aria-hidden="true" /></span>ticket<strong>ya</strong></a>
+    <nav class="shell-nav" aria-label="Navegación principal">
+      {navigation.map(link => (
+        <a class="shell-link" href={link.href} data-shell-route={link.current} data-shell-member={link.session ? '' : undefined} data-shell-roles={link.roles} hidden={!!(link.session || link.roles)}>{link.label}</a>
+      ))}
+    </nav>
+    <div class="shell-actions">
+      <AccountMenu />
+      <button type="button" class="shell-menu-trigger" data-shell-menu-trigger aria-label="Abrir navegación" aria-haspopup="dialog" aria-controls="shell-mobile-nav"><Menu size={23} aria-hidden="true" /></button>
+    </div>
+  </div>
+  <dialog class="shell-mobile" id="shell-mobile-nav" aria-labelledby="shell-mobile-title">
+    <div class="shell-mobile-head"><h2 id="shell-mobile-title">Navegación</h2><button type="button" class="icon-button" data-shell-menu-close aria-label="Cerrar navegación" autofocus><X size={20} aria-hidden="true" /></button></div>
+    <nav aria-label="Navegación móvil">
+      {navigation.map(link => (
+        <a class="shell-link" href={link.href} data-shell-route={link.current} data-shell-member={link.session ? '' : undefined} data-shell-roles={link.roles} hidden={!!(link.session || link.roles)}>{link.label}</a>
+      ))}
+      <div class="shell-mobile-account" data-shell-member hidden>
+        <a class="shell-link" href="/perfil/" data-shell-route="perfil">Mi perfil</a>
+        <a class="shell-link" href="/perfil/#compras" data-shell-route="compras">Historial de compras</a>
+        <button type="button" class="shell-link" data-shell-logout>Cerrar sesión</button>
+      </div>
+      <div class="shell-mobile-auth" data-shell-guest>
+        <a class="shell-link" href="/login/" data-shell-login>Iniciar sesión</a>
+        <a class="shell-primary" href="/registro/" data-shell-register>Registrarse</a>
+      </div>
+    </nav>
+  </dialog>
+</header>
+<script>import '../scripts/site-shell';</script>

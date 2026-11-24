@@ -1,199 +1,338 @@
-import { eventLink } from './selection-data';
-import gsap from 'gsap';
-import { api } from './api';
-import { mapCatalog, type CatalogEvent } from './catalog-data';
-import { latestRequest, matchesText, pageSize, searchPath } from './catalog-search';
+import { api, ApiError } from './api';
+import { mapCatalog, setEventImage, type CatalogEvent } from './catalog-data';
+import { catalogWindow, latestRequest, pageSize, searchPath } from './catalog-search';
+import { eventLink, parseAvailability, saleOpen } from './selection-data';
+import { parseRecommendations } from './recommendations-data';
+import { getAuthenticatedUserId } from './session';
 
-const query = document.querySelector<HTMLInputElement>('#query')!;
-const city = document.querySelector<HTMLInputElement>('#city')!;
-const state = document.querySelector<HTMLElement>('#catalog-state')!;
-const status = document.querySelector<HTMLElement>('#catalog-status')!;
-const error = document.querySelector<HTMLElement>('#catalog-error')!;
-const retry = document.querySelector<HTMLButtonElement>('#retry-catalog')!;
-const previous = document.querySelector<HTMLButtonElement>('#catalog-prev')!;
-const next = document.querySelector<HTMLButtonElement>('#catalog-next')!;
-const pageLabel = document.querySelector<HTMLElement>('#catalog-page')!;
-const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+const form = el<HTMLFormElement>('home-search-form');
+const query = el<HTMLInputElement>('query'), city = el<HTMLInputElement>('city');
+const category = el<HTMLSelectElement>('home-category'), date = el<HTMLInputElement>('home-date');
+const grid = el('event-grid'), featured = el('featured-grid');
+const previous = el<HTMLButtonElement>('catalog-prev'), next = el<HTMLButtonElement>('catalog-next');
+const state = el('catalog-state'), retry = el<HTMLButtonElement>('retry-catalog');
+const owner = getAuthenticatedUserId();
+const active = () => owner !== null && getAuthenticatedUserId() === owner;
 const runLatest = latestRequest();
-let events: CatalogEvent[] = [], tipo = '', page = 0, loading = false;
+const runRecommendations = latestRequest();
+const recommendations = el('home-recommendation-grid');
+const recommendationSection = el('para-vos');
+const recommendationStatus = el('home-recommendation-status');
+const retryRecommendations = el<HTMLButtonElement>('retry-home-recommendations');
 const cities = new Set<string>();
-let currentSlide = 0, paused = false, hovering = false, focusing = false;
-let timer: ReturnType<typeof setInterval>;
+const money = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2, minimumFractionDigits: 0 });
+date.min = catalogWindow('').from.slice(0, 10);
+const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+const observer = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(entries => {
+  for (const entry of entries) if (entry.isIntersecting) {
+    entry.target.classList.add('home-revealed');
+    observer?.unobserve(entry.target);
+  }
+}, { threshold: .12 });
+
+const favoritesKey = 'ticketya-event-favorites-' + owner;
 let favorites: number[] = [];
-try { const saved: unknown = JSON.parse(localStorage.getItem('ticketya-favorites') || '[]'); if (Array.isArray(saved)) favorites = saved.filter(Number.isSafeInteger); } catch {}
+try {
+  const value: unknown = JSON.parse(localStorage.getItem(favoritesKey) ?? '[]');
+  if (Array.isArray(value)) favorites = value.filter(Number.isSafeInteger);
+} catch { /* El almacenamiento puede estar desactivado. */ }
 
-function fill(container: ParentNode, event: CatalogEvent) {
-  const bindings: Record<string, string> = { title: event.title, 'category-label': event.category, artist: event.artist, location: event.location,
-    date: event.fullDate, day: event.day, month: event.month, 'month-year': event.monthYear, description: event.description };
-  for (const [key, value] of Object.entries(bindings)) container.querySelectorAll('[data-' + key + ']').forEach(el => el.textContent = value);
-  container.querySelectorAll<HTMLElement>('[data-event]').forEach(el => { el.dataset.event = String(event.id); el.setAttribute('aria-label', 'Ver ' + event.title); });
-}
-function renderCatalog() {
-  const visible = events.filter(event => matchesText(event, query.value));
-  const viewport = document.querySelector('.hero-viewport')!;
-  const dots = document.querySelector('.hero-dots')!;
-  viewport.replaceChildren(); dots.replaceChildren();
-  visible.slice(0, 3).forEach((event, i) => {
-    const slide = (document.querySelector<HTMLTemplateElement>('#event-slide-template')!.content.cloneNode(true) as DocumentFragment);
-    fill(slide, event);
-    const article = slide.querySelector<HTMLElement>('article')!;
-    article.classList.toggle('active', i === 0); article.inert = i !== 0; article.setAttribute('aria-hidden', String(i !== 0));
-    viewport.append(slide);
-    const dot = document.createElement('button'); dot.className = 'hero-dot' + (i === 0 ? ' selected' : ''); dot.dataset.slideTo = String(i);
-    dot.setAttribute('aria-label', 'Mostrar ' + event.title); dot.setAttribute('aria-current', String(i === 0)); dot.append(document.createElement('span')); dots.append(dot);
-  });
-  document.querySelector('#slide-total')!.textContent = String(Math.min(visible.length, 3)).padStart(2, '0');
-  document.querySelectorAll<HTMLElement>('[data-events-section]').forEach(section => {
-    const rail = section.querySelector('.event-rail')!;
-    rail.replaceChildren();
-    const items = section.id === 'alta-demanda' ? visible.filter(event => event.high) : visible;
-    items.forEach(event => {
-      const card = document.querySelector<HTMLTemplateElement>('#event-card-template')!.content.cloneNode(true) as DocumentFragment;
-      fill(card, event);
-      const article = card.querySelector<HTMLElement>('article')!;
-      article.dataset.title = [event.title, event.artist, event.venue].join(' '); article.dataset.city = event.city; article.dataset.type = event.category;
-      card.querySelector<HTMLElement>('[data-high]')!.hidden = !event.high;
-      card.querySelector<HTMLButtonElement>('[data-favorite]')!.dataset.favorite = String(event.id);
-      rail.append(card);
-    });
-    section.hidden = events.length === 0;
-    section.querySelector<HTMLElement>('.empty-state')!.hidden = items.length > 0;
-    section.querySelector('.empty-state p')!.textContent = section.id === 'alta-demanda'
-      ? 'No hay eventos de alta demanda que coincidan en esta página.' : 'No hay coincidencias de texto en esta página. Probá otra búsqueda o avanzá de página.';
-  });
-  document.querySelector<HTMLElement>('.hero')!.hidden = visible.length === 0;
-  document.querySelector<HTMLElement>('.hero-controls')!.hidden = visible.length < 2;
-  currentSlide = 0; updateCarousel(); updateRails(); updateFavorites();
-  document.querySelector('#filter-status')!.textContent = visible.length + ' coincidencias de texto en los ' + events.length + ' resultados cargados de esta página.';
-  document.querySelector<HTMLElement>('#clear-filters')!.hidden = !query.value && !city.value && !tipo;
+type Stock = { count: number; price: number | null };
+let dateMode = '', limited = false, page = 0, attemptedPage = 0, attemptedDirection = 1, requestId = 0;
+let debounce: ReturnType<typeof setTimeout>, toastTimer: ReturnType<typeof setTimeout>;
 
+function reveal(element: HTMLElement, index: number) {
+  if (!observer || reduced.matches) return;
+  element.style.setProperty('--reveal-delay', Math.min(index, 5) * 55 + 'ms');
+  element.classList.add('home-reveal');
+  observer.observe(element);
 }
 
-function updateFavorites() {
-  document.querySelectorAll<HTMLButtonElement>('[data-favorite]').forEach(button => {
-    const selected = favorites.includes(Number(button.dataset.favorite));
-    button.setAttribute('aria-pressed', String(selected));
-    button.setAttribute('aria-label', (selected ? 'Quitar' : 'Guardar') + ' evento en favoritos de este dispositivo');
+function skeletons() {
+  return Array.from({ length: 4 }, () => {
+    const card = document.createElement('div');
+    card.className = 'home-card home-card-skeleton';
+    card.setAttribute('aria-hidden', 'true');
+    return card;
   });
 }
-function updateRails() {
-  document.querySelectorAll<HTMLElement>('[data-events-section]').forEach(section => {
-    const rail = section.querySelector<HTMLElement>('.event-rail')!;
-    section.querySelector<HTMLButtonElement>('.rail-prev')!.disabled = rail.scrollLeft <= 2;
-    section.querySelector<HTMLButtonElement>('.rail-next')!.disabled = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 3;
+
+function updateOptions(events: CatalogEvent[]) {
+  events.forEach(event => { if (event.city) cities.add(event.city); });
+  el('catalog-cities').replaceChildren(...[...cities].sort((a, b) => a.localeCompare(b, 'es-AR')).map(value => new Option(value, value)));
+}
+
+function syncFilters() {
+  document.querySelectorAll<HTMLButtonElement>('[data-category-filter], [data-date-filter], #limited-filter').forEach(button => {
+    const pressed = button.dataset.categoryFilter ? button.dataset.categoryFilter === category.value
+      : button.dataset.dateFilter ? button.dataset.dateFilter === dateMode : limited;
+    button.setAttribute('aria-pressed', String(pressed));
   });
+  el('clear-filters').hidden = !(query.value || city.value || category.value || date.value || dateMode || limited);
 }
-function updateCarousel() {
-  clearInterval(timer);
-  const slides = [...document.querySelectorAll<HTMLElement>('[data-slide]')];
-  slides.forEach((slide, i) => { slide.classList.toggle('active', i === currentSlide); slide.inert = i !== currentSlide; slide.setAttribute('aria-hidden', String(i !== currentSlide)); });
-  document.querySelectorAll<HTMLButtonElement>('[data-slide-to]').forEach((dot, i) => { dot.classList.toggle('selected', i === currentSlide); dot.setAttribute('aria-current', String(i === currentSlide)); });
-  document.querySelector('#slide-number')!.textContent = String(currentSlide + 1).padStart(2, '0');
-  const pause = document.querySelector<HTMLButtonElement>('#hero-pause')!;
-  pause.setAttribute('aria-pressed', String(paused || reduced.matches)); pause.setAttribute('aria-label', paused || reduced.matches ? 'Reanudar carrusel' : 'Pausar carrusel');
-  if (!loading && slides.length > 1 && !paused && !hovering && !focusing && !reduced.matches && !document.hidden) timer = setInterval(() => changeSlide(1), 6500);
+
+function fill(template: string, event: CatalogEvent) {
+  const fragment = document.querySelector<HTMLTemplateElement>('#' + template)!.content.cloneNode(true) as DocumentFragment;
+  const bindings = { title: event.title, category: event.category, location: event.location, date: event.ticketDate,
+    action: event.state === 'En curso' ? 'Comprar entradas' : 'Ver detalles' };
+  for (const [key, value] of Object.entries(bindings)) fragment.querySelectorAll('[data-' + key + ']').forEach(node => node.textContent = value);
+  fragment.querySelectorAll<HTMLAnchorElement>('[data-event]').forEach(link => link.href = eventLink(event.id));
+  const image = fragment.querySelector('img')!;
+  setEventImage(image, event.image);
+  return fragment;
 }
-function changeSlide(delta: number) {
-  const count = document.querySelectorAll('[data-slide]').length;
-  if (!count) return;
-  currentSlide = (currentSlide + delta + count) % count; updateCarousel();
-  if (!reduced.matches) gsap.fromTo(document.querySelector('.hero-slide.active .hero-content'), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: .35, clearProps: 'all' });
-}
-async function loadCatalog(targetPage = 0) {
-  page = targetPage; loading = true; clearInterval(timer);
-  previous.disabled = true; next.disabled = true; state.hidden = false; retry.hidden = true; error.hidden = true; state.setAttribute('aria-busy', 'true');
-  document.querySelector<HTMLElement>('.hero')!.hidden = true;
-  document.querySelectorAll<HTMLElement>('[data-events-section]').forEach(section => section.hidden = true);
-  const dialog = document.querySelector<HTMLDialogElement>('#event-dialog')!; if (dialog.open) dialog.close();
-  document.querySelector('#catalog-state-title')!.textContent = 'Buscando tu próximo plan…'; status.textContent = 'Consultando categoría y ciudad en el servidor.';
-  pageLabel.textContent = 'Cargando página ' + (page + 1) + '…'; document.querySelector('#filter-status')!.textContent = 'El texto se aplicará a la nueva página cuando termine de cargar.';
-  document.querySelector<HTMLElement>('#clear-filters')!.hidden = !query.value && !city.value && !tipo;
+
+async function getStock(event: CatalogEvent, signal: AbortSignal): Promise<Stock | null> {
+  if (event.state !== 'En curso') return null;
   try {
-    const path = searchPath(tipo, city.value, targetPage);
-    const response = await runLatest(signal => api(path, { signal }));
-    if (!response.current) return;
-    events = mapCatalog(response.data.data); loading = false;
-    for (const event of events) if (event.city) cities.add(event.city);
-    const options = document.querySelector('#catalog-cities')!;
-    options.replaceChildren(...[...cities].sort((a, b) => a.localeCompare(b, 'es')).map(value => new Option(value, value)));
-    renderCatalog();
-    state.hidden = events.length > 0;
-    if (!events.length) {
-      document.querySelector('#catalog-state-title')!.textContent = 'No hay resultados en esta página.';
-      status.textContent = page > 0 ? 'Volvé a la página anterior o cambiá los filtros. No se informa un total de páginas.' : 'No hay eventos publicados que coincidan con la categoría y ciudad consultadas.';
-    }
-    pageLabel.textContent = 'Página ' + (page + 1) + ' · ' + events.length + ' resultados recibidos';
-    previous.disabled = page === 0; next.disabled = events.length < pageSize;
-    state.setAttribute('aria-busy', 'false'); updateCarousel();
-  } catch (cause) {
-    loading = false; events = []; state.setAttribute('aria-busy', 'false');
-    document.querySelector('#catalog-state-title')!.textContent = 'No pudimos cargar los eventos.';
-    status.textContent = 'Reintentá la misma página o cambiá los filtros.';
-    error.textContent = cause instanceof Error ? cause.message : 'No se pudo leer la respuesta del servidor.'; error.hidden = false; retry.hidden = false;
-    pageLabel.textContent = 'Página ' + (page + 1) + ' sin cargar'; previous.disabled = page === 0; next.disabled = true;
-    document.querySelector('#filter-status')!.textContent = 'No hay una página cargada para filtrar por texto.';
+    const { data } = await api('/eventos/' + event.id + '/sectores', { cache: 'no-store', signal });
+    if (!Array.isArray(data) || !data.length) return null;
+    const sectors = data.map(value => parseAvailability(value, event.id));
+    if (new Set(sectors.map(sector => sector.idSector)).size !== sectors.length) return null;
+    const sale = sectors.filter(sector => !sector.cancelado && sector.disponibles > 0);
+    return { count: sale.reduce((sum, sector) => sum + sector.disponibles, 0), price: sale.length ? Math.min(...sale.map(sector => sector.precio)) : null };
+  } catch { return null; }
+}
+
+async function stockFor(events: CatalogEvent[], signal: AbortSignal, paint?: (id: number, stock: Stock | null) => void) {
+  const stocks = new Map<number, Stock | null>();
+  for (let i = 0; i < events.length && !signal.aborted; i += 4) {
+    await Promise.all(events.slice(i, i + 4).map(async event => {
+      const stock = await getStock(event, signal);
+      stocks.set(event.id, stock);
+      if (!signal.aborted) paint?.(event.id, stock);
+    }));
+  }
+  return stocks;
+}
+
+function paintStock(card: ParentNode, event: CatalogEvent, stock: Stock | null | undefined) {
+  const badge = card.querySelector<HTMLElement>('[data-state]')!;
+  const status = event.state === 'En curso'
+    ? stock?.count === 0 ? 'Agotado' : stock && stock.count <= 10 ? 'Últimas entradas' : ''
+    : event.state === 'Estado no informado' ? '' : event.state;
+  badge.hidden = !status;
+  badge.textContent = status;
+  badge.dataset.tone = status === 'Últimas entradas' ? 'limited' : 'closed';
+  card.querySelector('[data-price]')!.textContent = stock?.price != null ? 'Desde ' + money.format(stock.price)
+    : stock === undefined && event.state === 'En curso' ? 'Consultando precio…' : event.state === 'En curso' && !status ? 'Ver precio' : '';
+  const action = card.querySelector('[data-action]')!;
+  const canBuy = event.state === 'En curso' && status !== 'Agotado';
+  action.textContent = canBuy ? 'Comprar entradas' : 'Ver detalles';
+  action.closest('a')?.setAttribute('aria-label', action.textContent + ' de ' + event.title);
+}
+
+function paintCards(events: CatalogEvent[], stocks: Map<number, Stock | null>, container = grid, reasons = new Map<number, string>()) {
+  const cards = new Map<number, HTMLElement>();
+  container.replaceChildren();
+  events.forEach((event, index) => {
+    const fragment = fill('event-card-template', event);
+    const card = fragment.querySelector<HTMLElement>('article')!;
+    const favorite = fragment.querySelector<HTMLButtonElement>('[data-favorite]')!;
+    const reason = fragment.querySelector<HTMLElement>('[data-reason]')!;
+    reason.textContent = reasons.get(event.id) ?? '';
+    reason.hidden = !reason.textContent;
+    favorite.dataset.favorite = String(event.id);
+    favorite.setAttribute('aria-pressed', String(favorites.includes(event.id)));
+    favorite.setAttribute('aria-label', (favorites.includes(event.id) ? 'Quitar de favoritos: ' : 'Guardar en favoritos: ') + event.title);
+    paintStock(card, event, stocks.get(event.id));
+    cards.set(event.id, card);
+    container.append(fragment);
+    reveal(card, index);
+  });
+  return cards;
+}
+
+async function loadRecommendations() {
+  if (!active()) return;
+  recommendationSection.hidden = false;
+  recommendationStatus.textContent = 'Buscando recomendaciones para vos…';
+  recommendations.setAttribute('aria-busy', 'true');
+  retryRecommendations.hidden = true;
+  try {
+    const response = await runRecommendations(async signal => {
+      const { data } = await api('/usuarios/' + owner + '/recomendaciones', { signal, cache: 'no-store' });
+      const result = parseRecommendations(data);
+      const picks = result.recomendaciones.slice(0, 4);
+      const details = await Promise.allSettled(picks.map(async pick => {
+        let detail: unknown;
+        try {
+          detail = (await api('/api/eventos/' + pick.idEvento, { signal })).data;
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 404) return null;
+          if (signal.aborted) throw error;
+          const [event] = mapCatalog([{
+            id: pick.idEvento, nombre: pick.nombre, tipo: pick.tipo, fechaHora: pick.fechaHora,
+          }]);
+          return { event: { ...event, location: pick.ciudad || 'Ubicación no informada' }, complete: false };
+        }
+        if (!saleOpen(detail)) return null;
+        const event = mapCatalog([detail])[0];
+        if (event.id !== pick.idEvento) throw new Error('El detalle no coincide con la recomendación.');
+        return { event, complete: true };
+      }));
+      return { result, picks, details, signal };
+    });
+    if (!active() || !response.current) return;
+    const { result, picks, details, signal } = response.data;
+    const resolved = details.flatMap(detail => detail.status === 'fulfilled' && detail.value ? [detail.value] : []);
+    const events = resolved.map(({ event }) => event);
+    const hadErrors = details.some(detail => detail.status === 'rejected');
+    const incomplete = hadErrors || resolved.some(event => !event.complete);
+    const reasons = new Map(picks.map(pick => [pick.idEvento, pick.motivos[0] ?? '']));
+    const cards = paintCards(events, new Map(), recommendations, reasons);
+    recommendationStatus.textContent = events.length
+      ? result.parcial || incomplete ? 'Algunas sugerencias tienen información limitada. Consultá el evento para confirmar el cupo.' : ''
+      : result.parcial || hadErrors ? 'No pudimos completar tus recomendaciones en este momento.'
+        : 'Todavía no encontramos eventos que coincidan. Podés agregar categorías, una ciudad o artistas favoritos en tus preferencias.';
+    retryRecommendations.hidden = !incomplete && !result.parcial;
+    recommendations.removeAttribute('aria-busy');
+    void stockFor(events, signal, (id, stock) => {
+      const card = cards.get(id), event = events.find(item => item.id === id);
+      if (card?.isConnected && event && active()) paintStock(card, event, stock);
+    });
+  } catch {
+    if (!active()) return;
+    recommendations.replaceChildren();
+    recommendations.removeAttribute('aria-busy');
+    recommendationStatus.textContent = 'No pudimos cargar tus recomendaciones.';
+    retryRecommendations.hidden = false;
   }
 }
 
-retry.addEventListener('click', () => loadCatalog(page));
-previous.addEventListener('click', () => { if (!loading && page > 0) loadCatalog(page - 1); });
-next.addEventListener('click', () => { if (!loading && !next.disabled) loadCatalog(page + 1); });
-query.addEventListener('input', () => { if (!loading) renderCatalog(); });
-city.addEventListener('change', () => loadCatalog(0));
-document.querySelector('.search-form')!.addEventListener('submit', event => { event.preventDefault(); loadCatalog(0); });
-document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(button => button.addEventListener('click', () => {
-  tipo = button.dataset.category || '';
-  document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(other => { other.classList.toggle('chosen', other === button); other.setAttribute('aria-pressed', String(other === button)); });
-  loadCatalog(0);
-}));
-document.querySelector('#clear-filters')!.addEventListener('click', () => {
-  query.value = ''; city.value = ''; tipo = '';
-  document.querySelectorAll<HTMLButtonElement>('[data-category]').forEach(button => { const selected = !button.dataset.category; button.classList.toggle('chosen', selected); button.setAttribute('aria-pressed', String(selected)); });
-  loadCatalog(0);
-});
-const hero = document.querySelector<HTMLElement>('.hero')!;
-document.querySelector('#hero-next')!.addEventListener('click', () => changeSlide(1));
-document.querySelector('#hero-prev')!.addEventListener('click', () => changeSlide(-1));
-document.querySelector('#hero-pause')!.addEventListener('click', () => { paused = !paused; updateCarousel(); });
-hero.addEventListener('mouseenter', () => { hovering = true; updateCarousel(); });
-hero.addEventListener('mouseleave', () => { hovering = false; updateCarousel(); });
-hero.addEventListener('focusin', () => { focusing = true; updateCarousel(); });
-hero.addEventListener('focusout', () => { focusing = hero.contains(document.activeElement); setTimeout(() => { focusing = hero.contains(document.activeElement); updateCarousel(); }, 0); });
-hero.addEventListener('keydown', event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); changeSlide(event.key === 'ArrowRight' ? 1 : -1); } });
-let touchX = 0, touchY = 0;
-hero.addEventListener('touchstart', event => { touchX = event.changedTouches[0].clientX; touchY = event.changedTouches[0].clientY; }, { passive: true });
-hero.addEventListener('touchend', event => { const dx = event.changedTouches[0].clientX - touchX, dy = event.changedTouches[0].clientY - touchY; if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) changeSlide(dx < 0 ? 1 : -1); }, { passive: true });
-document.addEventListener('visibilitychange', updateCarousel); reduced.addEventListener('change', updateCarousel);
-document.querySelectorAll<HTMLElement>('[data-events-section]').forEach(section => {
-  const rail = section.querySelector<HTMLElement>('.event-rail')!;
-  for (const [selector, direction] of [['.rail-prev', -1], ['.rail-next', 1]] as const) section.querySelector(selector)!.addEventListener('click', () => rail.scrollBy({ left: direction * rail.clientWidth * .8, behavior: reduced.matches ? 'instant' : 'smooth' }));
-  rail.addEventListener('scroll', updateRails, { passive: true }); new ResizeObserver(updateRails).observe(rail);
-});
-window.addEventListener('resize', updateRails);
-const menu = document.querySelector<HTMLButtonElement>('.mobile-toggle')!, mobileNav = document.querySelector<HTMLElement>('#mobile-nav')!;
-menu.addEventListener('click', () => { mobileNav.hidden = !mobileNav.hidden; menu.setAttribute('aria-expanded', String(!mobileNav.hidden)); });
-mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { mobileNav.hidden = true; menu.setAttribute('aria-expanded', 'false'); }));
-const dialog = document.querySelector<HTMLDialogElement>('#event-dialog')!;
-dialog.querySelectorAll('.dialog-close').forEach(button => button.addEventListener('click', () => dialog.close()));
-dialog.addEventListener('click', event => { const r = dialog.getBoundingClientRect(); if (event.target === dialog && (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom)) dialog.close(); });
-let toastTimer: ReturnType<typeof setTimeout>;
-document.addEventListener('click', e => {
-  const target = e.target as Element;
-  const dot = target.closest<HTMLElement>('[data-slide-to]'); if (dot) { currentSlide = Number(dot.dataset.slideTo); updateCarousel(); return; }
-  const favorite = target.closest<HTMLElement>('[data-favorite]');
-  if (favorite) {
-    const id = Number(favorite.dataset.favorite), exists = favorites.includes(id), values = exists ? favorites.filter(value => value !== id) : [...favorites, id];
-    const toast = document.querySelector('#toast')!;
-    try { localStorage.setItem('ticketya-favorites', JSON.stringify(values)); favorites = values; updateFavorites(); toast.textContent = exists ? 'Evento quitado de favoritos de este dispositivo' : 'Evento guardado en este dispositivo'; }
-    catch { toast.textContent = 'No pudimos guardar el favorito en este dispositivo.'; }
-    toast.classList.add('visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('visible'), 2500); return;
+async function loadFeatured() {
+  const feedback = el('featured-feedback');
+  try {
+    const { data } = await api(searchPath('', '', 0, '', catalogWindow('')));
+    if (!active()) return;
+    const events = mapCatalog(data);
+    updateOptions(events);
+    const picks = events.filter(event => event.state === 'En curso').slice(0, 3);
+    featured.replaceChildren(...picks.map(event => fill('featured-template', event)));
+    featured.dataset.count = String(picks.length);
+    if (picks.length === 0) { feedback.hidden = false; feedback.textContent = 'Encontrá tu próximo plan en el catálogo.'; }
+  } catch {
+    if (!active()) return;
+    featured.replaceChildren();
+    feedback.hidden = false;
+    feedback.textContent = 'Los destacados no están disponibles en este momento.';
+  } finally { featured.setAttribute('aria-busy', 'false'); }
+}
+
+async function loadCatalog(target = 0, direction = 1) {
+  if (!active()) return;
+  attemptedPage = target; attemptedDirection = direction;
+  const version = ++requestId;
+  const filters = { category: category.value, city: city.value, query: query.value, date: catalogWindow(dateMode || date.value), limited };
+  syncFilters();
+  previous.disabled = next.disabled = true;
+  state.hidden = true;
+  grid.setAttribute('aria-busy', 'true');
+  grid.replaceChildren(...skeletons());
+  el('catalog-status').textContent = 'Buscando eventos…';
+  el('catalog-page').textContent = '';
+  try {
+    const response = await runLatest(async signal => {
+      let position = target;
+      for (;;) {
+        const { data } = await api(searchPath(filters.category, filters.city, position, filters.query, filters.date), { signal });
+        const events = mapCatalog(data);
+        const stocks = filters.limited ? await stockFor(events, signal) : new Map<number, Stock | null>();
+        const visible = filters.limited ? events.filter(event => {
+          const count = stocks.get(event.id)?.count ?? 0;
+          return count > 0 && count <= 10;
+        }) : events;
+        const hasNext = events.length === pageSize;
+        if (visible.length || !filters.limited || signal.aborted || (direction > 0 ? !hasNext : position === 0)) {
+          return { events, visible, stocks, position, signal, hasNext };
+        }
+        position += direction;
+      }
+    });
+    if (!response.current || !active()) return;
+    const { events, visible, stocks, position, signal, hasNext } = response.data;
+    page = position;
+    updateOptions(events);
+    const cards = paintCards(visible, stocks);
+    grid.setAttribute('aria-busy', 'false');
+    el('catalog-status').textContent = visible.length ? visible.length + (visible.length === 1 ? ' evento' : ' eventos') : '';
+    el('catalog-page').textContent = 'Página ' + (page + 1);
+    previous.disabled = page === 0; next.disabled = !hasNext;
+    if (!visible.length) {
+      state.hidden = false; retry.hidden = true;
+      el('catalog-state-title').textContent = 'No encontramos eventos';
+      el('catalog-error').textContent = 'Probá con otra fecha, ciudad o categoría.';
+    }
+    if (!filters.limited) void stockFor(visible, signal, (id, stock) => {
+      const event = visible.find(item => item.id === id), card = cards.get(id);
+      if (active() && version === requestId && event && card) paintStock(card, event, stock);
+    });
+  } catch (error) {
+    if (!active() || version !== requestId) return;
+    grid.replaceChildren();
+    grid.setAttribute('aria-busy', 'false');
+    state.hidden = false; retry.hidden = false;
+    el('catalog-status').textContent = '';
+    el('catalog-state-title').textContent = 'No pudimos cargar los eventos';
+    el('catalog-error').textContent = error instanceof Error && error.name !== 'ApiConnectionError'
+      ? error.message : 'Revisá la conexión y volvé a intentar.';
   }
-  const link = target.closest<HTMLElement>('[data-event]'); if (!link) return;
-  e.preventDefault(); const event = events.find(event => event.id === Number(link.dataset.event)); if (!event || loading) return;
-  const bindings: Record<string, string> = { 'event-dialog-title': event.title, 'dialog-type': event.category, 'dialog-description': event.description,
-    'dialog-date': event.fullDate, 'dialog-location': [event.location, event.address].filter(Boolean).join(' · '), 'dialog-artists': event.artist, 'dialog-state': 'Estado del evento: ' + event.state };
-  for (const [id, value] of Object.entries(bindings)) document.getElementById(id)!.textContent = value;
-  document.querySelector<HTMLAnchorElement>('#event-selection-link')!.href = eventLink(event.id);
-  dialog.showModal();
+}
+
+const jump = () => el('catalogo').scrollIntoView({ block: 'start', behavior: reduced.matches ? 'instant' : 'smooth' });
+const refresh = () => { clearTimeout(debounce); void loadCatalog(); };
+form.addEventListener('submit', event => { event.preventDefault(); refresh(); jump(); });
+for (const input of [query, city]) input.addEventListener('input', () => {
+  syncFilters(); clearTimeout(debounce); debounce = setTimeout(refresh, 320);
 });
-loadCatalog();
+category.addEventListener('change', refresh);
+date.addEventListener('change', () => { dateMode = ''; refresh(); });
+document.querySelectorAll<HTMLButtonElement>('[data-category-filter], [data-date-filter]').forEach(button => {
+  button.addEventListener('click', () => {
+    const type = button.dataset.categoryFilter;
+    if (type) category.value = category.value === type ? '' : type;
+    else { dateMode = dateMode === button.dataset.dateFilter ? '' : button.dataset.dateFilter ?? ''; date.value = ''; }
+    refresh();
+    if (button.hasAttribute('data-jump')) jump();
+  });
+});
+el('limited-filter').addEventListener('click', () => { limited = !limited; refresh(); });
+el('clear-filters').addEventListener('click', () => { form.reset(); dateMode = ''; limited = false; refresh(); });
+retry.addEventListener('click', () => void loadCatalog(attemptedPage, attemptedDirection));
+previous.addEventListener('click', () => { if (page > 0) { void loadCatalog(page - 1, -1); jump(); } });
+next.addEventListener('click', () => { void loadCatalog(page + 1); jump(); });
+
+for (const container of [grid, recommendations]) container.addEventListener('click', event => {
+  const button = (event.target as Element).closest<HTMLButtonElement>('[data-favorite]');
+  if (!button || !active()) return;
+  const id = Number(button.dataset.favorite);
+  const exists = favorites.includes(id);
+  const values = exists ? favorites.filter(value => value !== id) : [...favorites, id];
+  const toast = el('toast');
+  try {
+    localStorage.setItem(favoritesKey, JSON.stringify(values));
+    favorites = values;
+    document.querySelectorAll<HTMLButtonElement>('[data-favorite="' + id + '"]').forEach(control => {
+      control.setAttribute('aria-pressed', String(!exists));
+      control.setAttribute('aria-label', (exists ? 'Guardar en favoritos: ' : 'Quitar de favoritos: ') + control.closest('article')?.querySelector('h3')?.textContent);
+    });
+    toast.textContent = exists ? 'Evento quitado de tus favoritos' : 'Evento guardado en este dispositivo';
+  } catch { toast.textContent = 'No pudimos guardar el favorito en este dispositivo.'; }
+  toast.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 2500);
+});
+
+document.querySelectorAll<HTMLElement>('[data-jump]').forEach(reveal);
+window.addEventListener('ticketya:profile', () => {
+  if (!active()) { grid.replaceChildren(); featured.replaceChildren(); recommendations.replaceChildren(); recommendationSection.hidden = true; }
+});
+retryRecommendations.addEventListener('click', () => void loadRecommendations());
+window.addEventListener('ticketya:recommendations-refresh', () => void loadRecommendations());
+window.addEventListener('pageshow', event => {
+  if (getAuthenticatedUserId() !== owner) location.reload();
+  else if (event.persisted) void loadRecommendations();
+});
+if (owner === null) location.replace('/login/?volver=' + encodeURIComponent(location.pathname + location.search + location.hash));
+else { void loadFeatured(); void loadCatalog(); void loadRecommendations(); }

@@ -1,0 +1,18 @@
+---
+import '../styles/seat-map.css';
+interface Props { id: string; configuration?: boolean }
+const { id, configuration = false } = Astro.props;
+---
+<div class="seat-map-panel">
+  <div class="seat-reference">Frente del sector</div>
+  {!configuration && (
+    <ul class="seat-map-legend" aria-label="Estados de asientos">
+      <li data-seat-tone="available">Disponible</li><li data-seat-tone="selected">Seleccionado</li>
+      <li data-seat-tone="sold">Vendido</li><li data-seat-tone="unavailable">No disponible</li>
+    </ul>
+  )}
+  <p class="seat-map-help">{configuration ? 'Vista de los asientos configurados por fila.' : 'Elegí un asiento por fila y número. Deslizá la grilla si la fila continúa fuera de la pantalla.'}</p>
+  <div class="seat-map-viewport" tabindex="0" role="region" aria-label="Grilla de asientos">
+    <div class="seat-map-rows" id={id} role="group" aria-label="Asientos del sector"></div>
+  </div>
+</div>

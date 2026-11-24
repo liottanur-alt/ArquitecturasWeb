@@ -1,0 +1,148 @@
+---
+import OperationalLayout from '../../components/OperationalLayout.astro';
+import SeatMap from '../../components/SeatMap.astro';
+import { eventTypes } from '../../scripts/catalog-search';
+import { Activity, ChartNoAxesCombined, Ticket, Plus, LayoutGrid, MapPin } from '@lucide/astro';
+
+const labels = { RECITAL: 'Recital', TEATRO: 'Teatro', DEPORTE: 'Deporte', CONFERENCIA: 'Conferencia', FESTIVAL: 'Festival', OTRO: 'Otro' };
+---
+
+<OperationalLayout title="Organización de eventos" mode="organizer" description="Gestioná tus eventos, prepará las entradas y seguí el desempeño de tus ventas.">
+  <p id="organizer-access" class="ops-status" role="status">Comprobando la sesión…</p>
+  <fieldset id="organizer-workspace" class="organizer-workspace" hidden disabled>
+    <div class="ops-metrics" aria-label="Resumen de eventos">
+      <div><span class="ops-metric-icon"><Activity size={20} aria-hidden="true" /></span><span>Eventos activos</span><strong id="organizer-active-count">—</strong></div>
+      <div><span class="ops-metric-icon"><Ticket size={20} aria-hidden="true" /></span><span>Entradas vendidas</span><strong id="organizer-sold">—</strong></div>
+      <div><span class="ops-metric-icon"><ChartNoAxesCombined size={20} aria-hidden="true" /></span><span>Recaudación neta</span><strong id="organizer-revenue">—</strong></div>
+    </div>
+    <p class="ops-status" id="organizer-metrics-status" role="status"></p>
+    <nav class="ops-navigation" aria-label="Gestión de eventos">
+      <a class="ops-button" id="organizer-create-action" href="#organizer-draft-title"><Plus size={18} aria-hidden="true" /> Crear evento</a>
+      <a class="ops-tab" href="#organizer-events-overview"><LayoutGrid size={17} aria-hidden="true" /> Tus eventos</a>
+      <a class="ops-tab" href="#organizer-report-title"><ChartNoAxesCombined size={17} aria-hidden="true" /> Métricas</a>
+      <a class="ops-tab" id="organizer-catalog-action" href="#organizer-catalog-title"><MapPin size={17} aria-hidden="true" /> Lugares y artistas</a>
+    </nav>
+    <section class="ops-section" aria-labelledby="organizer-events-overview">
+      <h2 id="organizer-events-overview">Tus eventos</h2>
+      <ul id="organizer-event-cards" class="ops-event-cards"></ul>
+    </section>
+    <details class="ops-section" id="organizer-catalog">
+      <summary id="organizer-catalog-title">Lugares y artistas</summary>
+      <p>Podés usar los que ya están cargados al crear un borrador.</p>
+      <div class="ops-grid">
+        <form id="organizer-place" method="post">
+          <h3>Agregar lugar</h3>
+          <label>Nombre <input name="nombre" required /></label>
+          <label>Dirección <input name="direccion" required /></label>
+          <label>Ciudad <input name="ciudad" required /></label>
+          <label>Tipo
+            <select name="tipo" required>
+              <option value="ESTADIO">Estadio</option><option value="TEATRO">Teatro</option>
+              <option value="SALA">Sala</option><option value="OTRO">Otro</option>
+            </select>
+          </label>
+          <label>Latitud <input name="latitud" type="number" min="-90" max="90" step="any" required /></label>
+          <label>Longitud <input name="longitud" type="number" min="-180" max="180" step="any" required /></label>
+          <button class="ops-button" type="submit">Agregar lugar</button>
+        </form>
+        <form id="organizer-artist" method="post">
+          <h3>Agregar artista</h3>
+          <label>Nombre <input name="nombre" required /></label>
+          <label>Género <input name="genero" required /></label>
+          <button class="ops-button" type="submit">Agregar artista</button>
+        </form>
+      </div>
+    </details>
+    <details class="ops-section" id="organizer-draft-panel">
+      <summary id="organizer-draft-title">Crear borrador</summary>
+      <p class="ops-hint">Completá los datos básicos. Después vas a poder configurar los sectores y publicar el evento.</p>
+      <form id="organizer-draft" class="ops-grid" method="post">
+        <label>Nombre <input name="nombre" required /></label>
+        <label>Tipo <select name="tipo">{eventTypes.map(type => <option value={type}>{labels[type]}</option>)}</select></label>
+        <label>Fecha y hora de Buenos Aires <input name="fechaHora" type="datetime-local" required /></label>
+        <label>Lugar <select id="organizer-place-select" name="idLugar" required></select></label>
+        <label>Artistas <select id="organizer-artists-select" name="participantesIds" multiple required aria-describedby="organizer-artists-hint"></select><small id="organizer-artists-hint" class="ops-hint">Podés seleccionar más de un artista.</small></label>
+        <label>Descripción <textarea name="descripcion" rows="3" required></textarea></label>
+        <label class="organizer-checkbox"><input name="demanda" type="checkbox" /> Habilitar fila virtual por alta demanda</label>
+        <div class="ops-actions"><button class="ops-button" id="organizer-save-draft" type="submit">Crear borrador</button><button class="ops-button ops-secondary" id="organizer-cancel-edit" type="button" hidden>Cancelar edición</button></div>
+      </form>
+    </details>
+    <section class="ops-section" aria-labelledby="organizer-events-title">
+      <h2 id="organizer-events-title">Configuración del evento</h2>
+      <div class="ops-actions">
+        <label>Evento <select id="organizer-events"></select></label>
+        <button class="ops-button" id="organizer-refresh" type="button">Actualizar datos</button>
+      </div>
+      <p id="organizer-event-summary"></p>
+      <div id="organizer-draft-actions" hidden>
+        <h3><span class="ops-step" aria-hidden="true">1</span> Sectores y asientos del lugar</h3>
+        <div class="ops-grid">
+          <form id="organizer-sector" method="post">
+            <label>Nombre del sector <input name="nombre" maxlength="255" required /></label>
+            <label>Tipo <select name="tipo"><option value="CAMPO">Campo</option><option value="NUMERADO">Numerado</option></select></label>
+            <label>Capacidad física <input name="capacidadTotal" type="number" min="1" max="2147483647" required /></label>
+            <button class="ops-button" type="submit">Crear sector</button>
+          </form>
+          <form id="organizer-seat" method="post">
+            <label>Sector numerado <select id="organizer-numbered-sector" name="idSector" required></select></label>
+            <p id="organizer-seats"></p>
+            <div id="organizer-seat-preview" hidden><SeatMap id="organizer-seat-map" configuration /></div>
+            <label>Fila <input name="fila" maxlength="255" required /></label>
+            <label>Columna <input name="columna" maxlength="255" required /></label>
+            <button class="ops-button" type="submit">Agregar asiento</button>
+          </form>
+        </div>
+        <h3><span class="ops-step" aria-hidden="true">2</span> Inventario del evento</h3>
+        <p>Definí el límite por cliente antes de asociar sectores. El límite y la configuración de cada sector quedan fijos una vez guardados.</p>
+        <div class="ops-grid">
+          <form id="organizer-inventory" method="post">
+            <label>Límite por cliente <input name="limitePorCliente" type="number" min="1" max="2147483647" required /></label>
+            <button class="ops-button" type="submit">Guardar límite</button>
+          </form>
+          <form id="organizer-pricing" method="post">
+            <label>Sector <select id="organizer-inventory-sector" name="idSector" required></select></label>
+            <label>Precio por entrada <input name="precio" type="number" min="0" max="9999999999.99" step="0.01" required /></label>
+            <label>Capacidad habilitada <input name="capacidadHabilitada" type="number" min="1" max="2147483647" required /></label>
+            <p>Para un sector numerado, la capacidad debe coincidir con la cantidad de asientos creados.</p>
+            <button class="ops-button" type="submit">Configurar sector</button>
+          </form>
+        </div>
+        <p id="organizer-inventory-summary"></p>
+        <div class="ops-action-bar"><p class="ops-hint">Cuando el inventario esté listo, publicá el evento en el catálogo.</p><button class="ops-button" id="organizer-publish" type="button" disabled>Publicar evento</button></div>
+      </div>
+    </section>
+    <section class="ops-section" aria-labelledby="organizer-report-title">
+      <h2 id="organizer-report-title">Reporte del evento</h2>
+      <button class="ops-button" id="organizer-report-load" type="button">Consultar reporte</button>
+      <p id="organizer-report-total"></p>
+      <div class="organizer-table" id="organizer-report-table" hidden>
+        <table>
+          <caption>Ventas y devoluciones por sector</caption>
+          <thead><tr><th>Sector</th><th>Vendidas</th><th>Devueltas</th><th>Capacidad</th><th>Ocupación</th><th>Ingresos netos</th></tr></thead>
+          <tbody id="organizer-report-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </fieldset>
+  <p id="organizer-status" class="ops-status organizer-status" role="status" aria-live="polite"></p>
+</OperationalLayout>
+
+<script>
+  import '../../scripts/organizador';
+  document.getElementById('organizer-catalog-action')?.addEventListener('click', () => {
+    const catalog = document.querySelector<HTMLDetailsElement>('#organizer-catalog');
+    if (catalog) catalog.open = true;
+  });
+</script>
+
+<style>
+  .organizer-workspace { border: 0; margin: 0; min-width: 0; padding: 0; }
+  .organizer-workspace form { display: grid; gap: .75rem; align-content: start; }
+  .organizer-workspace label { display: grid; gap: .25rem; }
+  .organizer-workspace details > .ops-hint, #organizer-catalog > p { margin-top: .65rem; }
+  .organizer-workspace .organizer-checkbox { display: flex; align-items: center; gap: .5rem; }
+  .organizer-table { overflow-x: auto; }
+  .organizer-table table { width: 100%; border-collapse: collapse; }
+  .organizer-table td, .organizer-table th { text-align: start; padding: .5rem; border-bottom: 1px solid #ccd5e6; }
+  .organizer-status:not(:empty) { position: sticky; bottom: .5rem; padding: .75rem; border-radius: .5rem; background: #e7efff; color: #142548; }
+</style>

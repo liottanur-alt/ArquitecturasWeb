@@ -1,6 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { searchPath, matchesText, latestRequest, eventTypes } from '../src/scripts/catalog-search.ts';
+import { searchPath, latestRequest, eventTypes, catalogWindow } from '../src/scripts/catalog-search.ts';
+
+test('Hoy y fin de semana siguen el calendario de Buenos Aires', () => {
+  const instant = new Date('2026-11-28T01:00:00Z');
+  assert.deepEqual(catalogWindow('today', instant), { from: '2026-11-27T22:00:00', to: '2026-11-27T23:59:59.999999' });
+  const weekend = catalogWindow('weekend', instant);
+  assert.deepEqual(weekend, { from: '2026-11-28T00:00:00', to: '2026-11-29T23:59:59.999999' });
+  const url = new URL(searchPath('', '', 0, '', weekend), 'http://localhost');
+  assert.equal(url.searchParams.get('fechaDesde'), weekend.from);
+  assert.equal(url.searchParams.get('fechaHasta'), weekend.to);
+});
 
 test('construye solo filtros soportados, enum, orden y página de base cero', () => {
   for (const tipo of eventTypes) {
@@ -15,10 +25,11 @@ test('construye solo filtros soportados, enum, orden y página de base cero', ()
   assert.throws(() => searchPath('Música', '', 0));
 });
 
-test('texto se aplica localmente sobre nombre, artista o lugar', () => {
-  const event = { title: 'Música en vivo', artist: 'José', venue: 'Teatro Central' };
-  for (const query of [' MUSICA ', 'jose', 'central', '']) assert.equal(matchesText(event, query), true);
-  assert.equal(matchesText(event, 'otro'), false);
+test('envía el texto al servidor y ordena por relevancia antes de paginar', () => {
+  const url = new URL(searchPath('RECITAL', 'Tandil', 1, '  Música + José  '), 'http://localhost');
+  assert.equal(url.searchParams.get('q'), 'Música + José');
+  assert.equal(url.searchParams.get('ordenar'), 'relevancia,desc');
+  assert.equal(url.searchParams.get('pagina'), '1');
 });
 
 test('descarta respuesta anterior aunque el transporte ignore la cancelación', async () => {

@@ -206,7 +206,7 @@ class CompraServiceTests {
         when(reservaClient.confirmar(ID_RESERVA))
                 .thenReturn(reserva(ID_RESERVA, "1500.00", "CONFIRMADA", List.of(11L, 12L)));
 
-        CompraResponseDTO pagada = compraService.procesarPago(creada.id(), true);
+        CompraResponseDTO pagada = compraService.procesarPago(creada.id(), true, ID_CLIENTE);
 
         assertThat(pagada.estadoCompra()).isEqualTo("APROBADA");
         assertThat(pagada.referenciaPago()).startsWith("SIM-");
@@ -228,8 +228,8 @@ class CompraServiceTests {
         when(reservaClient.confirmar(ID_RESERVA))
                 .thenReturn(reserva(ID_RESERVA, "1500.00", "CONFIRMADA", List.of(11L, 12L)));
 
-        compraService.procesarPago(creada.id(), true);
-        compraService.procesarPago(creada.id(), true);
+        compraService.procesarPago(creada.id(), true, ID_CLIENTE);
+        compraService.procesarPago(creada.id(), true, ID_CLIENTE);
 
         assertThat(entradaRepository.findAllByCompra_Id(creada.id())).hasSize(2);
         verify(reservaClient, times(1)).confirmar(ID_RESERVA);
@@ -242,7 +242,7 @@ class CompraServiceTests {
                 .thenThrow(new IllegalStateException("Se perdió la respuesta de inventario"))
                 .thenReturn(reserva(ID_RESERVA, "1500.00", "CONFIRMADA", List.of(11L, 12L)));
 
-        assertThatThrownBy(() -> compraService.procesarPago(creada.id(), true))
+        assertThatThrownBy(() -> compraService.procesarPago(creada.id(), true, ID_CLIENTE))
                 .hasMessageContaining("Se perdió la respuesta");
         assertThat(compraRepository.findById(creada.id()).orElseThrow().getEstadoCompra())
                 .isEqualTo(EstadoCompra.PENDIENTE);
@@ -252,8 +252,8 @@ class CompraServiceTests {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(
                 new org.msvcompraentradasol.dtos.EventoFechaResponseDTO(evento.id(), evento.nombre(),
                         evento.fechaHora(), "AGOTADO", evento.estadoPublicacion(), evento.lugar()));
-        assertThat(compraService.procesarPago(creada.id(), true).estadoCompra()).isEqualTo("APROBADA");
-        compraService.procesarPago(creada.id(), true);
+        assertThat(compraService.procesarPago(creada.id(), true, ID_CLIENTE).estadoCompra()).isEqualTo("APROBADA");
+        compraService.procesarPago(creada.id(), true, ID_CLIENTE);
         assertThat(entradaRepository.findAllByCompra_Id(creada.id())).hasSize(2);
         verify(reservaClient, times(2)).confirmar(ID_RESERVA);
     }
@@ -264,7 +264,7 @@ class CompraServiceTests {
         when(reservaClient.liberar(ID_RESERVA))
                 .thenReturn(reserva(ID_RESERVA, "1500.00", "LIBERADA", List.of(11L, 12L)));
 
-        CompraResponseDTO rechazada = compraService.procesarPago(creada.id(), false);
+        CompraResponseDTO rechazada = compraService.procesarPago(creada.id(), false, ID_CLIENTE);
 
         assertThat(rechazada.estadoCompra()).isEqualTo("RECHAZADA");
         assertThat(entradaRepository.findAllByCompra_Id(creada.id())).isEmpty();
@@ -277,7 +277,7 @@ class CompraServiceTests {
         when(reservaClient.confirmar(ID_RESERVA))
                 .thenReturn(reserva(ID_RESERVA, "1500.00", "VENCIDA", List.of(11L, 12L)));
 
-        CompraResponseDTO expirada = compraService.procesarPago(creada.id(), true);
+        CompraResponseDTO expirada = compraService.procesarPago(creada.id(), true, ID_CLIENTE);
 
         assertThat(expirada.estadoCompra()).isEqualTo("EXPIRADA");
         assertThat(expirada.estadoReintegro()).isEqualTo("COMPLETADO");
@@ -286,8 +286,18 @@ class CompraServiceTests {
     }
 
     @Test
+    void rechazarCompraAjenaDevuelve403() {
+        when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
+        when(reservaClient.reservar(any())).thenReturn(reservaActiva(ID_RESERVA, "900.00", List.of()));
+        var compra = crearCompra(compraSinAsientos("rechazo-ajeno", ID_CLIENTE, ID_EVENTO, 1));
+        assertThatThrownBy(() -> compraService.procesarPago(compra.id(), false, ID_CLIENTE + 1))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        exception -> assertThat(exception.getStatusCode().value()).isEqualTo(403));
+    }
+
+    @Test
     void procesarPagoDeCompraInexistenteDevuelve404() {
-        assertThatThrownBy(() -> compraService.procesarPago(999L, true))
+        assertThatThrownBy(() -> compraService.procesarPago(999L, true, ID_CLIENTE))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(exception -> assertThat(
                         ((ResponseStatusException) exception).getStatusCode().value()
@@ -434,7 +444,7 @@ class CompraServiceTests {
         CompraResponseDTO creada = crearCompraPendiente();
         when(reservaClient.confirmar(ID_RESERVA))
                 .thenReturn(reserva(ID_RESERVA, "1500.00", "CONFIRMADA", List.of(11L, 12L)));
-        return compraService.procesarPago(creada.id(), true);
+        return compraService.procesarPago(creada.id(), true, ID_CLIENTE);
     }
 
     private static FeignException feignError(int status, String metodo) {

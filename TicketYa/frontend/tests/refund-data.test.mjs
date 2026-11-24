@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseRefunds, refundRule } from '../src/scripts/refund-data.ts';
-const entry = { id: 50, idCliente: 7, estadoEntrada: 'PAGA', estadoQr: 'ESCANEADO' };
+const entry = { id: 50, idCliente: 7, estadoEntrada: 'PAGA', estadoQr: 'NO_ESCANEADO' };
 const event = { estado: 'EN_CURSO', fechaHora: '2030-12-20T21:00:00' };
 const request = { id: 60, idEntrada: 50, idCompra: 40, idCliente: 7, descripcion: 'No puedo ir', estadoSolicitud: 'PENDIENTE', fechaSolicitud: '2030-01-01T00:00:00Z' };
 test('plazo de 72 horas es inclusivo y usa Buenos Aires sin depender del equipo', () => {
@@ -9,9 +9,10 @@ test('plazo de 72 horas es inclusivo y usa Buenos Aires sin depender del equipo'
   assert.equal(refundRule(entry, [], event, deadline).allowed, true);
   assert.equal(refundRule(entry, [], event, deadline + 1).allowed, false);
 });
-test('pendiente o aceptada impiden otra solicitud; rechazada admite solicitar de nuevo', () => {
+test('pendiente o aceptada impiden otra solicitud; rechazada y escaneada también bloquean', () => {
   for (const estadoSolicitud of ['PENDIENTE','ACEPTADA']) assert.equal(refundRule(entry, [{ ...request, estadoSolicitud }], event, 0).allowed, false);
-  assert.equal(refundRule({ ...entry, estadoEntrada: 'DEVOLUCION_RECHAZADA' }, [{ ...request, estadoSolicitud: 'RECHAZADA' }], event, 0).allowed, true);
+  assert.equal(refundRule({ ...entry, estadoEntrada: 'DEVOLUCION_RECHAZADA' }, [{ ...request, estadoSolicitud: 'RECHAZADA' }], event, 0).allowed, false);
+  assert.equal(refundRule({ ...entry, estadoQr: 'ESCANEADO' }, [], event, 0).allowed, false);
   assert.equal(refundRule({ ...entry, estadoEntrada: 'SOLICITUD_DEVOLUCION' }, [], event, 0).allowed, false);
 });
 test('sin fecha no inventa plazo ni bloqueo; cancelado/finalizado no permite solicitar', () => {

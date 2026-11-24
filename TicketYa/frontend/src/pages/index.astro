@@ -1,270 +1,129 @@
 ---
-import "../styles/global.css";
-import AccountMenu from "../components/AccountMenu.astro";
-import {
-  ArrowUpRight,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  MapPin,
-  CalendarDays,
-  Ticket,
-  Heart,
-  Menu,
-  X,
-  Pause,
-  Play,
-  Music2,
-  Drama,
-  Trophy,
-  Sparkles,
-} from "@lucide/astro";
+import '../styles/global.css';
+import '../styles/catalog.css';
+import '../styles/event-navigation.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { ArrowRight, ArrowUpRight, CalendarDays, Drama, Heart, MapPin, Mic2, Music2, Search, Sparkles, Ticket, Trophy } from '@lucide/astro';
 
 const categories = [
-  { name: "Todos", type: "", icon: Sparkles }, { name: "Recitales", type: "RECITAL", icon: Music2 },
-  { name: "Festivales", type: "FESTIVAL", icon: Music2 }, { name: "Teatro", type: "TEATRO", icon: Drama },
-  { name: "Deportes", type: "DEPORTE", icon: Trophy }, { name: "Conferencias", type: "CONFERENCIA", icon: Ticket }, { name: "Otros", type: "OTRO", icon: Sparkles },
-];
-const sections = [
-  { id: "alta-demanda", eyebrow: "QUE NO TE LO CUENTEN", title: "En boca de todos.", description: "Alta demanda entre los resultados de esta página." },
-  { id: "catalogo", eyebrow: "ENCONTRÁ TU PRÓXIMO PLAN", title: "Hay que estar ahí.", description: "Resultados de esta página. La publicación no garantiza disponibilidad." },
+  { label: 'Recitales', value: 'RECITAL', icon: Music2, color: 'purple' },
+  { label: 'Teatro', value: 'TEATRO', icon: Drama, color: 'rose' },
+  { label: 'Deportes', value: 'DEPORTE', icon: Trophy, color: 'green' },
+  { label: 'Festivales', value: 'FESTIVAL', icon: Sparkles, color: 'orange' },
+  { label: 'Conferencias', value: 'CONFERENCIA', icon: Mic2, color: 'blue' },
+  { label: 'Otros', value: 'OTRO', icon: Ticket, color: 'neutral' },
 ];
 ---
-
 <!doctype html>
 <html lang="es-AR">
-  <head>
-    <meta charset="UTF-8" /><meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
-    <meta
-      name="description"
-      content="Encontrá tu próximo recital, obra, partido o encuentro en TicketYa. Explorá eventos y elegí tu próxima experiencia."
-    />
-    <meta name="theme-color" content="#2055f5" /><title>
-      TicketYa — Hay que estar ahí.
-    </title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <a href="#explorar" class="skip-link">Saltar a los eventos</a>
-    <header class="site-header">
-      <a href="/" class="brand" aria-label="TicketYa, inicio"
-        ><span class="brand-symbol"><Ticket size={22} /></span>ticket<span
-          >ya</span
-        ><span class="brand-dot">®</span></a
-      >
-      <nav class="desktop-nav" aria-label="Navegación principal">
-        <a href="#explorar" class="nav-active">Explorar</a><a
-          href="#alta-demanda">Alta demanda</a
-        ><a href="#catalogo">Catálogo</a>
-      </nav>
-      <div class="header-actions">
-        <span class="country"><MapPin size={15} /> Argentina</span><AccountMenu /><button
-          class="mobile-toggle icon-button"
-          aria-expanded="false"
-          aria-controls="mobile-nav"
-          aria-label="Abrir menú"><Menu size={22} /></button>
-      </div>
-    </header>
-    <nav
-      id="mobile-nav"
-      class="mobile-nav"
-      hidden
-      aria-label="Navegación móvil"
-    >
-      <a href="#explorar">Explorar eventos</a><a href="#alta-demanda"
-        >Alta demanda</a
-      ><a href="#catalogo">Catálogo</a>
-    </nav>
-    <main>
-      <div class="intro wrap">
-        <span class="eyebrow"
-          ><span class="live-dot"></span> SALÍ DE LA RUTINA</span
-        ><p>Los mejores momentos <span>no se scrollean. Se viven.</span></p>
-      </div>
-      <div id="catalog-state" class="wrap empty-state catalog-state" aria-busy="true">
-        <h2 id="catalog-state-title">Buscando tu próximo plan…</h2>
-        <p id="catalog-status" role="status" aria-live="polite">Cargando eventos del catálogo.</p>
-        <p id="catalog-error" role="alert" hidden></p>
-        <button id="retry-catalog" class="button button-blue" hidden>Reintentar</button>
-      </div>
-      <noscript><p class="wrap empty-state">Activá JavaScript para consultar el catálogo real de eventos.</p></noscript>
-      <section class="hero wrap" aria-roledescription="carrusel" aria-label="Eventos del catálogo" hidden>
-        <div class="hero-viewport" tabindex="0" aria-label="Usá las flechas izquierda y derecha para cambiar de evento"></div>
-        <div class="hero-controls">
-          <div class="hero-dots" aria-label="Elegir evento"></div>
-          <span class="hero-counter"><span id="slide-number">01</span> / <span id="slide-total"></span></span>
-          <button id="hero-pause" class="hero-control" aria-label="Pausar carrusel" aria-pressed="false"><Pause size={16}/><Play size={16} class="play-icon"/></button>
-          <button id="hero-prev" class="hero-control" aria-label="Evento anterior"><ChevronLeft size={20}/></button>
-          <button id="hero-next" class="hero-control" aria-label="Evento siguiente"><ChevronRight size={20}/></button>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#171327" />
+  <meta name="description" content="Descubrí los próximos recitales, obras de teatro, encuentros y partidos. Encontrá tus entradas en TicketYa." />
+  <title>TicketYa — Encontrá tu próximo plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="home-page">
+  <a href="#explorar" class="skip-link">Ir al buscador</a>
+  <SiteHeader />
+  <div class="home-stage">
+    
+    <main id="home-main">
+      <section class="home-shell home-featured" aria-labelledby="featured-title">
+        <div class="home-section-head featured-head">
+          <div><p class="home-kicker">EVENTOS EN VIVO</p><h1 id="featured-title">Destacados</h1></div>
+          <a href="#catalogo">Ver eventos <ArrowUpRight size={17} aria-hidden="true" /></a>
         </div>
+        <div id="featured-grid" class="featured-grid" aria-busy="true" aria-live="off">
+          {[0, 1, 2].map(() => <div class="featured-tile home-skeleton" aria-hidden="true"></div>)}
+        </div>
+        <p id="featured-feedback" class="featured-feedback" hidden></p>
       </section>
-      <section class="discovery wrap" id="explorar" aria-label="Buscar eventos">
-        <div class="discovery-title">
-          <h2>Tu próximo <span>“yo estuve ahí”.</span></h2><span
-            >Encontrá un plan que sea muy vos.</span>
-        </div>
-        <form class="search-form" role="search">
-          <label class="search-field"
-            ><Search size={21} /><span class="sr-only"
-              >Evento, artista o lugar</span
-            ><input
-              id="query"
-              type="search"
-              placeholder="Evento, artista o lugar"
-              aria-describedby="text-search-scope"
-              autocomplete="off"
-            /></label
-          ><label class="city-field"
-            ><MapPin size={19} /><span class="sr-only">Ciudad</span><input id="city" type="text" list="catalog-cities" placeholder="Todas las ciudades" autocomplete="off" /></label
-          ><button type="submit" class="button button-blue"
-            >Encontrar mi plan <ArrowRight size={18} /></button>
+      <section class="home-shell home-search" id="explorar" aria-label="Buscador de eventos">
+        <form id="home-search-form" role="search">
+          <label class="home-field home-query"><Search size={20} aria-hidden="true" /><span>¿Qué querés ver?</span><input id="query" type="search" placeholder="Evento, artista o lugar" autocomplete="off" /></label>
+          <label class="home-field"><MapPin size={18} aria-hidden="true" /><span>Ciudad</span><input id="city" list="catalog-cities" placeholder="Todas las ciudades" autocomplete="off" /></label>
+          <label class="home-field"><Ticket size={18} aria-hidden="true" /><span>Categoría</span><select id="home-category"><option value="">Todas</option>{categories.map(category => <option value={category.value}>{category.label}</option>)}</select></label>
+          <label class="home-field"><CalendarDays size={18} aria-hidden="true" /><span>Fecha</span><input id="home-date" type="date" /></label>
+          <button class="home-button" type="submit">Buscar <ArrowRight size={17} aria-hidden="true" /></button>
         </form>
         <datalist id="catalog-cities"></datalist>
-        <p class="filter-status" id="text-search-scope">El texto busca evento, artista o lugar solo en la página cargada. Ciudad y categoría se consultan en el servidor; la ciudad debe coincidir completa.</p>
-        <div class="category-row" aria-label="Categorías">
-          {
-            categories.map(({ name, type, icon: Icon }, i) => (
-              <button
-                class:list={["category", { chosen: i === 0 }]}
-                data-category={type}
-                aria-pressed={i === 0}
-              >
-                <Icon size={17} />
-                {name}
-              </button>
-            ))
-          }
+        <div class="home-chips" aria-label="Filtros rápidos">
+          <button type="button" data-date-filter="today" aria-pressed="false">Hoy</button>
+          <button type="button" data-date-filter="weekend" aria-pressed="false">Este fin de semana</button>
+          {categories.slice(0, 3).map(category => <button type="button" data-category-filter={category.value} aria-pressed="false">{category.label}</button>)}
+          <button type="button" id="limited-filter" aria-pressed="false">Últimas entradas</button>
+          <button type="button" id="clear-filters" hidden>Limpiar filtros</button>
         </div>
-        <p
-          id="filter-status"
-          class="filter-status"
-          role="status"
-          aria-live="polite"
-        >
-        </p><button id="clear-filters" class="text-link" hidden
-          >Limpiar filtros <X size={14} /></button
-        >
       </section>
-      <nav class="catalog-pagination wrap" aria-label="Páginas de resultados">
-        <button id="catalog-prev" class="button" disabled>Anterior</button>
-        <p id="catalog-page" role="status" aria-live="polite">Cargando página 1…</p>
-        <button id="catalog-next" class="button" disabled>Buscar página siguiente</button>
-        <p class="pagination-help">Sin total de páginas. Una página completa puede ser la última.</p>
-      </nav>
-      {
-        sections.map((section) => (
-          <section
-            class="events-section wrap"
-            id={section.id}
-            hidden
-            data-events-section
-          >
-            <div class="section-heading">
-              <>
-                <div>
-                  <>
-                    <span class="eyebrow">{section.eyebrow}</span>
-                    <h2>{section.title}</h2>
-                    <p>{section.description}</p>
-                  </>
-                </div>
-                <div class="rail-controls">
-                  <>
-                    <button
-                      class="icon-button rail-prev"
-                      aria-label={`Anterior en ${section.title}`}
-                    >
-                      <ChevronLeft size={20} />
-                    </button>
-                    <button
-                      class="icon-button rail-next"
-                      aria-label={`Siguiente en ${section.title}`}
-                    >
-                      <ChevronRight size={20} />
-                    </button>
-                  </>
-                </div>
-              </>
-            </div>
-            <>
-              <div class="event-rail" tabindex="0" aria-label={section.title}></div>
-              <div class="empty-state" hidden>
-                <>
-                  <Search size={26} />
-                  <h3>Ese plan todavía no apareció.</h3>
-                  <p>Probá con otra ciudad, categoría o búsqueda.</p>
-                </>
-              </div>
-            </>
-          </section>
-        ))
-      }
-      <section class="closing wrap">
-        <div class="closing-icon"><Ticket size={48} /></div><div>
-          <span class="eyebrow">MENOS VUELTAS. MÁS MOMENTOS.</span><h2>
-            El próximo recuerdo<br />empieza con una entrada.
-          </h2>
-        </div><a class="button button-blue" href="#explorar"
-          >Encontrá tu próximo plan <ArrowUpRight size={19} /></a
-        ><span class="closing-decoration" aria-hidden="true">↗</span>
+      <section class="home-shell home-personalized" id="para-vos" aria-labelledby="personalized-title" hidden>
+        <div class="home-section-head">
+          <h2 id="personalized-title">Para vos</h2>
+          <a href="/perfil/#datos">Editar preferencias <ArrowUpRight size={16} aria-hidden="true" /></a>
+        </div>
+        <p id="home-recommendation-status" class="home-recommendation-status" role="status"></p>
+        <details class="home-recommendation-help">
+          <summary>¿Cómo se eligen las recomendaciones?</summary>
+          <p>TicketYa busca eventos futuros con cupo según tus categorías, ciudad y artistas favoritos. También busca otros eventos comprados por personas que tienen una compra aprobada en común con vos. Los eventos que ya compraste se excluyen.</p>
+        </details>
+        <div class="home-grid" id="home-recommendation-grid"></div>
+        <button type="button" class="home-button" id="retry-home-recommendations" hidden>Reintentar</button>
       </section>
+      <section class="home-shell home-catalog" id="catalogo" aria-labelledby="catalog-title">
+        <div class="home-section-head"><h2 id="catalog-title">Próximos eventos</h2><p id="catalog-status" role="status"></p></div>
+        <div id="catalog-state" class="home-feedback" hidden>
+          <h3 id="catalog-state-title"></h3><p id="catalog-error" role="alert"></p>
+          <button type="button" id="retry-catalog" class="home-button" hidden>Reintentar</button>
+        </div>
+        <div class="home-grid" id="event-grid" aria-busy="true">
+          {[0, 1, 2, 3].map(() => <div class="home-card home-card-skeleton" aria-hidden="true"></div>)}
+        </div>
+        <nav class="home-pagination" aria-label="Páginas de eventos">
+          <button id="catalog-prev" type="button" disabled>Anterior</button><span id="catalog-page"></span><button id="catalog-next" type="button" disabled>Siguiente</button>
+        </nav>
+      </section>
+      <section class="home-shell home-categories" id="categorias" aria-labelledby="category-title">
+        <div class="home-section-head"><h2 id="category-title">Explorar por categoría</h2></div>
+        <div class="home-category-grid">
+          {categories.map(({ label, value, icon: Icon, color }) => (
+            <button type="button" class="home-category" data-color={color} data-category-filter={value} data-jump aria-pressed="false">
+              <Icon size={25} aria-hidden="true" /><span>{label}</span><ArrowUpRight size={17} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </section>
+      <noscript><p class="home-shell">Activá JavaScript para consultar el catálogo de TicketYa.</p></noscript>
     </main>
-    <footer class="site-footer wrap">
-      <a class="brand" href="/"
-        >ticket<span>ya</span><span class="brand-dot">®</span></a
-      ><p>Hay que estar ahí.</p><span
-        >© 2026 TicketYa</span
-      ><a href="#explorar">Volver a explorar <ArrowUpRight size={15} /></a>
-    </footer>
-    <div id="toast" role="status" aria-live="polite"></div>
-    <template id="event-card-template">
-      <article class="event-card" data-card>
-        <div class="card-image">
-          <img src="/event-placeholder.svg" alt="" loading="lazy" width="600" height="440"/>
-          <span class="card-badge" data-high hidden>↗ Alta demanda</span>
-          <button class="favorite" data-favorite aria-label="Guardar evento en este dispositivo" aria-pressed="false"><Heart size={18}/></button>
-          <span class="date-stamp"><strong data-day></strong><span data-month></span></span>
-          <a href="#event-dialog" class="card-image-link" data-event></a>
-        </div>
-        <div class="card-body">
-          <div class="card-category"><span data-category-label></span></div>
-          <h3><a href="#event-dialog" data-event data-title></a></h3>
-          <p class="card-artist" data-artist></p>
-          <p class="card-location"><MapPin size={14}/><span data-location></span></p>
-          <div class="card-bottom"><span class="catalog-date" data-date></span><a href="#event-dialog" class="card-cta" data-event aria-label="Ver evento"><ArrowUpRight size={20}/></a></div>
-        </div>
-      </article>
-    </template>
-    <template id="event-slide-template">
-      <article class="hero-slide" data-slide>
-        <img src="/event-placeholder.svg" alt="" class="hero-photo"/>
-        <div class="hero-shade"></div><span class="hero-top-label">DEL CATÁLOGO · IMAGEN ILUSTRATIVA</span>
-        <div class="hero-content"><span class="hero-kicker" data-category-label></span><h1 data-title></h1><p data-description></p>
-          <div class="hero-meta"><span><CalendarDays size={16}/><span data-date></span></span><span><MapPin size={16}/><span data-location></span></span></div>
-          <a href="#event-dialog" class="button button-white" data-event>Ver evento <ArrowUpRight size={20}/></a>
-        </div><div class="hero-date"><strong data-day></strong><span data-month-year></span></div>
-      </article>
-    </template>
-    <dialog id="event-dialog" aria-labelledby="event-dialog-title">
-      <div class="dialog-head"><span class="eyebrow">EVENTO DEL CATÁLOGO</span><button class="icon-button dialog-close" aria-label="Cerrar evento"><X size={22}/></button></div>
-      <img src="/event-placeholder.svg" id="dialog-image" alt="Imagen ilustrativa de respaldo"/>
-      <div class="dialog-body"><span class="eyebrow" id="dialog-type"></span><h2 id="event-dialog-title"></h2><p id="dialog-description"></p>
-        <p id="dialog-date"></p><p id="dialog-location"></p><p id="dialog-artists"></p><p id="dialog-state"></p>
-        <p class="demo-note">La imagen es ilustrativa. El catálogo no informa precios, ventas ni disponibilidad. Elegí un sector para consultar disponibilidad actual y preparar una selección local.</p>
-        <a id="event-selection-link" class="button button-blue" href="/eventos/">Elegir sector y entradas</a><button class="button button-blue dialog-close">Volver al catálogo</button>
+  </div>
+  <SiteFooter />
+  <div id="toast" role="status"></div>
+  <template id="featured-template">
+    <a class="featured-tile" data-event>
+      <img alt="" width="960" height="600" />
+      <div class="featured-copy">
+        <span data-category></span><h2 data-title></h2><p data-location></p>
+        <div><time data-date></time><span class="featured-action" data-action></span><ArrowUpRight size={18} aria-hidden="true" /></div>
       </div>
-    </dialog>
-    <script>
-      import "../scripts/home";
-    </script>
-  </body>
+    </a>
+  </template>
+  <template id="event-card-template">
+    <article class="home-card" data-card>
+      <a class="home-card-photo" data-event tabindex="-1" aria-hidden="true"><img alt="" width="600" height="420" loading="lazy" /></a>
+      <span class="home-card-badge" data-state hidden></span>
+      <button type="button" class="home-favorite" data-favorite aria-label="Guardar evento en favoritos" aria-pressed="false"><Heart size={19} aria-hidden="true" /></button>
+      <div class="home-card-copy">
+        <div class="home-card-meta"><time data-date></time><span data-category></span></div>
+        <h3><a data-title data-event></a></h3>
+        <p class="home-location"><MapPin size={15} aria-hidden="true" /><span data-location></span></p>
+        <p class="home-reason" data-reason hidden></p>
+        <div class="home-card-bottom"><strong data-price></strong><a class="home-card-action" data-event><span data-action></span><ArrowUpRight size={16} aria-hidden="true" /></a></div>
+      </div>
+    </article>
+  </template>
+  <script>import '../scripts/home';</script>
+</body>
 </html>

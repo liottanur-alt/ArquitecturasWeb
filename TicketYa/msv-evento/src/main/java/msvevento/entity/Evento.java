@@ -2,6 +2,7 @@ package msvevento.entity;
 
 
 import jakarta.persistence.EnumType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,6 +29,9 @@ public class Evento {
 
     private String nombre;
     private String descripcion;
+
+    @Column(length = 2048)
+    private String imagenUrl;
 
     @Enumerated(EnumType.STRING)
     private TipoEvento tipo;
@@ -81,6 +85,14 @@ public class Evento {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
     }
 
     public TipoEvento getTipo() {

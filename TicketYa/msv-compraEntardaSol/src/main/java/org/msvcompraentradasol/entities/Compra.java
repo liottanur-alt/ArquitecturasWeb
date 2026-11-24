@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.msvcompraentradasol.enums.EstadoCompra;
 import org.msvcompraentradasol.enums.EstadoReintegro;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -12,6 +13,15 @@ import java.util.ArrayList;
         @Index(name = "idx_compra_estado_cliente_evento", columnList = "estado_compra,id_cliente,id_evento")
 })
 public class Compra {
+    @Column(name = "fecha_creacion")
+    private Instant fechaCreacion;
+
+    @PrePersist
+    void registrarFechaCreacion() {
+        if (fechaCreacion == null) fechaCreacion = Instant.now();
+    }
+
+    public Instant getFechaCreacion() { return fechaCreacion; }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

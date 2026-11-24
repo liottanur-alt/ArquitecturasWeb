@@ -10,6 +10,7 @@ const source = stripTypeScriptTypes(readFileSync(new URL('../src/scripts/profile
 const original = { id: 18, idRol: 93, nombre: 'Ana', email: 'ana@example.com', dni: 'AB-123', ciudad: 'Tandil' };
 const settle = () => new Promise(resolve => setImmediate(resolve));
 function setup(save) {
+  let owner = 18;
   const elements = new Map();
   const get = id => {
     if (!elements.has(id)) elements.set(id, {
@@ -24,13 +25,13 @@ function setup(save) {
   vm.runInNewContext(source, {
     ...helpers, ApiError,
     api: async (path, options) => { calls.push({ path, options }); return options ? save(options) : { data: { ...original } }; },
-    getSelectedProfileId: () => 18, clearSelectedProfile() {},
+    getAuthenticatedUserId: () => owner, getSession: () => ({ roles: ['CLIENTE'] }), clearSession() { owner = null; },
     initTickets() {}, initCart() {}, initHistory() {}, initPreferences() {}, initRecommendations() {}, getCart: () => [], catalog: [], demoPurchases: [],
     document: { querySelector: selector => get(selector), getElementById: id => get('#' + id), querySelectorAll: () => [], addEventListener() {} },
     window: { addEventListener() {} }, history: { replaceState() {} },
     location: { hash: '' }, matchMedia: () => ({ matches: true }),
   });
-  return { get, calls, submit: () => get('#profile-form').handlers.submit({ preventDefault() {} }) };
+  return { get, calls, setOwner: id => { owner = id; }, submit: () => get('#profile-form').handlers.submit({ preventDefault() {} }) };
 }
 test('GET habilita edición y PUT conserva el rol recibido sin consultar roles', async () => {
   let finish;
@@ -57,4 +58,16 @@ test('un 409 conserva la edición y permite corregir', async () => {
   assert.equal(get('#email').value, 'duplicado@example.com');
   assert.equal(get('#profile-fields').disabled, false);
   assert.match(get('#profile-error-text').textContent, /email o DNI/);
+});
+
+test('una respuesta de guardado pendiente no actualiza el perfil al cambiar de cuenta', async () => {
+  let finish;
+  const { get, submit, setOwner } = setup(() => new Promise(resolve => { finish = resolve; }));
+  await settle();
+  const pending = submit();
+  setOwner(19);
+  finish({ data: { ...original, nombre: 'Respuesta anterior' } });
+  await pending;
+  assert.equal(get('#nombre').value, original.nombre);
+  assert.equal(get('#profile-fields').disabled, true);
 });

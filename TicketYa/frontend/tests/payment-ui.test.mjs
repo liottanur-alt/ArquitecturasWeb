@@ -7,10 +7,10 @@ import { parseHTML } from 'linkedom';
 import { parsePurchase, seedResume } from '../src/scripts/history-data.ts';
 import { purchaseFlow } from '../src/scripts/purchase-attempt.ts';
 import { ApiError } from '../src/scripts/api.ts';
-test('retomar bloquea aprobar y rechazar si falló la verificación de una reserva previamente activa', async () => {
+test('retomar bloquea el pago hasta recuperar la compra pública', async () => {
   const ids = ['create-purchase','recover-purchase','new-purchase','approve-payment','reject-payment'];
-  const other = ['purchase-status','reservation-status','payment-state','payment-entries-status','payment-entries','reservation-clock','back-history','purchase-panel'];
-  const { document } = parseHTML('<html><body>' + ids.map(id => `<button id="${id}"></button>`).join('') + other.map(id => `<div id="${id}"></div>`).join('') + '<dialog id="review-dialog"></dialog></body></html>');
+  const other = ['purchase-status','payment-state','payment-entries-status','payment-entries','back-history','purchase-panel'];
+  const { document, window } = parseHTML('<html><body>' + ids.map(id => `<button id="${id}"></button>`).join('') + other.map(id => `<div id="${id}"></div>`).join('') + '<dialog id="review-dialog"></dialog></body></html>');
   document.querySelector('#review-dialog').close = () => {};
   document.querySelector('#purchase-panel').scrollIntoView = () => {};
   const body = { claveIdempotencia: 'clave', idCliente: 7, idEvento: 700, idSector: 55, medioDePago: 'SIMULADO', cantidadEntradas: 1 };
@@ -19,12 +19,21 @@ test('retomar bloquea aprobar y rechazar si falló la verificación de una reser
   const storage = { getItem: key => data.get(key) ?? null, setItem: (key,value) => data.set(key,value), removeItem: key => data.delete(key) };
   const source = stripTypeScriptTypes(readFileSync(new URL('../src/scripts/purchase-ui.ts', import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace('export function','function'));
   let reads = 0;
-  const context = vm.createContext({ document, parsePurchase, seedResume, purchaseFlow, ApiError, URLSearchParams, location: { search: '?compra=40' }, localStorage: storage,
-    getSelectedProfileId: () => 7, setInterval() {}, api: async path => { if (path === '/compras/40') return { data: purchase }; reads++; throw new Error('Reserva inaccesible'); } });
+  const context = vm.createContext({ document, window, parsePurchase, seedResume, purchaseFlow, ApiError, URLSearchParams, location: { search: '?compra=40' }, localStorage: storage,
+    getAuthenticatedUserId: () => 7, api: async path => {
+      assert.equal(path, '/compras/40');
+      if (++reads === 1) throw new Error('Compra inaccesible');
+      return { data: purchase };
+    } });
   vm.runInContext(source,context); context.initPurchase(7,700,() => null,() => {});
   for (let i=0;i<5;i++) await new Promise(resolve => setImmediate(resolve));
   assert.equal(reads,1);
   assert.equal(document.querySelector('#approve-payment').disabled,true);
   assert.equal(document.querySelector('#reject-payment').disabled,true);
   assert.equal(document.querySelector('#recover-purchase').disabled,false);
+  document.querySelector('#recover-purchase').click();
+  for (let i=0;i<5;i++) await new Promise(resolve => setImmediate(resolve));
+  assert.equal(reads,2);
+  assert.equal(document.querySelector('#approve-payment').disabled,false);
+  assert.equal(document.querySelector('#reject-payment').disabled,false);
 });

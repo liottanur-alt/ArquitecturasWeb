@@ -1,0 +1,64 @@
+---
+import OperationalLayout from '../../components/OperationalLayout.astro';
+import { ScanLine, Check, RotateCcw, History } from '@lucide/astro';
+---
+
+<OperationalLayout title="Control de acceso" mode="access" description="Validá entradas en puerta y registrá el ingreso cuando la persona esté lista para pasar.">
+  <p id="access-permission" class="ops-status" role="status">Comprobando permisos…</p>
+  <div id="access-panel" class="ops-split access-workspace" hidden>
+  <section class="ops-section" aria-labelledby="access-title">
+    <h2 id="access-title" class="ops-title-icon"><ScanLine size={22} aria-hidden="true" /> Consultar entrada</h2>
+    <form id="access-form">
+      <div class="access-fields">
+        <label>
+          ID del evento
+          <input id="access-event" type="number" min="1" step="1" required />
+        </label>
+        <label>
+          Código QR de la entrada
+          <input id="access-qr" type="text" maxlength="36" autocomplete="off" spellcheck="false" aria-describedby="access-qr-hint" required autofocus />
+        </label>
+      </div>
+      <p id="access-qr-hint">Pegá el código o escanealo con un lector configurado como teclado. Enter consulta la entrada.</p>
+      <button class="ops-button access-submit" type="submit" id="access-lookup"><ScanLine size={18} aria-hidden="true" /> Validar código</button>
+    </form>
+    <div class="access-result" id="access-result">
+      <strong id="access-verdict"></strong>
+      <p id="access-status" class="ops-status" role="status"></p>
+      <p id="access-entry" hidden></p>
+    </div>
+    <div class="ops-actions">
+      <button class="ops-button" type="button" id="access-confirm" disabled><Check size={18} aria-hidden="true" /> Registrar ingreso</button>
+      <button class="ops-button ops-secondary" type="button" id="access-next"><RotateCcw size={16} aria-hidden="true" /> Escanear otro</button>
+    </div>
+  </section>
+    <section class="ops-section access-history" aria-labelledby="access-history-title">
+      <h2 id="access-history-title" class="ops-title-icon"><History size={21} aria-hidden="true" /> Escaneos recientes</h2>
+      <p id="access-history-empty">Los últimos escaneos de esta sesión aparecen acá.</p>
+      <ol id="access-history"></ol>
+    </section>
+  </div>
+</OperationalLayout>
+
+<script>
+  import '../../scripts/acceso';
+</script>
+
+<style>
+  .access-workspace { grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); }
+  .access-fields { display:grid; gap:1rem; grid-template-columns: minmax(0, 1fr); }
+  .access-fields #access-qr { min-height:3.5rem; font-size:1.15rem; font-weight:650; }
+  #access-event { max-width: 12rem; }
+  #access-qr-hint { color:var(--muted); margin-block:.55rem .85rem; font-size:.9rem; }
+  .access-submit { width: 100%; }
+  .access-result { margin-top: 1rem; }
+  .access-result[data-tone] { padding:1rem; border:1px solid currentColor; border-radius:12px; }
+  .access-result[data-tone="valid"] { background:#e6f5eb; color:#195537; }
+  .access-result[data-tone="invalid"] { background:#fdecea; color:#852321; }
+  .access-result[data-tone] .ops-status { color:inherit; margin-block:.25rem; }
+  .access-result strong { font-size:1.15rem; }
+  .access-history p { color:var(--muted); }
+  .access-history ol { list-style:none; padding:0; display:grid; gap:.5rem; }
+  .access-history :global(li) { padding:.75rem; border-radius:8px; border:1px solid var(--line); background:var(--canvas); overflow-wrap:anywhere; font-size:.875rem; }
+  @media (max-width: 760px) { .access-workspace { grid-template-columns: minmax(0,1fr); } }
+</style>

@@ -7,7 +7,6 @@ function setup() {
 }
 const selection = { idEvento: 700, idSector: 55, idsAsientos: [9876] };
 const purchase = body => ({ id: 40, idReserva: 30, ...body, estadoCompra: 'PENDIENTE' });
-const reservation = { id: 30, idCliente: 7, idEvento: 700, idSector: 55, estado: 'ACTIVA', venceEn: '2030-12-01T15:10:00Z' };
 test('timeout y recarga conservan clave y cuerpo; no envía precios ni crea reserva aparte', async () => {
   const storage = setup(); let firstBody;
   const first = purchaseFlow(storage, 'key', 7, 700, async (path, options) => {
@@ -19,23 +18,28 @@ test('timeout y recarga conservan clave y cuerpo; no envía precios ni crea rese
   const paths = [];
   const restored = purchaseFlow(storage, 'key', 7, 700, async (path, options) => {
     paths.push(path);
-    if (path === '/compras') { assert.deepEqual(options.body, firstBody); assert.equal('precio' in options.body, false); return purchase(options.body); }
-    return reservation;
+    assert.equal(path, '/compras');
+    assert.deepEqual(options.body, firstBody);
+    assert.equal('precio' in options.body, false);
+    return purchase(options.body);
   });
   const result = await restored.recover();
-  assert.deepEqual(paths, ['/compras', '/reservas/30']);
-  assert.equal(result.reservationState, 'ACTIVA'); assert.equal(result.expiresAt, reservation.venceEn);
+  assert.deepEqual(paths, ['/compras']);
+  assert.equal(result.purchaseState, 'PENDIENTE');
+  assert.equal(restored.canPay(true), true);
 });
-test('fallo al leer reserva conserva compra conocida y recupera por GET', async () => {
-  const storage = setup(); let body;
-  const first = purchaseFlow(storage, 'key', 7, 700, async (path, options) => {
-    if (path === '/compras') { body = options.body; return purchase(body); }
-    throw new Error('reserva inaccesible');
-  });
-  first.start(selection, 'clave'); await assert.rejects(first.recover());
+test('compra conocida se recupera por GET antes de habilitar el pago', async () => {
+  const storage = setup();
+  const first = purchaseFlow(storage, 'key', 7, 700, async (_path, options) => purchase(options.body));
+  first.start(selection, 'clave');
+  const result = await first.recover();
   const paths = [];
-  const restored = purchaseFlow(storage, 'key', 7, 700, async path => { paths.push(path); return path === '/compras/40' ? purchase(body) : { ...reservation, estado: 'VENCIDA' }; });
-  await restored.recover(); assert.deepEqual(paths, ['/compras/40', '/reservas/30']);
+  const restored = purchaseFlow(storage, 'key', 7, 700, async path => {
+    paths.push(path);
+    return { ...purchase(result.body), estadoCompra: 'EXPIRADA' };
+  });
+  assert.equal(restored.canPay(true), false);
+  await restored.recover(); assert.deepEqual(paths, ['/compras/40']);
   restored.reset(); assert.equal(restored.current, null);
 });
 test('409 permite revisar; un reintento incierto vuelve a impedir cambiar la clave', async () => {
@@ -43,6 +47,35 @@ test('409 permite revisar; un reintento incierto vuelve a impedir cambiar la cla
   flow.start({ idEvento: 700, idSector: 55, cantidadEntradas: 2 }, 'campo');
   await assert.rejects(flow.recover()); assert.equal(flow.current.conflict, true);
   fail = new Error('conexión'); await assert.rejects(flow.recover()); assert.throws(() => flow.reset());
+});
+test('409 posterior a un POST incierto conserva el intento incluso tras recargar', async () => {
+  const storage = setup();
+  const flow = purchaseFlow(storage, 'key', 7, 700, async () => { throw new Error('timeout'); });
+  flow.start(selection, 'clave');
+  await assert.rejects(flow.recover(), /timeout/);
+  const restored = purchaseFlow(storage, 'key', 7, 700, async () => { throw { status: 409 }; });
+  await assert.rejects(restored.recover());
+  assert.equal(restored.canReset(), false);
+  assert.equal(restored.current.body.claveIdempotencia, 'clave');
+});
+test('un reintento incierto en fila conserva la autorización con el mismo pedido', async () => {
+  const storage = setup();
+  let original;
+  const flow = purchaseFlow(storage, 'key', 7, 700, async (_path, options) => {
+    original = options.body;
+    assert.equal(original.autorizacionCompra, 'turno-admitido');
+    assert.deepEqual(JSON.parse(storage.getItem('key')).body, original);
+    throw new Error('timeout');
+  });
+  flow.start(selection, 'clave', 'turno-admitido');
+  await assert.rejects(flow.recover(), /timeout/);
+  const restored = purchaseFlow(storage, 'key', 7, 700, async (path, options) => {
+    assert.equal(path, '/compras');
+    assert.deepEqual(options.body, original);
+    return purchase(options.body);
+  });
+  assert.throws(() => restored.start(selection, 'clave-nueva', 'turno-nuevo'));
+  await restored.recover();
 });
 test('almacenamiento bloqueado impide POST; otro perfil no puede recuperar el intento', () => {
   const storage = setup(); const flow = purchaseFlow(storage, 'key', 7, 700, async () => assert.fail());

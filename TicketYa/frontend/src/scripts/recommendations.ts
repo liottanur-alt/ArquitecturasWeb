@@ -1,5 +1,5 @@
 import { api } from './api';
-import { getSelectedProfileId } from './session';
+import { getAuthenticatedUserId } from './session';
 import { latestRequest } from './catalog-search';
 import { catalogDate } from './catalog-data';
 import { eventLink } from './selection-data';
@@ -15,13 +15,13 @@ export function initRecommendations(owner: number) {
   let version = 0;
   const text = (tag: string, value: string, className = '') => { const node = document.createElement(tag); node.textContent = value; node.className = className; return node; };
   async function load() {
-    if (getSelectedProfileId() !== owner) return;
+    if (getAuthenticatedUserId() !== owner) return;
     const current = ++version;
     list.replaceChildren(); warnings.replaceChildren(); verified.textContent = '';
     reload.disabled = true; list.setAttribute('aria-busy','true'); status.textContent = 'Consultando recomendaciones para este perfil…';
     try {
       const result = await latest(signal => api('/usuarios/' + owner + '/recomendaciones', { signal, cache: 'no-store' }));
-      if (!result.current || getSelectedProfileId() !== owner) return;
+      if (!result.current || getAuthenticatedUserId() !== owner) return;
       const response = parseRecommendations(result.data.data);
       for (const warning of recommendationWarnings(response)) warnings.append(text('li', warning));
       verified.textContent = 'Historial: ' + (response.historialVerificado ? 'verificado al consultar' : 'sin verificar') + ' · Disponibilidad: ' + (response.disponibilidadVerificada ? 'verificada al consultar; puede cambiar' : 'sin verificar') + '.';
@@ -40,9 +40,9 @@ export function initRecommendations(owner: number) {
         card.append(image, content); list.append(card);
       }
     } catch (cause) {
-      if (current !== version || getSelectedProfileId() !== owner) return;
+      if (current !== version || getAuthenticatedUserId() !== owner) return;
       status.textContent = 'No pudimos consultar las recomendaciones. ' + (cause instanceof Error ? cause.message : 'Reintentá en unos momentos.');
-    } finally { if (current === version && getSelectedProfileId() === owner) { reload.disabled = false; list.removeAttribute('aria-busy'); } }
+    } finally { if (current === version && getAuthenticatedUserId() === owner) { reload.disabled = false; list.removeAttribute('aria-busy'); } }
   }
   reload.addEventListener('click', load);
   window.addEventListener('ticketya:recommendations-refresh', load);

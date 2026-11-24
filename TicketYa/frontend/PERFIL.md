@@ -1,20 +1,17 @@
 # Perfil, historial y carrito
 
-/perfil/ requiere un ID de perfil de demostración seleccionado desde /login/.
-Sin selección, redirige al selector conservando la pestaña solicitada.
-El parámetro antiguo ?demo=1 ya no habilita un perfil ficticio local.
-GET /usuarios/{id} y PUT /usuarios/{id} usan el cliente compartido, sin JWT ni
-Authorization. Se conserva idRol. La edición modifica el perfil del servidor.
-Una selección no autentica al usuario. Mi cuenta permite cambiarla o quitarla.
-El carrito y las consultas de entradas corresponden al perfil seleccionado.
+`/perfil/` requiere iniciar sesión. Redirige al login conservando la pestaña
+y los parámetros de la URL. Las consultas cargan el perfil y los datos de compra
+usando el ID de la cuenta autenticada. La edición de perfil conserva el `idRol`
+que devuelve el servidor. Los detalles del ingreso están en [Inicio de sesión y registro](LOGIN.md).
 
 El historial usa GET /compras/cliente/{idCliente}; no contiene compras ficticias.
 Los filtros corresponden a PENDIENTE/APROBADA/RECHAZADA/EXPIRADA/CANCELADA.
-Los pendientes muestran su reserva y permiten retomar el pago simulado tras
-verificarla. El modal muestra importes y referencias reales, sin inventar moneda
-ni fecha de compra. La pestaña de entradas también consulta el servidor.
+Los pendientes enlazan al detalle de la compra para consultar el estado vigente
+y retomar el flujo. El modal muestra importes y referencias del servidor. La
+pestaña de entradas también consulta el Gateway.
 
-El carrito es local y requiere un perfil seleccionado. Guarda un borrador por
+El carrito se guarda localmente por cuenta. Guarda un borrador por
 evento y sector con IDs reales, cantidad CAMPO o asientos NUMERADO; no precios.
 La versión v2 no importa el carrito de ejemplo. Para recuperar cada tarjeta se
 consulta el evento publicado y la disponibilidad actual del sector. Los fallos
@@ -30,7 +27,7 @@ consulta primero GET /compras/{id} para verificar el perfil y luego
 GET /entradas/compra/{idCompra}. Se conserva el filtro de compra y se puede volver
 a todas las entradas. También admite /perfil/?compra=ID#entradas desde el pago.
 Muestra estados de entrada y QR, importe, evento, sector y asiento. Los nombres
-se resuelven con lecturas públicas; ante un fallo se conservan los IDs reales.
+se resuelven por el Gateway. Ante un fallo se conservan los IDs reales.
 Antes de mostrar un QR consulta GET /entradas/{id} y genera la imagen con la cadena
 exacta qr, sin prefijos ni transformaciones. Solo PAGA y NO_ESCANEADO habilita QR;
 DEVOLUCION_RECHAZADA sigue la limitación de acceso del backend y no se trata como
@@ -85,14 +82,14 @@ de favoritos no modifica una edición de preferencias pendiente. No hay reintent
 automáticos de escrituras. El backend no valida existencia al agregar un favorito;
 la UI solo ofrece altas desde el catálogo recibido.
 
-Artistas favoritos son datos del servidor asociados al perfil. Los corazones de
-eventos del inicio son eventos guardados en localStorage de este navegador; no
-se convierten en artistas favoritos ni se sincronizan con esos endpoints.
+Artistas favoritos son datos del servidor asociados al perfil. Los corazones del
+catálogo guardan eventos en el navegador, separados por cuenta. La lista local
+anterior, compartida entre cuentas, queda fuera de las listas individuales.
 
 ## Recomendaciones
 
 La pestaña Para vos (/perfil/#recomendaciones) y el enlace de Mi cuenta consultan
-GET /usuarios/{id}/recomendaciones para el perfil seleccionado. No se consultan
+GET /usuarios/{id}/recomendaciones para la cuenta autenticada. No se consultan
 rutas internas ni fuentes individuales. Se conserva el orden del servidor y se
 muestran motivos, fuentes, fecha y ciudad, con imagen ilustrativa local. El enlace
 al evento vuelve a consultar su detalle y disponibilidad al preparar la selección.
@@ -108,4 +105,3 @@ sustituir recomendaciones por ejemplos. Flags ausentes o malformados no se
 interpretan como verificaciones exitosas. Respuestas y errores antiguos se
 descartan, también al cambiar de perfil. Guardar preferencias o modificar
 artistas favoritos actualiza las recomendaciones; también hay actualización manual.
-La selección de perfil continúa siendo una demostración, sin autenticación.

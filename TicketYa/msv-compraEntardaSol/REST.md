@@ -154,8 +154,8 @@ Marca el QR como `ESCANEADO`. Devuelve `409` si la entrada no esta `PAGA` o si y
 
 Devuelve `201`. Reglas:
 
-- La entrada debe pertenecer al cliente (`403` si no).
-- La entrada debe estar `PAGA` o `DEVOLUCION_RECHAZADA`.
+- La entrada y la compra deben pertenecer al cliente identificado por el JWT (`403` si no).
+- La compra debe estar `APROBADA`, la entrada en `PAGA` y el QR en `NO_ESCANEADO` (`400` si no).
 - No debe existir una solicitud `PENDIENTE` o `ACEPTADA` para la entrada.
 - Deben faltar al menos 72 horas para el evento.
 - Registrar la solicitud no libera el lugar ni reintegra dinero.
@@ -197,7 +197,8 @@ Respuesta:
 
 - `ACEPTADA`: libera el asiento en SectorAsiento con la fecha original de la solicitud, marca la entrada `DEVOLUCION_ACEPTADA` y ejecuta el reintegro simulado (`estadoReintegro = COMPLETADO`).
 - `RECHAZADA`: marca la entrada `DEVOLUCION_RECHAZADA`.
-- Repetir el mismo estado es idempotente; otro estado devuelve `409`.
+- Solo puede resolver un administrador. Se revalida la titularidad entre solicitud, entrada y compra.
+- Repetir el mismo estado es idempotente. Una resolución incompatible devuelve `400`.
 - Estados permitidos: `ACEPTADA` y `RECHAZADA`.
 
 ## Codigos de estado

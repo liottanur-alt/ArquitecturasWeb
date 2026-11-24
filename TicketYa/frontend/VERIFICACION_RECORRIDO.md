@@ -1,5 +1,52 @@
 # Verificación del recorrido integrado
 
+## Casos de cierre de la integración
+
+- **Reserva vencida.** La compra de prueba 109 quedó `PENDIENTE` con el plazo local de diez minutos. Después del vencimiento, Edge retomó la compra y solicitó el pago simulado. El Gateway devolvió HTTP `200` con estado `EXPIRADA`, la interfaz mostró el vencimiento y la consulta de entradas devolvió una lista vacía.
+- **Sesión vencida.** Edge inició sesión contra el Gateway real. Se adelantó el reloj solo en esa página hasta después del `exp` del JWT. El frontend borró la sesión y redirigió al login conservando el destino `/perfil/#carrito` con su query. El reloj del Gateway quedó intacto.
+- **Espera en la fila real.** En el evento de prueba 16, Edge mostró la posición 1 y mantuvo bloqueada la compra. Cuando se aprobó la compra de otro cliente admitido, Eventos liberó su turno y Edge habilitó la compra en la siguiente consulta.
+- **Build estático.** Un servidor HTTP temporal sirvió el contenido de `dist/` y el reverse proxy `/gateway` al mismo origen. Las ocho rutas respondieron y Edge inició sesión y cargó el catálogo con JWT.
+- **Pruebas funcionales del Gateway.** `tests/system/Test-System.ps1` completó 10 comprobaciones, incluidas la admisión del siguiente cliente en Redis, el pago simulado, la devolución y la restitución del inventario.
+
+TypeScript, las 77 pruebas del frontend y el recorrido simulado volvieron a pasar. El build generó ocho páginas. Los datos de prueba quedaron en el entorno local.
+
+## Pantallas operativas en Edge · 24 de noviembre de 2026
+
+Los cuatro roles iniciaron sesión contra el Gateway local. El menú mostró las operaciones correspondientes a cada rol. Las acciones siguientes usaron datos de prueba.
+
+| Pantalla | Resultado observado |
+| --- | --- |
+| `/organizador/` | Se consultó el reporte del evento 15. Desde la interfaz se crearon un lugar, un artista, un borrador, un sector numerado y su asiento. Se configuró el inventario y se publicó el evento 17. |
+| `/administracion/` | Se aceptó la solicitud 100 y se rechazó la 101. El panel mostró el resultado confirmado por el Gateway. |
+| `/acceso/` | Se consultó el QR de la entrada 107 y se registró el ingreso. Al consultarlo otra vez, la pantalla mostró que ya estaba usado y deshabilitó la confirmación. Se probó el ingreso del código como texto. |
+
+Los registros de prueba quedaron en el entorno local.
+
+## Edge con el Gateway local · 24 de noviembre de 2026
+
+Docker Desktop inició los contenedores existentes y el Gateway respondió `UP`. Edge ejecutó el frontend de Astro con el proxy `/gateway`. Las solicitudes de catálogo enviaron el JWT al Gateway y no hubo llamadas del frontend a `/reservas`.
+
+| Escenario | Resultado observado |
+| --- | --- |
+| Registro, login y catálogo | Registro `201`, login `200` y catálogo autenticado `200`. |
+| CAMPO sin fila | En el evento de prueba 15, la compra 106 se retomó desde el historial y el pago simulado quedó `APROBADA`. Se emitió una entrada y el navegador renderizó el QR. |
+| Devolución | Se creó desde la entrada la solicitud 101 y la interfaz mostró `PENDIENTE`. |
+| NUMERADO con fila | En el evento de prueba 16, el Gateway devolvió un turno `ADMITIDO`. El checkout envió el asiento físico y la autorización del turno. |
+| Respuesta de compra perdida | El navegador descartó deliberadamente la respuesta de creación de la compra 107 después de recibirla el servidor. El botón de recuperación reenvió el mismo pedido con la misma clave y obtuvo el mismo ID. El pago simulado quedó `RECHAZADA`. |
+
+Se conservaron las cuentas, eventos, compras y solicitudes de prueba en el entorno local. La espera y el vencimiento del turno se comprobaron con el simulador. El vencimiento real de una reserva y de una sesión quedaron fuera de esta ejecución en Edge.
+
+## Integración con fila virtual · 24 de noviembre de 2026
+
+`npm run check`, las 70 pruebas de `npm test` y `npm run test:journey` pasaron. El último comando compiló las cinco páginas estáticas y ejecutó dos recorridos con API en memoria.
+
+- CAMPO sin demanda. El usuario inicia sesión, guarda la selección, crea una compra, la retoma desde el historial, simula el pago, muestra el QR y solicita devolución. El navegador simulado no consulta fila ni reservas internas.
+- NUMERADO con demanda. El usuario elige un asiento físico, espera, ve vencer el turno y vuelve a ingresar. Tras la admisión, el intento guarda la autorización con el pedido y la clave de idempotencia. Al perderse la respuesta del POST, la recuperación reenvía el mismo cuerpo. Cerrar el diálogo durante la espera detiene las consultas.
+
+Durante esta primera ejecución el motor Linux de Docker Desktop todavía no estaba disponible. Los recorridos simulados no crearon datos en el backend.
+
+## Verificación histórica del recorrido de demostración
+
 Fecha: 17 de noviembre de 2026. Todos los cambios de esta revisión están en `frontend/`.
 
 ## Resultados

@@ -1,58 +1,49 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { getSelectedProfileId, selectProfile, clearSelectedProfile, safeReturn } from '../src/scripts/session.ts';
+import { getAuthenticatedUserId, getSession, startSession, clearSession, safeReturn } from '../src/scripts/session.ts';
 
 let storage;
-let events;
 beforeEach(() => {
-  storage = new Map(); events = [];
+  storage = new Map();
   globalThis.sessionStorage = {
     getItem: key => storage.get(key) ?? null,
     setItem: (key, value) => storage.set(key, value),
     removeItem: key => storage.delete(key),
   };
-  globalThis.window = { location: { origin: 'http://localhost:4321' }, dispatchEvent: event => events.push(event.type) };
+  globalThis.window = new EventTarget();
+  window.location = { origin: 'https://ticketya.example' };
 });
 
-test('guarda solo el ID, permite cambiarlo y quitarlo sin borrar otros datos', () => {
-  storage.set('carrito', 'selección local');
-  selectProfile(7);
-  assert.equal(getSelectedProfileId(), 7);
-  assert.equal(storage.get('ticketya-demo-profile-id'), '7');
-  selectProfile(9);
-  assert.equal(getSelectedProfileId(), 9);
-  clearSelectedProfile();
-  assert.equal(getSelectedProfileId(), null);
-  assert.equal(storage.get('carrito'), 'selección local');
-  assert.deepEqual(events, ['ticketya:profile', 'ticketya:profile', 'ticketya:profile']);
+function token(sub = '7', exp = Math.floor(Date.now() / 1000) + 120) {
+  return `e30.${Buffer.from(JSON.stringify({ sub, exp, roles: ['CLIENTE'] })).toString('base64url')}.fixture`;
+}
+
+test('inicia y cierra la sesión y avisa a los consumidores', () => {
+  let changes = 0;
+  window.addEventListener('ticketya:profile', () => changes++);
+  const accessToken = token();
+  assert.deepEqual(startSession({ accessToken }).roles, ['CLIENTE']);
+  assert.equal(getSession().accessToken, accessToken);
+  assert.equal(getAuthenticatedUserId(), 7);
+  clearSession();
+  assert.equal(getSession(), null);
+  assert.equal(changes, 2);
 });
 
-test('descarta JWT heredado sin convertirlo en perfil seleccionado', () => {
-  storage.set('ticketya-session', JSON.stringify({ accessToken: 'legacy', email: 'viejo@example.com' }));
-  assert.equal(getSelectedProfileId(), null);
-  assert.equal(storage.has('ticketya-session'), false);
-});
-
-test('rechaza IDs inválidos y almacenamiento corrupto', () => {
-  for (const value of [0, -1, 1.5, '7', null, Number.MAX_SAFE_INTEGER + 1]) {
-    assert.throws(() => selectProfile(value));
-    storage.set('ticketya-demo-profile-id', JSON.stringify(value));
-    assert.equal(getSelectedProfileId(), null);
+test('descarta los perfiles demo y los tokens vencidos, inválidos o con ID impreciso', () => {
+  storage.set('ticketya-demo-profile-id', '7');
+  assert.equal(getSession(), null);
+  for (const accessToken of ['inválido', token('7', 1), token('9007199254740993')]) {
+    assert.throws(() => startSession({ accessToken }));
+    storage.set('ticketya-auth-session', accessToken);
+    assert.equal(getSession(), null);
+    assert.equal(storage.has('ticketya-auth-session'), false);
   }
-  storage.set('ticketya-demo-profile-id', '{');
-  assert.equal(getSelectedProfileId(), null);
 });
 
-test('no confirma selección cuando el almacenamiento no está disponible', () => {
-  sessionStorage.setItem = () => { throw new Error('storage blocked'); };
-  assert.throws(() => selectProfile(7));
-  assert.deepEqual(events, []);
-});
-
-test('conserva destino y hash internos y rechaza destinos externos y bucles', () => {
-  assert.equal(safeReturn('/perfil/#carrito'), '/perfil/#carrito');
-  assert.equal(safeReturn('/eventos/1/?carrito=1'), '/eventos/1/?carrito=1');
-  for (const value of ['https://example.com', '//example.com', '/\\example.com', '/login/?volver=/', '/registro/', null]) {
-    assert.equal(safeReturn(value), '/');
+test('limita el retorno a rutas locales fuera de login y registro', () => {
+  assert.equal(safeReturn('/perfil/?x=1#compras'), '/perfil/?x=1#compras');
+  for (const path of ['//evil.example', '/\\evil.example', '/login/?volver=/', '/registro/']) {
+    assert.equal(safeReturn(path), '/');
   }
 });

@@ -160,9 +160,12 @@ public class CompraService {
     }
 
     @Transactional
-    public CompraResponseDTO procesarPago(Long idCompra, boolean aprobado) {
+    public CompraResponseDTO procesarPago(Long idCompra, boolean aprobado, Long idCliente) {
         Compra compra = compraRepository.buscarPorIdParaActualizar(idCompra)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compra no encontrada"));
+        if (!java.util.Objects.equals(compra.getIdCliente(), idCliente)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "La compra no pertenece al usuario autenticado");
+        }
 
         if (compra.getEstadoCompra() != EstadoCompra.PENDIENTE) {
             if (aprobado && (compra.getEstadoCompra() == EstadoCompra.APROBADA
@@ -172,7 +175,7 @@ public class CompraService {
             if (!aprobado && compra.getEstadoCompra() == EstadoCompra.RECHAZADA) {
                 return CompraResponseDTO.from(compra);
             }
-            throw new IllegalStateException("La compra ya fue procesada con otro resultado");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La compra ya fue procesada con otro resultado");
         }
 
         EventoFechaResponseDTO evento = validarEventoVendible(compra.getIdEvento(), true);

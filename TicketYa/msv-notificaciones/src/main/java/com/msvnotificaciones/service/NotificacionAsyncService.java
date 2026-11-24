@@ -43,6 +43,10 @@ public class NotificacionAsyncService {
                 mensaje = "La devolución de la compra " + s.getIdCompra() + " para el evento "
                     + s.getIdEvento() + " fue aprobada.";
             }
+            case DEVOLUCION_RECHAZADA -> {
+                asunto = "Devolución rechazada";
+                mensaje = "La solicitud de devolución de la compra " + s.getIdCompra() + " fue rechazada.";
+            }
             case EVENTO_CANCELADO -> {
                 asunto = "Evento cancelado";
                 mensaje = "El evento " + s.getIdEvento() + " fue cancelado. Revisá la información de tu compra.";
@@ -68,15 +72,16 @@ public class NotificacionAsyncService {
 
         Notificacion notificacion = notificaciones.save(new Notificacion(s.getId(), s.getIdCliente(),
             s.getDestinatario(), asunto, mensaje, EstadoNotificacion.PENDIENTE));
+        EstadoNotificacion estado;
         try {
             correo.enviar(notificacion);
-            notificacion.setEstado(EstadoNotificacion.ENVIADA);
+            estado = EstadoNotificacion.ENVIADA;
         } catch (MessagingException | RuntimeException e) {
             log.warn("Falló el envío de la notificación {} ({})", notificacion.getId(),
                 e.getClass().getSimpleName());
-            notificacion.setEstado(EstadoNotificacion.FALLIDA);
+            estado = EstadoNotificacion.FALLIDA;
         }
-        notificaciones.save(notificacion);
+        notificaciones.actualizarEnvio(notificacion.getId(), estado);
     }
 
     public record SucesoRegistrado(SucesoNegocio suceso) {}

@@ -1,27 +1,9 @@
-# Selección de perfil de demostración
+# Inicio de sesión y registro
 
-/login/ reutiliza el diseño existente para elegir explícitamente
-un perfil de GET /usuarios. No hay contraseña, JWT, login ni autenticación.
-Se muestran carga, lista vacía, respuesta inválida, fallo de red y reintento.
-Confirmar guarda únicamente el ID en sessionStorage y vuelve al destino interno
-indicado por volver, o a /perfil/. No se aceptan destinos externos ni bucles al
-selector. La selección dura mientras exista el almacenamiento de la pestaña.
+`/registro/` crea una cuenta CLIENTE con `POST /auth/registro`. El formulario envía nombre, email, DNI, ciudad y contraseña. El servidor asigna el rol. Tras confirmar el alta, la pantalla lleva a `/login/` conservando el destino interno.
 
-Mi cuenta indica el ID y permite cambiar o quitar el perfil. Quitar no borra
-el usuario del servidor ni su carrito local. Los datos de sesión JWT anteriores
-se descartan. Si el servidor responde 404 al consultar el perfil, se quita la
-selección y se vuelve a elegir. Un fallo temporal conserva la selección.
+`/login/` envía email y contraseña a `POST /auth/login`. Al recibir el JWT, el frontend guarda el token en el almacenamiento de la pestaña y vuelve al destino interno indicado por `volver`. Si el formulario se abre sin ese parámetro, dirige a `/perfil/`. El menú Mi cuenta permite cerrar sesión y conservar el carrito local asociado a la cuenta.
 
-Seleccionar un perfil no autentica al usuario ni concede permisos.
-Consultar README.md para configurar el cliente API y el proxy.
+El cliente HTTP agrega Bearer a las peticiones protegidas del Gateway. El servidor valida identidad y permisos. Un 401 en una ruta protegida dirige a login. Un 401 al iniciar sesión muestra el error de credenciales en el formulario. Ante 403 se conserva la sesión.
 
-/registro/ permite crear un perfil sin contraseña. Consulta GET /roles y exige
-un único CLIENTE con ID válido; no crea roles ni asume un ID. POST /usuarios
-envía nombre, email, dni, ciudad e idRol. Valida campos obligatorios y límites
-después de trim (100/254/20/100), formato de email y permite DNI no numérico.
-Los errores 409 se muestran como posible duplicado o conflicto concurrente.
-Si falta CLIENTE o falla la consulta se bloquea el alta y se ofrece reintentar.
-Tras una creación confirmada no se vuelve a enviar ni se cambia la selección:
-un enlace lleva al selector para elegir el perfil explícitamente. No autentica.
-Tras un fallo de conexión, revisar perfiles existentes antes de volver a enviar,
-ya que no hay idempotencia para crear usuarios.
+Para ver el arranque local y preparar cuentas de prueba, consultar la [documentación del sistema](../DOCUMENTACION-TICKETYA.md).

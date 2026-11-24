@@ -1,0 +1,112 @@
+.account-page {
+  --account-ink: #121b36;
+  background: #f3f5fb;
+}
+
+.account-page .profile-welcome {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(.85rem, 3vw, 1.6rem);
+  margin: .75rem 0 1.5rem;
+  padding: clamp(1.1rem, 4vw, 3rem);
+  border: 1px solid #344975;
+  border-radius: 23px;
+  background: radial-gradient(ellipse at 92% 0%, #342d7a, transparent 65%), linear-gradient(125deg, #101932, #172a53);
+  color: white;
+}
+.account-page .profile-welcome h1 { margin: 0; color: white; font-size: clamp(1.6rem, 4vw, 3rem); overflow-wrap: anywhere; }
+.account-page .profile-welcome p { margin-top: .25rem; color: #e1e8fa; font-size: .95rem; overflow-wrap: anywhere; }
+.account-page .profile-welcome .profile-avatar {
+  display: grid; place-items: center; width: clamp(3.3rem, 8vw, 5.5rem); height: auto; aspect-ratio: 1;
+  margin: 0; border: 1px solid #ffffff55; background: #ffffff19; color: white; font-size: clamp(1.1rem, 3vw, 1.8rem);
+}
+.account-page .profile-welcome .identity-label { background: #ffffff1f; color: #f0f3ff; border-radius: 1rem; margin-top: .6rem; font-size: .8rem; }
+.account-page .profile-welcome .button { background: #fff; color: #172a53; min-height: 44px; }
+.account-page .profile-grid { grid-template-columns: minmax(11.75rem, 14rem) minmax(0, 1fr); gap: clamp(1rem, 3vw, 1.8rem); }
+.account-page .profile-sidebar { position: sticky; top: 1rem; border-radius: 16px; padding: .65rem; }
+.account-page .profile-tabs { margin: 0; gap: .35rem; }
+.account-page .profile-tabs button { min-height: 46px; color: #44516d; font-size: .9rem; border: 1px solid transparent; }
+.account-page .profile-tabs button:hover { background: #f4f6fb; }
+.account-page .profile-tabs button[aria-selected="true"] { background: #eaf0ff; border-color: #d3defc; color: #1c42bf; font-weight: 750; }
+.account-page .profile-panels { padding: clamp(1rem, 3.8vw, 2.25rem); border-radius: 20px; box-shadow: 0 12px 30px #1c35540a; }
+.account-page .profile-panel-heading h2 { color: var(--account-ink); font-size: clamp(1.55rem, 3.5vw, 2.3rem); letter-spacing: -.04em; }
+.account-panel-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .7rem; }
+.account-panel-heading .button { white-space: normal; gap: .5rem; }
+.account-preference-card { margin-top: 1rem; padding: clamp(.85rem, 3vw, 1.35rem); border: 1px solid var(--line); border-radius: 14px; background: #f6f8fc; }
+.account-preference-card fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.account-preference-card :is(legend, h3) { margin-bottom: .55rem; padding: 0; color: var(--account-ink); font-weight: 750; }
+.account-preference-card label[for="artist-choice"] { display: block; margin-bottom: .35rem; }
+.account-preference-card #artist-choice { display: block; width: min(100%, 28rem); }
+.account-preference-card #preferred-city { width: 100%; }
+.account-page .profile-panel-heading p, .account-page .entry-content p { color: var(--muted); font-size: .9rem; }
+.account-page .profile-field :is(input, select), .account-page textarea { font-size: 1rem; }
+.account-page :is(#artist-choice, #preferred-city, #refund-description) { max-width: 100%; }
+.account-page .profile-empty .button { margin-top: .8rem; white-space: normal; }
+.account-refunds, .account-security { margin-top: 1.5rem; padding: 1rem; border: 1px solid var(--line); border-radius: 14px; background: #f6f8fc; }
+.account-refunds h3, .account-security h2 { font-size: 1.1rem; font-weight: 750; }
+.account-refunds p, .account-security p { color: var(--muted); font-size: .875rem; }
+.account-security .button { margin-top: .65rem; }
+.account-refunds ul:not(:empty) { display: grid; gap: .5rem; list-style: none; padding: 0; margin-block: .65rem; }
+.account-refunds li { padding: .65rem; border-radius: 8px; background: white; overflow-wrap: anywhere; }
+
+.account-page .entry-card, .account-page .purchase-card {
+  min-width: 0; border: 1px solid #dce3f0; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 8px 22px #27395b09; transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.account-page .entry-card { display: grid; grid-template-columns: minmax(7rem, 28%) minmax(0, 1fr); }
+.account-page .entry-card .entry-photo { width: 100%; height: 100%; min-height: 9rem; }
+.account-page .entry-photo img { height: 100%; }
+.account-page .entry-content { min-width: 0; padding: clamp(.9rem, 2.5vw, 1.45rem); }
+.account-page .entry-content h3 { font-size: clamp(1.15rem, 3vw, 1.55rem); overflow-wrap: anywhere; }
+.account-page .entry-topline, .account-page .purchase-meta { display: flex; flex-wrap: wrap; gap: .45rem .7rem; align-items: center; color: #465673; }
+.wallet-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; border-top: 1px dashed #a8b7d3; margin-top: 1rem; padding-top: .75rem; }
+.account-page .wallet-actions :is(.entry-qr, .entry-refund) { min-height: 44px; margin: 0; padding: .55rem .8rem; border-radius: 9px; font-size: .875rem; }
+.account-page .wallet-actions .entry-refund { background: #eef2fc; color: #2242a0; }
+.wallet-badge { display: inline-block; border-radius: 1rem; padding: .3rem .55rem; background: #edf0f6; color: #44516d; font-size: .75rem; font-weight: 750; }
+.wallet-badge:is([data-state="PAGA"], [data-state="APROBADA"]) { background: #e0f5e9; color: #155a3c; }
+.wallet-badge:is([data-state="PENDIENTE"], [data-state="SOLICITUD_DEVOLUCION"]) { background: #fff0ce; color: #714500; }
+.wallet-badge:is([data-state="RECHAZADA"], [data-state="DEVOLUCION_RECHAZADA"], [data-state="EVENTO_CANCELADO"]) { background: #fce7e6; color: #922825; }
+.account-page .purchase-bottom { flex-wrap: wrap; gap: .55rem; }
+.account-page .purchase-bottom :is(button, a) { min-height: 44px; }
+.account-page .qr-frame { background: white; border: 1px solid #dce3f1; border-radius: 18px; }
+.account-page #ticket-qr-image { width: min(100%, 320px); height: auto; image-rendering: pixelated; margin-inline: auto; }
+
+.profile-inbox .inbox-actions { display: flex; flex-wrap: wrap; gap: .8rem; }
+.profile-inbox .inbox-status:not(:empty) { padding: .75rem; background: #f2f5fb; border-radius: 10px; color: #435574; }
+.profile-inbox .inbox-items { list-style: none; padding: 0; display: grid; gap: .65rem; }
+.profile-inbox .inbox-items li { display: grid; justify-items: start; gap: .3rem; padding: .95rem; border: 1px solid var(--line); border-radius: 12px; overflow-wrap: anywhere; }
+.profile-inbox .inbox-items li[data-unread] { background: #edf2ff; border-inline-start: 4px solid var(--blue); }
+.profile-inbox .inbox-items time { font-size: .82rem; color: var(--muted); }
+
+.account-page :is(#ticket-list, #purchase-list)[aria-busy="true"]:empty::before,
+.account-page :is(#ticket-list, #purchase-list)[aria-busy="true"]:empty::after {
+  content: ""; display: block; height: 8.5rem; margin-block: .8rem; border-radius: 16px;
+  background: linear-gradient(100deg, #e9edf7 25%, #f6f8fc 50%, #e9edf7 75%) 0 0 / 220% 100%;
+}
+@media (hover: hover) {
+  .account-page :is(.entry-card, .purchase-card):hover { transform: translateY(-3px); border-color: #b7c9f2; box-shadow: 0 13px 28px #27395b14; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .account-page [data-panel]:not([hidden]), .account-page :is(.entry-card, .purchase-card) { animation: wallet-enter .28s ease-out both; }
+  .account-page :is(.entry-card, .purchase-card):nth-child(2) { animation-delay: .04s; }
+  .account-page :is(.entry-card, .purchase-card):nth-child(3) { animation-delay: .08s; }
+  .account-page :is(.entry-card, .purchase-card):nth-child(4) { animation-delay: .12s; }
+  .account-page :is(#ticket-list, #purchase-list)[aria-busy="true"]:empty::before,
+  .account-page :is(#ticket-list, #purchase-list)[aria-busy="true"]:empty::after { animation: wallet-shimmer 1.6s linear infinite; }
+}
+@keyframes wallet-enter { from { opacity: .45; translate: 0 5px; } to { opacity: 1; translate: 0; } }
+@keyframes wallet-shimmer { to { background-position: -220% 0; } }
+@media (max-width: 760px) {
+  .account-page .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .account-page .profile-sidebar { position: static; min-width: 0; }
+  .account-page .profile-tabs { display: flex; flex-direction: row; overflow-x: auto; padding: .22rem; scrollbar-width: thin; position: relative; }
+  .account-page .profile-tabs button { flex: none; white-space: nowrap; }
+  .account-page .profile-welcome { grid-template-columns: auto minmax(0, 1fr); }
+  .account-page .profile-welcome .button { grid-column: 1 / -1; justify-self: start; }
+}
+@media (max-width: 480px) {
+  .account-page .entry-card { grid-template-columns: minmax(0, 1fr); }
+  .account-page .entry-card .entry-photo { height: 8rem; min-height: 0; }
+  .account-page .purchase-info { min-width: 0; overflow-wrap: anywhere; }
+}

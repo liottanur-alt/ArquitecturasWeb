@@ -2,10 +2,11 @@
 import "../styles/global.css";
 import "../styles/profile.css";
 import "../styles/tickets.css";
-import AccountMenu from "../components/AccountMenu.astro";
+import "../styles/account.css";
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 import {
     Ticket,
-    ArrowLeft,
     ArrowUpRight,
     ArrowRight,
     UserRound,
@@ -20,6 +21,8 @@ import {
     Plus,
     LogOut,
     CalendarDays,
+    Bell,
+    SlidersHorizontal,
 } from "@lucide/astro";
 ---
 
@@ -44,53 +47,32 @@ import {
             rel="stylesheet"
         /></head
     >
-    <body
-        ><header class="site-header">
-            <a class="brand" href="/"
-                ><span class="brand-symbol"><Ticket size={22} /></span
-                >ticket<span>ya</span><span class="brand-dot">®</span></a
-            ><a class="profile-back" href="/#explorar"
-                ><ArrowLeft size={16} /> Seguir explorando</a
-            ><AccountMenu />
-        </header>
+    <body class="account-page"
+        ><SiteHeader />
         <main class="wrap profile-main" id="profile-main" hidden>
             <div class="profile-breadcrumb">
                 <a href="/">Inicio</a><span>/</span> Mi cuenta
             </div>
             <section class="profile-welcome">
+                <span class="profile-avatar" data-initials aria-hidden="true"></span>
                 <div>
-                    <span class="eyebrow">TU LUGAR EN TICKETYA</span><h1>
-                        Hola, <span data-first-name>qué bueno verte</span><span
-                            class="blue-period">.</span>
-                    </h1><p>
-                        Los planes que viviste. Los que todavía están por venir.
-                    </p>
+                    <h1 data-full-name>Mi cuenta</h1>
+                    <p data-profile-email></p>
+                    <span class="identity-label" id="identity-label" hidden></span>
+                    <span data-first-name hidden></span>
                 </div><a href="/#explorar" class="button button-blue"
-                    >Un nuevo plan <Plus size={17} /></a>
+                    >Explorar eventos <ArrowUpRight size={17} /></a>
             </section>
-            <div class="demo-banner" id="profile-demo" hidden>
-                <Info size={17} /><p>
-                    <strong>Perfil de demostración.</strong> Seleccionar un perfil no autentica al usuario ni concede permisos. Los datos de este perfil vienen del servidor y los cambios se guardan allí.
-                </p><a href="/login/?volver=/perfil/"
-                    >Cambiar perfil <ArrowUpRight size={15} /></a>
-            </div>
             <div class="profile-grid">
                 <aside class="profile-sidebar">
-                    <div class="identity">
-                        <span class="profile-avatar" data-initials>TY</span><h2
-                            data-full-name
-                        >
-                            Tu cuenta
-                        </h2><p data-profile-email></p><span
-                            class="identity-label"
-                            id="identity-label">Mi espacio personal</span>
-                    </div><div
+                    <div
                         class="profile-tabs"
                         role="tablist"
                         aria-label="Mi cuenta"
                         aria-orientation="vertical"
                     >
                         <button id="tab-recomendaciones" role="tab" aria-selected="false" aria-controls="panel-recomendaciones" data-tab="recomendaciones" tabindex="-1"><Ticket size={18}/> Para vos <ArrowRight size={15}/></button>
+                        <button id="tab-preferencias" role="tab" aria-selected="false" aria-controls="panel-preferencias" data-tab="preferencias" tabindex="-1"><SlidersHorizontal size={18} aria-hidden="true"/> Preferencias</button>
                         <button
                             id="tab-datos"
                             role="tab"
@@ -129,15 +111,34 @@ import {
                             ><ShoppingCart size={18} /> Carrito <span
                                 id="cart-count">0</span
                             ></button>
-                    </div><a class="sidebar-explore" href="/#explorar"
-                        ><Ticket size={18} /><span
-                            >Tu próximo recuerdo<br /><strong
-                                >te está esperando.</strong
-                            ></span
-                        ><ArrowUpRight size={17} /></a>
+                        <button id="tab-notificaciones" role="tab" aria-selected="false" aria-controls="panel-notificaciones" data-tab="notificaciones" tabindex="-1"><Bell size={18} aria-hidden="true"/> Notificaciones</button>
+                    </div>
                 </aside>
                 <div class="profile-panels">
-                    <section id="panel-recomendaciones" role="tabpanel" aria-labelledby="tab-recomendaciones" data-panel="recomendaciones" hidden><div class="profile-panel-heading"><span class="eyebrow">IDEAS PARA TU PRÓXIMO PLAN</span><h2>Recomendados para vos.</h2><p>Motivos y fuentes informados por el servidor para el perfil seleccionado.</p></div><div class="sample-note"><Info size={17}/><p>Una recomendación no garantiza cupo, incluso si la disponibilidad fue verificada al consultar. Revisá el detalle y la disponibilidad actual antes de comprar.</p></div><button id="reload-recommendations" class="text-link">Actualizar recomendaciones</button><p id="recommendation-status" role="status" aria-live="polite"></p><ul id="recommendation-warnings" role="status" aria-live="polite"></ul><p id="recommendation-verifications"></p><div id="recommendation-list"></div><p class="price-note">Podés editar tus preferencias y artistas favoritos en Mis datos. Seleccionar un perfil no autentica al usuario.</p></section>
+                    <section id="panel-notificaciones" role="tabpanel" aria-labelledby="tab-notificaciones" data-panel="notificaciones" hidden>
+                        <div class="profile-panel-heading"><h2>Notificaciones</h2></div>
+                        <div class="profile-inbox" data-inbox>
+                            <div class="history-filters" role="group" aria-label="Filtrar notificaciones">
+                                <button type="button" aria-pressed="true" data-inbox-filter="all">Todas</button>
+                                <button type="button" aria-pressed="false" data-inbox-filter="unread">Sin leer</button>
+                                <button type="button" aria-pressed="false" data-inbox-filter="read">Leídas</button>
+                            </div>
+                            <div class="inbox-actions"><button class="text-link inbox-read-all" type="button" disabled>Marcar todas como leídas</button><button class="text-link inbox-retry" type="button" hidden>Reintentar</button></div>
+                            <p class="inbox-status" role="status"></p>
+                            <ol class="inbox-items"></ol>
+                        </div>
+                    </section>
+                    <section id="panel-recomendaciones" role="tabpanel" aria-labelledby="tab-recomendaciones" data-panel="recomendaciones" hidden>
+                        <div class="profile-panel-heading account-panel-heading">
+                            <h2>Recomendados para vos</h2>
+                            <a id="personalize-recommendations" class="button button-blue" href="#preferencias"><SlidersHorizontal size={17} aria-hidden="true"/> Personalizar recomendaciones</a>
+                        </div>
+                        <div class="sample-note"><Info size={17}/><p>Revisá la disponibilidad en el detalle del evento antes de comprar.</p></div>
+                        <button id="reload-recommendations" class="text-link">Actualizar recomendaciones</button>
+                        <p id="recommendation-status" role="status" aria-live="polite"></p>
+                        <ul id="recommendation-warnings" role="status" aria-live="polite"></ul>
+                        <p id="recommendation-verifications"></p><div id="recommendation-list"></div>
+                    </section>
                     <section
                         id="panel-datos"
                         role="tabpanel"
@@ -218,9 +219,30 @@ import {
                             >
                             </p>
                         </form>
-                    <section class="profile-panel-heading" aria-labelledby="preferences-heading"><h2 id="preferences-heading">Tus preferencias.</h2><p>Se guardan en el perfil del servidor. La ciudad preferida es independiente de la ciudad de tus datos personales.</p></section>
-                    <form id="preferences-form"><fieldset id="preferences-fields" disabled><legend>Tipos de evento preferidos</legend><div id="preferred-types" class="history-filters"></div><div class="profile-field"><label for="preferred-city">Ciudad preferida (opcional)</label><div><input id="preferred-city" maxlength="100" autocomplete="off"/></div></div><p>Guardar envía ambos campos completos. Sin tipos y con ciudad vacía se borran esas preferencias.</p><button class="button button-blue" type="submit">Guardar preferencias</button></fieldset><p id="preferences-status" role="status" aria-live="polite"></p></form><button id="reload-preferences" class="text-link">Recargar preferencias (descarta la edición)</button>
-                    <section aria-labelledby="artists-heading" class="profile-panel-heading"><h2 id="artists-heading">Artistas favoritos del servidor.</h2><p>Elegí artistas del catálogo. Son distintos de los eventos guardados con el corazón del inicio: esos eventos quedan solo en este navegador y no se envían al backend.</p><label for="artist-choice">Artista del catálogo</label><select id="artist-choice" disabled><option value="">Cargando catálogo…</option></select><button id="add-artist" class="text-link" disabled>Agregar artista favorito</button><ul id="favorite-artists"></ul><p id="artists-status" role="status" aria-live="polite"></p><button id="reload-artists" class="text-link">Recargar catálogo y artistas favoritos</button></section>
+                    <section class="account-security" aria-labelledby="security-heading"><h2 id="security-heading">Seguridad de la sesión</h2><p>Cerrá sesión al terminar si usás un dispositivo compartido.</p><button type="button" class="button button-blue" data-logout><LogOut size={17} aria-hidden="true"/> Cerrar sesión</button></section>
+                    </section>
+                    <section id="panel-preferencias" role="tabpanel" aria-labelledby="tab-preferencias" data-panel="preferencias" hidden>
+                        <div class="profile-panel-heading"><h2 id="preferences-heading" tabindex="-1">Tus preferencias</h2><p>Elegí qué tipos de eventos, ciudades y artistas querés ver en tus recomendaciones.</p></div>
+                        <form id="preferences-form" class="account-preference-card">
+                            <fieldset id="preferences-fields" disabled>
+                                <legend>Eventos y ciudad</legend>
+                                <p>Marcá los tipos de eventos que te interesan.</p>
+                                <div id="preferred-types" class="history-filters" role="group" aria-label="Tipos de eventos preferidos"></div>
+                                <div class="profile-field"><label for="preferred-city">Ciudad preferida (opcional)</label><div><input id="preferred-city" maxlength="100" autocomplete="off"/></div></div>
+                                <button class="button button-blue" type="submit">Guardar preferencias</button>
+                            </fieldset>
+                            <p id="preferences-status" role="status" aria-live="polite"></p>
+                            <button id="reload-preferences" type="button" class="text-link">Recargar preferencias guardadas</button>
+                        </form>
+                        <section aria-labelledby="artists-heading" class="account-preference-card">
+                            <h3 id="artists-heading">Artistas favoritos</h3>
+                            <label for="artist-choice">Artista del catálogo</label>
+                            <select id="artist-choice" disabled><option value="">Cargando catálogo…</option></select>
+                            <button id="add-artist" type="button" class="text-link" disabled>Agregar a favoritos</button>
+                            <ul id="favorite-artists"></ul>
+                            <p id="artists-status" role="status" aria-live="polite"></p>
+                            <button id="reload-artists" type="button" class="text-link">Actualizar artistas</button>
+                        </section>
                     </section>
                     <section
                         id="panel-compras"
@@ -232,12 +254,12 @@ import {
                         <div class="profile-panel-heading">
                             <span class="eyebrow"
                                 >MOMENTOS QUE YA SON TUYOS</span
-                            ><h2>Tu historial de planes.</h2><p>
+                            ><h2>Compras y devoluciones</h2><p>
                                 Un recorrido por tus entradas y compras.
                             </p>
                         </div><div class="sample-note">
                             <Info size={16} /><p>
-                                Compras del perfil seleccionado. Pago y reintegros simulados; seleccionar un perfil no autentica al usuario.
+                                Tus compras, pagos y reintegros simulados.
                             </p></div>
                         <div class="history-filters" role="group" aria-label="Filtrar compras por estado">
                         <button data-history-filter="" aria-pressed="true">Todas <span data-purchase-count>—</span></button>
@@ -247,6 +269,7 @@ import {
                         <button data-history-filter="EXPIRADA" aria-pressed="false">Expiradas</button>
                         <button data-history-filter="CANCELADA" aria-pressed="false">Canceladas</button></div>
                         <button id="refresh-history" class="text-link">Actualizar historial</button><p id="history-status" role="status" aria-live="polite"></p><div id="purchase-list"></div>
+                        <section class="account-refunds" aria-labelledby="refunds-heading"><div><h3 id="refunds-heading">Mis solicitudes de devolución</h3><button id="refresh-refunds" class="text-link">Consultar solicitudes y entradas</button><p id="refunds-status" role="status" aria-live="polite"></p><ul id="refund-list"></ul><p>Estados PENDIENTE, ACEPTADA y RECHAZADA según el servidor. Los reintegros son simulados. Tras un rechazo, el backend no admite usar el QR para ingreso.</p></div></section>
                     </section>
                     <section
                         id="panel-entradas"
@@ -258,7 +281,7 @@ import {
                         <div class="profile-panel-heading">
                             <span class="eyebrow"
                                 >LISTAS PARA TU PRÓXIMO MOMENTO</span
-                            ><h2>Hay que estar ahí.</h2><p>
+                            ><h2>Mis entradas</h2><p>
                                 Tus entradas, una por cada lugar que elegiste.
                             </p>
                         </div>
@@ -278,6 +301,11 @@ import {
                                     >Escaneadas</span>
                             </div>
                         </div>
+                        <div class="history-filters" role="group" aria-label="Filtrar por fecha del evento">
+                            <button type="button" data-ticket-period="" aria-pressed="true">Todas las fechas</button>
+                            <button type="button" data-ticket-period="upcoming" aria-pressed="false">Próximos eventos</button>
+                            <button type="button" data-ticket-period="past" aria-pressed="false">Eventos pasados</button>
+                        </div>
                         <div class="history-filters ticket-filters" role="group" aria-label="Filtrar entradas">
                         <button data-ticket-filter="" aria-pressed="true">Todas</button><button data-ticket-filter="PAGA" aria-pressed="false">Pagas</button><button data-ticket-filter="SOLICITUD_DEVOLUCION" aria-pressed="false">Devolución pendiente</button><button data-ticket-filter="DEVOLUCION_ACEPTADA" aria-pressed="false">Devolución aceptada</button><button data-ticket-filter="DEVOLUCION_RECHAZADA" aria-pressed="false">Devolución rechazada</button><button data-ticket-filter="EVENTO_CANCELADO" aria-pressed="false">Evento cancelado</button><button data-ticket-filter="scan:ESCANEADO" aria-pressed="false">Escaneadas</button><button data-ticket-filter="scan:NO_ESCANEADO" aria-pressed="false">Sin escanear</button></div>
                         <div
@@ -289,7 +317,7 @@ import {
                                 id="clear-purchase-ticket"
                                 >Ver todas mis entradas <X size={13} /></button>
                         </div>
-                        <div id="ticket-list"></div><section class="sample-note" aria-labelledby="refunds-heading"><div><h3 id="refunds-heading">Mis solicitudes de devolución</h3><button id="refresh-refunds" class="text-link">Consultar solicitudes y entradas</button><p id="refunds-status" role="status" aria-live="polite"></p><ul id="refund-list"></ul><p>Estados PENDIENTE, ACEPTADA y RECHAZADA según el servidor. Los reintegros son simulados. Tras un rechazo, el backend no admite usar el QR para ingreso.</p></div></section><div
+                        <div id="ticket-list"></div><div
                             id="tickets-empty"
                             class="profile-empty"
                             hidden
@@ -297,9 +325,8 @@ import {
                             <Ticket size={32} /><h3>
                                 No hay entradas en esta sección.
                             </h3><p>
-                                Probá con otro filtro para encontrar tu próximo
-                                momento.
-                            </p>
+                                Probá con otro filtro o elegí tu próximo evento.
+                            </p><a class="button button-blue" href="/#explorar">Explorar próximos eventos</a>
                         </div>
                         <p
                             id="tickets-status"
@@ -319,7 +346,7 @@ import {
                         <div class="profile-panel-heading">
                             <span class="eyebrow"
                                 >TODAVÍA ESTÁS A TIEMPO DE ELEGIR</span
-                            ><h2>Planes en pausa.</h2><p>
+                            ><h2>Mi carrito</h2><p>
                                 Los eventos que guardaste para seguir eligiendo
                                 después.
                             </p>
@@ -361,26 +388,14 @@ import {
                     </section>
                 </div>
             </div>
-            <section class="profile-closing">
-                <Ticket size={32} /><div>
-                    <h2>El próximo “yo estuve ahí” te espera.</h2><p>
-                        Siempre hay una nueva historia para vivir.
-                    </p>
-                </div><a href="/#explorar"
-                    >Encontrá tu plan <ArrowUpRight size={18} /></a>
-            </section>
+            
         </main>
         <noscript
             ><p class="wrap">
                 Activá JavaScript para consultar tu perfil.
             </p></noscript
         >
-        <footer class="site-footer wrap">
-            <a class="brand" href="/"
-                >ticket<span>ya</span><span class="brand-dot">®</span></a
-            ><p>Hay que estar ahí.</p><span>© 2026 TicketYa</span><a href="/"
-                >Volver al inicio <ArrowUpRight size={15} /></a>
-        </footer>
+        <SiteFooter />
         <dialog id="purchase-dialog" aria-labelledby="purchase-title">
             <div class="dialog-head">
                 <span class="eyebrow">DETALLE DE COMPRA</span><button
@@ -388,7 +403,7 @@ import {
                     data-close-purchase
                     aria-label="Cerrar detalle"><X size={22} /></button>
             </div><div class="dialog-body">
-                <p id="history-reservation-detail" role="status"></p><a id="history-resume-detail" class="text-link" hidden>Retomar pago simulado</a><button id="history-entry-detail" class="text-link" data-purchase-tickets>Ver entradas de esta compra</button><h2 id="purchase-title"></h2><p id="purchase-detail"></p><p
+                <a id="history-resume-detail" class="text-link" hidden>Revisar compra pendiente</a><button id="history-entry-detail" class="text-link" data-purchase-tickets>Ver entradas de esta compra</button><h2 id="purchase-title"></h2><p id="purchase-detail"></p><p
                     id="purchase-payment"
                 >
                 </p><div class="purchase-modal-total">
@@ -407,7 +422,7 @@ import {
                     data-close-qr
                     aria-label="Cerrar QR"><X size={22} /></button>
             </div><div class="dialog-body ticket-qr-body">
-                <span class="qr-demo-badge">QR RECIBIDO DEL SERVIDOR</span
+                <span class="qr-demo-badge">PRESENTÁ ESTE QR EN PUERTA</span
                 ><h2 id="qr-title"></h2><p id="qr-location"></p><p id="qr-date">
                 </p><div class="qr-frame">
                     <img

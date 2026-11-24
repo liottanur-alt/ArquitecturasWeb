@@ -1,6 +1,7 @@
 package org.msvcompraentradasol.dtos;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import org.msvcompraentradasol.entities.Compra;
 
@@ -20,7 +21,8 @@ public record CompraResponseDTO(
         String referenciaPago,
         String referenciaReintegro,
         String estadoReintegro,
-        List<Long> idsAsientos
+        List<Long> idsAsientos,
+        Instant fechaCreacion
 ) {
     public static CompraResponseDTO from(Compra compra) {
         return new CompraResponseDTO(
@@ -39,7 +41,8 @@ public record CompraResponseDTO(
                 compra.getReferenciaPago(),
                 compra.getReferenciaReintegro(),
                 compra.getEstadoReintegro() == null ? null : compra.getEstadoReintegro().name(),
-                compra.getIdsAsientos() == null ? List.of() : List.copyOf(compra.getIdsAsientos())
+                compra.getIdsAsientos() == null ? List.of() : List.copyOf(compra.getIdsAsientos()),
+                compra.getFechaCreacion()
         );
     }
 }

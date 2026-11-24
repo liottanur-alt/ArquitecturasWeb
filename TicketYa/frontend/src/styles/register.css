@@ -2,4 +2,7 @@
 @media(max-width:1000px) and (min-width:701px){.register-page .login-form-side{padding-inline:26px}.register-row{gap:10px}.register-row .login-input>svg{display:none}.register-page .login-form-content h2{font-size:34px}}
 @media(max-width:700px){.register-page .login-form-content{padding-top:60px;padding-bottom:35px}.register-page .login-form-content h2{font-size:36px}.register-page .login-field label{font-size:11px}.register-row{gap:12px}.register-row .login-input>svg{display:none}.register-page .login-assurance{margin-top:22px}.register-page .login-divider{font-size:6px}}
 
-#register-fields{border:0;padding:0;margin:0;min-width:0}#register-error{margin-top:17px}.field-help[role=alert]{color:#ad4c48}input[aria-invalid=true]{outline:1px solid #ad4c48!important}
+#register-fields{border:0;padding:0;margin:0;min-width:0}#register-error{margin-top:17px}.field-help[role=alert]{color:#ad4c48}.login-input:has(input[aria-invalid=true]){border-color:#ad4c48;box-shadow:inset 0 0 0 1px #ad4c48}
+
+.register-page .login-field label { font-size: 14px; }
+.field-help, .auth-switch { color: var(--muted); font-size: 13px; }

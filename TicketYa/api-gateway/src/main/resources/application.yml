@@ -2,6 +2,8 @@ server:
   port: 8080
 
 msvc:
+  notificaciones:
+    url: ${MSVC_NOTIFICACIONES_URL:http://localhost:8006}
   sectores:
     url: ${MSVC_SECTORES_URL:http://localhost:8002}
   usuarios:
@@ -24,6 +26,10 @@ spring:
       server:
         webmvc:
           routes:
+            - id: msvc-notificaciones
+              uri: ${msvc.notificaciones.url}
+              predicates:
+                - Path=/api/notificaciones,/api/notificaciones/**
             - id: msvc-usuarios
               uri: ${msvc.usuarios.url}
               predicates:

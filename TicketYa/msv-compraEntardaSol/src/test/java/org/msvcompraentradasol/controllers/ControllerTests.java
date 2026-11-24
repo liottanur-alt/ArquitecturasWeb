@@ -152,7 +152,7 @@ class ControllerTests {
 
     @Test
     void procesarPagoDevuelve200() throws Exception {
-        when(compraService.procesarPago(eq(5L), eq(true))).thenReturn(compra(5L, "APROBADA"));
+        when(compraService.procesarPago(eq(5L), eq(true), eq(ID_CLIENTE_JWT))).thenReturn(compra(5L, "APROBADA"));
 
         perform(put("/compras/5/pago").param("aprobado", "true"))
                 .andExpect(status().isOk())
@@ -306,7 +306,8 @@ class ControllerTests {
                 "SIM-PAGO",
                 null,
                 null,
-                List.of(11L, 12L)
+                List.of(11L, 12L),
+                null
         );
     }
 

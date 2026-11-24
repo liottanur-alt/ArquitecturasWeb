@@ -19,6 +19,10 @@ Invoke-RestMethod http://localhost:8080/actuator/health
 
 Esperá `status: UP`. `mysql-esquemas` inicializa las bases y debe terminar con código 0. Para detener el entorno y conservar los datos usá `docker compose stop`.
 
+Abrí TicketYa en `http://localhost:8081`. El servicio `frontend` sirve el build de Astro y reenvía `/gateway/*` al Gateway. Podés cambiar el puerto web con `FRONTEND_PORT` en `.env`.
+
+Para cargar eventos de demostración con distintos niveles de disponibilidad, seguí la [guía del seed del catálogo](docs/SEED_CATALOGO.md).
+
 ## 2. Arquitectura y datos
 
 | Servicio | Dirección | Datos y función |
@@ -239,7 +243,7 @@ La URL base es `http://localhost:8080` salvo las rutas directas. Usá **Body →
 | `GET` | `/compras/{id}` | JWT | Sin body |
 | `PUT` | `/compras/{id}/pago` | JWT | Sin body. Query `aprobado` |
 | `GET` | `/compras/cliente/{idCliente}` | JWT | Sin body |
-| `POST` | `/compras/eventos/{idEvento}/cancelacion` | JWT | Sin body |
+| `POST` | `/compras/eventos/{idEvento}/cancelacion` | JWT de administrador | Sin body |
 | `GET` | `/entradas/{id}` | JWT | Sin body |
 | `PATCH` | `/entradas/{id}/uso` | JWT | Sin body. Query `idEvento` |
 | `GET` | `/entradas/cliente/{idCliente}` | JWT | Sin body |
@@ -260,10 +264,10 @@ La URL base es `http://localhost:8080` salvo las rutas directas. Usá **Body →
 
 | Método | Ruta | Acceso | Entrada |
 | --- | --- | --- | --- |
-| `GET` | `/api/bitacora` | Directa en Docker, sin JWT | Sin body. Query `idEvento` |
-| `GET` | `/api/logs` | Directa en Docker, sin JWT | Sin body. Query `servicio` (opcional), `desde`, `hasta` |
+| `GET` | `/api/bitacora` | Gateway, JWT del titular | Sin body. Query `idEvento` |
+| `GET` | `/api/logs` | Gateway, JWT del titular | Sin body. Query `servicio` (opcional), `desde`, `hasta` |
 | `POST` | `/api/logs` | Directa en Docker, sin JWT | [JSON](#body-34) |
-| `GET` | `/api/notificaciones/clientes/{idCliente}` | Directa en Docker, sin JWT | Sin body |
+| `GET` | `/api/notificaciones/clientes/{idCliente}` | Gateway, JWT del titular | Sin body |
 | `GET` | `/api/reportes/eventos/{idEvento}` | Directa en Docker, sin JWT | Resumen interno basado en sucesos. El reporte para organizadores se consulta por Gateway. |
 | `POST` | `/api/sucesos` | Directa en Docker, sin JWT | [JSON](#body-35) |
 

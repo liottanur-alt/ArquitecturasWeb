@@ -1,6 +1,7 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { api, ApiError, ApiConnectionError } from '../src/scripts/api.ts';
+import { getSession, startSession } from '../src/scripts/session.ts';
 
 const originalFetch = globalThis.fetch;
 after(() => { globalThis.fetch = originalFetch; });
@@ -72,4 +73,42 @@ test('rechaza URLs ajenas al Gateway', async () => {
   for (const path of ['https://example.com', '//example.com', '/api/../login']) {
     await assert.rejects(api(path));
   }
+});
+
+test('envía Bearer al Gateway, trata 401 protegido y conserva la sesión ante 403 o login fallido', async t => {
+  const data = new Map();
+  globalThis.sessionStorage = {
+    getItem: key => data.get(key) ?? null,
+    setItem: (key, value) => data.set(key, value),
+    removeItem: key => data.delete(key),
+  };
+  globalThis.window = new EventTarget();
+  window.location = {
+    origin: 'https://ticketya.example', pathname: '/perfil/', search: '', hash: '#compras',
+    replace(value) { this.target = value; }
+  };
+  t.after(() => { delete globalThis.sessionStorage; delete globalThis.window; });
+  const payload = Buffer.from(JSON.stringify({ sub: '7', exp: Math.floor(Date.now() / 1000) + 120 })).toString('base64url');
+  const accessToken = `e30.${payload}.fixture`;
+  startSession({ accessToken });
+
+  globalThis.fetch = async (_, options) => {
+    assert.equal(options.headers.get('Authorization'), `Bearer ${accessToken}`);
+    return new Response(null, { status: 403 });
+  };
+  await assert.rejects(api('/roles'), { status: 403 });
+  assert.equal(getSession()?.userId, 7);
+
+  globalThis.fetch = async (_, options) => {
+    assert.equal(options.headers.has('Authorization'), false);
+    return new Response(null, { status: 401 });
+  };
+  await assert.rejects(api('/auth/login', { method: 'POST', body: {} }), { status: 401 });
+  assert.equal(getSession()?.userId, 7);
+  assert.equal(window.location.target, undefined);
+
+  globalThis.fetch = async () => new Response(null, { status: 401 });
+  await assert.rejects(api('/usuarios/7'), { status: 401 });
+  assert.equal(getSession(), null);
+  assert.equal(window.location.target, '/login/?volver=%2Fperfil%2F%23compras');
 });

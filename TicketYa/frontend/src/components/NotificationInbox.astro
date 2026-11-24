@@ -1,0 +1,39 @@
+---
+import { Bell, X } from '@lucide/astro';
+---
+<div class="inbox" data-inbox hidden>
+  <button class="inbox-trigger" type="button" aria-label="Notificaciones" aria-haspopup="dialog">
+    <Bell size={21} aria-hidden="true" /><span class="inbox-count" hidden></span>
+  </button>
+  <dialog class="inbox-drawer" aria-label="Notificaciones">
+    <header><h2>Notificaciones</h2><button class="icon-button inbox-close" type="button" aria-label="Cerrar notificaciones" autofocus><X size={20} aria-hidden="true" /></button></header>
+    <div class="inbox-actions">
+      <button type="button" class="text-link inbox-read-all" disabled>Marcar todas como leídas</button>
+      <button type="button" class="text-link inbox-retry" hidden>Reintentar</button>
+    </div>
+    <p role="status" class="inbox-status"></p>
+    <ol class="inbox-items"></ol>
+  </dialog>
+</div>
+<style>
+  .inbox-trigger { position:relative; display:grid; place-items:center; width:44px; height:44px; border:1px solid var(--line); border-radius:12px; background:white; }
+  .inbox-trigger:hover { color:var(--blue); border-color:var(--blue); }
+  .inbox-count { position:absolute; top:-5px; right:-5px; border-radius:1rem; background:var(--blue); color:white; padding:.1rem .35rem; font-size:.7rem; font-weight:750; }
+  .inbox-drawer { inset:0 0 0 auto; max-width:none; width:min(100%, 28rem); height:100dvh; max-height:none; margin:0; border-radius:16px 0 0 16px; padding:clamp(1rem,4vw,1.5rem); }
+  .inbox-drawer[open] { animation: inbox-open .24s ease-out; }
+  .inbox-count[data-pulse] { animation: inbox-pulse .34s ease-out; }
+  @keyframes inbox-open { from { translate: 1.1rem 0; opacity: .6; } to { translate: 0 0; opacity: 1; } }
+  @keyframes inbox-pulse { 50% { scale: 1.2; } }
+  .inbox-drawer header,.inbox-actions { display:flex; justify-content:space-between; align-items:center; gap:.75rem; }
+  .inbox-drawer h2 { font-size:1.45rem; font-weight:800; }
+  .inbox-actions { margin-block:.65rem; }
+  .inbox-status { color:var(--muted); font-size:.9rem; }
+  .inbox-items { list-style:none; padding:0; display:grid; gap:.65rem; margin-top:.75rem; }
+  .inbox-items :global(li) { display:grid; gap:.4rem; padding:.9rem; border:1px solid var(--line); border-radius:12px; overflow-wrap:anywhere; }
+  .inbox-items :global(li[data-unread]) { background:#edf2ff; border-inline-start:4px solid var(--blue); }
+  .inbox-items :global(time),.inbox-items :global(p) { color:var(--muted); font-size:.88rem; }
+  .inbox-items :global(button) { justify-self:start; }
+</style>
+<script>
+  import '../scripts/notifications';
+</script>

@@ -4,10 +4,29 @@ const categories: Record<string, string> = {
 const states: Record<string, string> = { EN_CURSO: 'En curso', AGOTADO: 'Agotado', CANCELADO: 'Cancelado', FINALIZADO: 'Finalizado' };
 const text = (value: unknown, fallback: string) => typeof value === 'string' && value.trim() ? value.trim() : fallback;
 const object = (value: unknown): Record<string, unknown> => value && typeof value === 'object' ? value as Record<string, unknown> : {};
+const placeholder = '/event-placeholder.svg';
+
+function catalogImage(value: unknown) {
+  const source = text(value, '');
+  if (source.startsWith('/') && !source.startsWith('//') && !/[\\\s]/.test(source)) return source;
+  try {
+    const parsed = new URL(source);
+    if (['http:', 'https:'].includes(parsed.protocol) && !parsed.username && !parsed.password) return parsed.href;
+  } catch {}
+  return placeholder;
+}
+
+export function setEventImage(image: HTMLImageElement, source: string) {
+  image.onerror = () => {
+    image.onerror = null;
+    image.src = placeholder;
+  };
+  image.src = source;
+}
 
 /** fechaHora es LocalDateTime de Buenos Aires: conservar sus componentes, sin depender de la zona del navegador. */
 export function catalogDate(value: unknown) {
-  const empty = { day: '—', month: 'SIN FECHA', monthYear: 'SIN FECHA', fullDate: 'Fecha no informada' };
+  const empty = { day: '—', month: 'SIN FECHA', monthYear: 'SIN FECHA', fullDate: 'Fecha no informada', ticketDate: 'Fecha sin confirmar' };
   if (typeof value !== 'string') return empty;
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?$/.exec(value);
   if (!match) return empty;
@@ -16,7 +35,8 @@ export function catalogDate(value: unknown) {
   if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day
     || date.getUTCHours() !== hour || date.getUTCMinutes() !== minute || date.getUTCSeconds() !== Number(second)) return empty;
   const shortMonth = new Intl.DateTimeFormat('es-AR', { month: 'short', timeZone: 'UTC' }).format(date).replace('.', '').toUpperCase();
-  return { day: String(day).padStart(2, '0'), month: shortMonth, monthYear: `${shortMonth} / ${year}`,
+  const weekday = new Intl.DateTimeFormat('es-AR', { weekday: 'short', timeZone: 'UTC' }).format(date).replace('.', '').toUpperCase();
+  return { day: String(day).padStart(2, '0'), month: shortMonth, monthYear: `${shortMonth} / ${year}`, ticketDate: `${weekday} ${day} ${shortMonth}`,
     fullDate: new Intl.DateTimeFormat('es-AR', { dateStyle: 'long', timeStyle: 'short', hourCycle: 'h23', timeZone: 'UTC' }).format(date) + ' · hora de Buenos Aires' };
 }
 
@@ -35,7 +55,7 @@ export function mapCatalog(data: unknown) {
       category: categories[String(event.tipo)] || 'Tipo no informado', artist: artists || 'Participantes no informados',
       venue, city, location: [venue, city].filter(Boolean).join(' · '), address: text(place.direccion, ''),
       state: states[String(event.estado)] || 'Estado no informado', high: event.demanda === true,
-      image: '/event-placeholder.svg', ...catalogDate(event.fechaHora),
+      image: catalogImage(event.imagenUrl), ...catalogDate(event.fechaHora),
     };
   });
 }

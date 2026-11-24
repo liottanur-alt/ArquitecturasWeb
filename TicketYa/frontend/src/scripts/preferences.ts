@@ -1,5 +1,5 @@
 import { api } from './api';
-import { getSelectedProfileId } from './session';
+import { getAuthenticatedUserId } from './session';
 import { preferredTypes, preferencesBody, parsePreferences, parseArtists } from './preferences-data';
 export function initPreferences(owner: number) {
   const form = document.querySelector<HTMLFormElement>('#preferences-form')!;
@@ -14,7 +14,7 @@ export function initPreferences(owner: number) {
   const list = document.querySelector<HTMLElement>('#favorite-artists')!;
   let ids: number[] = [], artists: ReturnType<typeof parseArtists> = [], resolved: ReturnType<typeof parseArtists> = [];
   let ready = false, prefsBusy = false, artistsBusy = false;
-  const active = () => getSelectedProfileId() === owner;
+  const active = () => getAuthenticatedUserId() === owner;
   const get = async (path: string) => (await api(path, { cache: 'no-store' })).data;
   const prefix = '/usuarios/' + owner;
   const types = document.querySelector<HTMLElement>('#preferred-types')!;
@@ -67,6 +67,7 @@ export function initPreferences(owner: number) {
     try {
       await api(prefix + '/artistas-favoritos/' + id, { method: adding ? 'PUT' : 'DELETE' }); confirmed = true;
     } catch (cause) { artistStatus.textContent = (cause instanceof Error ? cause.message : 'No se pudo leer el resultado.') + ' Se consultarán los IDs del servidor para confirmar el estado.'; }
+    if (!active()) return;
     try {
       const data = parsePreferences(await get(prefix + '/preferencias')); if (!active()) return;
       ids = data.artistasFavoritos; ready = true;

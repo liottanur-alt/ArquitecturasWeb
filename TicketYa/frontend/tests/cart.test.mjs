@@ -9,7 +9,7 @@ const source = stripTypeScriptTypes(readFileSync(new URL('../src/scripts/cart.ts
 function setup() {
   let owner = 7;
   const storage = new Map();
-  const context = vm.createContext({ normalizeDraft, getSelectedProfileId: () => owner, localStorage: {
+  const context = vm.createContext({ normalizeDraft, getAuthenticatedUserId: () => owner, localStorage: {
     getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value),
   } });
   vm.runInContext(source, context);

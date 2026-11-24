@@ -1,0 +1,57 @@
+---
+import { ArrowRight, CreditCard, LockKeyhole, ShoppingBag, Ticket, X } from '@lucide/astro';
+
+interface Props { view: 'status' | 'review' }
+const { view } = Astro.props;
+---
+{view === 'status' ? (
+  <section class="checkout-panel" id="purchase-panel" aria-labelledby="purchase-heading" hidden>
+    <header class="checkout-heading">
+      <span class="checkout-icon"><CreditCard size={22} aria-hidden="true" /></span>
+      <div><h2 id="purchase-heading">Estado de tu compra</h2><p id="purchase-status" role="status"></p></div>
+    </header>
+    <a id="back-history" class="text-link" href="/perfil/#compras" hidden>Volver a mis compras</a>
+    <div class="checkout-payment" id="payment-controls" hidden>
+      <h3>Pago simulado</h3>
+      <p>Elegí un resultado para completar la prueba de compra.</p>
+      <div class="checkout-actions">
+        <button id="approve-payment" class="button button-blue" disabled>Simular pago aprobado</button>
+        <button id="reject-payment" class="button checkout-secondary" disabled>Simular rechazo</button>
+      </div>
+    </div>
+    <p id="payment-state" class="checkout-result" role="status"></p>
+    <p id="payment-entries-status" class="checkout-result" role="status"></p>
+    <ul id="payment-entries" class="checkout-entries"></ul>
+    <div class="checkout-actions">
+      <button id="recover-purchase" class="button checkout-secondary" hidden>Consultar estado de la compra</button>
+      <button id="new-purchase" class="button checkout-secondary" hidden>Empezar una nueva selección</button>
+    </div>
+  </section>
+) : (
+  <dialog id="review-dialog" class="checkout-dialog" aria-labelledby="review-title">
+    <div class="dialog-head">
+      <span class="checkout-icon"><Ticket size={22} aria-hidden="true" /></span>
+      <button class="icon-button" id="close-review" aria-label="Cerrar resumen" autofocus><X size={20} aria-hidden="true" /></button>
+    </div>
+    <div class="dialog-body">
+      <h2 id="review-title">Revisá tus entradas</h2>
+      <div class="checkout-receipt">
+        <p id="review-event"></p>
+        <p id="review-items"></p>
+        <div class="checkout-receipt-total"><span>Total estimado</span><strong id="review-total">—</strong></div>
+      </div>
+      <p class="checkout-note"><LockKeyhole size={16} aria-hidden="true" /> La reserva se solicita al confirmar la compra.</p>
+      <section id="purchase-queue" class="checkout-queue" aria-labelledby="queue-title" hidden>
+        <h3 id="queue-title">Fila virtual</h3>
+        <p id="queue-status" role="status"></p>
+        <button class="button checkout-secondary" id="join-queue">Entrar a la fila</button>
+      </section>
+      <fieldset class="checkout-actions" id="review-actions" aria-label="Acciones de la selección">
+        <button class="button button-blue" id="create-purchase" disabled>Reservar y continuar <ArrowRight size={17} aria-hidden="true" /></button>
+        <button class="button checkout-secondary" id="save-cart"><ShoppingBag size={17} aria-hidden="true" /> Guardar en el carrito</button>
+      </fieldset>
+      <p id="save-cart-status" class="checkout-result" role="status" aria-live="polite"></p>
+      <a id="view-cart" class="text-link" href="/perfil/#carrito" hidden>Ver mi carrito <ArrowRight size={16} aria-hidden="true" /></a>
+    </div>
+  </dialog>
+)}
