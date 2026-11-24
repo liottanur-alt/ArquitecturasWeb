@@ -186,6 +186,7 @@
         ],
         "summary": "Cancelar un evento, cerrar inventario y reintegrar las entradas vendidas",
         "operationId": "cancelarEvento",
+        "description": "Requiere JWT de ADMINISTRADOR. Es la operación de cancelación disponible por Gateway. Repetir una cancelación no duplica reintegros.",
         "parameters": [
           {
             "$ref": "#/components/parameters/IdEvento"
@@ -201,6 +202,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "JWT ausente o inválido."
+          },
+          "403": {
+            "description": "La cuenta no tiene rol ADMINISTRADOR."
           },
           "502": {
             "$ref": "#/components/responses/BadGateway"

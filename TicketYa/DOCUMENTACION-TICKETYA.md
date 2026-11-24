@@ -178,16 +178,17 @@ La URL base es `http://localhost:8080` salvo las rutas directas. Usá **Body →
 | `PUT` | `/api/artistas/{id}` | JWT | [JSON](#body-10) |
 | `GET` | `/api/eventos` | JWT | Sin body |
 | `POST` | `/api/eventos` | ORGANIZADOR o ADMINISTRADOR | [JSON](#body-11) |
-| `POST` | `/api/eventos/{eventoId}/fila` | JWT | Sin body |
-| `GET` | `/api/eventos/{eventoId}/fila/mi-turno` | JWT | Sin body |
+| `POST` | `/api/eventos/{eventoId}/fila` | CLIENTE | Sin body |
+| `GET` | `/api/eventos/{eventoId}/fila/mi-turno` | CLIENTE | Sin body |
 | `DELETE` | `/api/eventos/{id}` | JWT | Sin body |
 | `GET` | `/api/eventos/{id}` | JWT | Sin body |
 | `PUT` | `/api/eventos/{id}` | JWT y titular del evento | [JSON](#body-12) |
-| `PATCH` | `/api/eventos/{id}/cancelar` | ADMINISTRADOR o JWT de servicio | Sin body |
+| `PATCH` | `/api/eventos/{id}/cancelar` | Directa, SERVICIO_INTERNO | Para cancelar desde Gateway, usar `POST /compras/eventos/{idEvento}/cancelacion`. |
 | `PATCH` | `/api/eventos/{id}/finalizar` | JWT y titular del evento | Sin body |
 | `PATCH` | `/api/eventos/{id}/programacion` | ORGANIZADOR o ADMINISTRADOR, y titular | [JSON](#body-13) |
 | `PATCH` | `/api/eventos/{id}/publicar` | ORGANIZADOR o ADMINISTRADOR, y titular | Sin body |
-| `PATCH` | `/api/eventos/{id}/suspender` | JWT | Sin body |
+| `PATCH` | `/api/eventos/{id}/suspender` | ADMINISTRADOR | Sin body |
+| `GET` | `/api/reportes/eventos/{idEvento}` | Gateway, ORGANIZADOR titular o ADMINISTRADOR | Totales y desglose de ventas, devoluciones, ocupación e ingresos netos por sector. |
 | `GET` | `/api/eventos/buscar` | JWT | Sin body. Query `tipo` (opcional), `idOrganizador` (opcional), `idParticipante` (opcional), `ciudad` (opcional), `fechaDesde` (opcional), `fechaHasta` (opcional), `pagina` (opcional), `tamanio` (opcional), `ordenar` (opcional) |
 | `GET` | `/api/eventos/interno/{id}` | Directa, SERVICIO_INTERNO | Sin body |
 | `PATCH` | `/api/eventos/interno/{id}/disponibilidad` | Directa, SERVICIO_INTERNO | Sin body. Query `agotado` |
@@ -263,7 +264,7 @@ La URL base es `http://localhost:8080` salvo las rutas directas. Usá **Body →
 | `GET` | `/api/logs` | Directa en Docker, sin JWT | Sin body. Query `servicio` (opcional), `desde`, `hasta` |
 | `POST` | `/api/logs` | Directa en Docker, sin JWT | [JSON](#body-34) |
 | `GET` | `/api/notificaciones/clientes/{idCliente}` | Directa en Docker, sin JWT | Sin body |
-| `GET` | `/api/reportes/eventos/{idEvento}` | Directa en Docker, sin JWT | Sin body |
+| `GET` | `/api/reportes/eventos/{idEvento}` | Directa en Docker, sin JWT | Resumen interno basado en sucesos. El reporte para organizadores se consulta por Gateway. |
 | `POST` | `/api/sucesos` | Directa en Docker, sin JWT | [JSON](#body-35) |
 
 ### Salud y contratos OpenAPI

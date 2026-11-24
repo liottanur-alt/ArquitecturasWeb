@@ -1,6 +1,6 @@
 # TicketYa | Historias de usuario
 
-> **Alcance** · Entrega 1: 5 funcionalidades y 14 historias. Entrega 2: 2 funcionalidades y 5 historias.
+> **Alcance** · Entrega 1: 5 funcionalidades y 14 historias. Entrega 2: 6 funcionalidades y 12 historias.
 
 ## Entrega 1 · Core del sistema
 
@@ -185,6 +185,10 @@
 
 - [F06 · Fila virtual](#f06)
 - [F07 · Caché del catálogo](#f07)
+- [F08 · Control de acceso por QR](#f08)
+- [F09 · Preferencias y recomendaciones](#f09)
+- [F10 · Notificaciones por correo](#f10)
+- [F11 · Reportes para organizadores](#f11)
 
 ---
 
@@ -248,3 +252,90 @@
 - Cuando se crea, edita, publica, suspende, cancela o elimina un evento, el sistema invalida o actualiza las respuestas cacheadas que puedan incluirlo.
 - Cuando cambia un precio o un estado de venta que se muestra en una consulta pública, el resultado cacheado afectado deja de servirse como vigente.
 - Si una invalidación no ocurre, el TTL limita cuánto tiempo puede conservarse la respuesta anterior.
+
+<a id="f08"></a>
+
+### F08 · Control de acceso por QR
+
+#### HU-20 · Validar una entrada en el ingreso del evento
+
+> Como personal de acceso, quiero escanear el QR en el evento al que estoy dando ingreso para validar la entrada una sola vez.
+
+**Criterios de aceptación**
+
+- Con rol de personal de acceso o administrador, un QR existente, vigente y sin usar se marca como escaneado al indicar el evento correcto.
+- Un QR de otro evento devuelve `409` y conserva su estado. Un QR inexistente devuelve `404`. Si falta el identificador del evento, la solicitud devuelve `400`.
+- Si dos solicitudes escanean el mismo QR simultáneamente, una confirma el ingreso y la otra devuelve `409`.
+
+<a id="f09"></a>
+
+### F09 · Preferencias y recomendaciones
+
+#### HU-21 · Guardar mis preferencias
+
+> Como cliente, quiero guardar mis tipos de evento preferidos, artistas favoritos y ciudad preferida para recibir sugerencias acordes.
+
+**Criterios de aceptación**
+
+- Puedo consultar y actualizar las preferencias de mi perfil. Al volver a consultarlas se conservan los valores guardados.
+- Puedo agregar y quitar artistas favoritos. Repetir la incorporación del mismo artista conserva una sola referencia.
+- Un cliente que intenta modificar las preferencias de otra cuenta recibe `403`.
+
+#### HU-22 · Recibir recomendaciones por preferencias e historial
+
+> Como cliente, quiero descubrir eventos relacionados con mis gustos y con lo que compraron otros clientes con compras en común.
+
+**Criterios de aceptación**
+
+- Se consideran coincidencias por tipo, artistas y ciudad preferida, y eventos que compraron clientes con historial en común.
+- Si un evento coincide por varias fuentes, aparece una sola vez con los motivos correspondientes.
+- Se excluyen los eventos que ya compré y para los que todavía tengo entradas vigentes. Si devuelvo todas esas entradas, el evento puede volver a ser candidato.
+- Cuando una fuente no está disponible y se puede responder con otras, la respuesta indica que el resultado es parcial.
+
+<a id="f10"></a>
+
+### F10 · Notificaciones por correo
+
+#### HU-23 · Recibir la confirmación de mi compra
+
+> Como cliente, quiero recibir un correo cuando el pago se aprueba y mi compra queda confirmada.
+
+**Criterios de aceptación**
+
+- Una compra confirmada genera un correo con la referencia de compra y la cantidad de entradas. Una reserva pendiente o un pago rechazado no generan ese aviso.
+- Reintentar la misma confirmación no genera otro correo para esa compra.
+
+#### HU-24 · Recibir avisos de cancelación y reprogramación
+
+> Como comprador, quiero enterarme si se cancela un evento o cambia su programación.
+
+**Criterios de aceptación**
+
+- Al cancelar un evento, cada comprador afectado recibe un aviso, aunque tenga varias entradas.
+- Un cambio efectivo de fecha, horario o lugar de un evento publicado notifica a los compradores con la programación anterior y la nueva.
+- Repetir la cancelación o enviar la misma programación no genera un segundo aviso por la misma operación.
+
+#### HU-25 · Recibir avisos de mis artistas favoritos en mi ciudad
+
+> Como cliente, quiero enterarme cuando se publica un evento en mi ciudad con un artista que marqué como favorito.
+
+**Criterios de aceptación**
+
+- Al publicar un evento, reciben el aviso los clientes que tengan al menos un participante como favorito y cuya ciudad de perfil coincida con la ciudad del lugar.
+- Un cliente recibe un solo aviso por ese evento, incluso si marcó como favoritos a varios participantes.
+- Los eventos en borrador y las publicaciones que no coinciden con la ciudad o los favoritos del cliente no generan el aviso para esa persona.
+
+<a id="f11"></a>
+
+### F11 · Reportes para organizadores
+
+#### HU-26 · Consultar ventas, devoluciones y ocupación de mi evento
+
+> Como organizador, quiero consultar el desempeño de mis eventos para conocer las ventas, las devoluciones y la recaudación.
+
+**Criterios de aceptación**
+
+- El organizador titular y un administrador pueden obtener el reporte por Gateway con JWT. Un organizador ajeno o un cliente recibe `403`.
+- El reporte muestra totales y desglose por sector de entradas vendidas y devueltas, capacidad, porcentaje de ocupación e ingresos netos.
+- La ocupación se calcula con las entradas vendidas menos las devueltas sobre la capacidad configurada. Si no hay capacidad para calcularla, el porcentaje es nulo.
+- Una devolución aprobada aumenta las devoluciones del sector y reduce su ocupación y sus ingresos netos.

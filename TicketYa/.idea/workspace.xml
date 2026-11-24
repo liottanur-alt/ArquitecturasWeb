@@ -6,31 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/java/com/apigateway/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/apigateway/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/mysql/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/mysql/check-health.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/mysql/init/01-create-databases.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/config/InternalAuthInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/config/InternalAuthInterceptor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-SectoerAsiento/src/main/java/com/universidad/msvsectoerasiento/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/config/CorrelationIdFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/config/CorrelationIdFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/controllers/DestinatarioCompraInternoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/controllers/DestinatarioCompraInternoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/feigns/NotificacionCompraClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/feigns/NotificacionCompraClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/repositories/EntradaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/repositories/EntradaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/services/CompraService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/services/CompraService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/services/SolicitudService.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/java/org/msvcompraentradasol/services/SolicitudService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/CompraServiceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/CompraServiceTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/SolicitudServiceTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/test/java/org/msvcompraentradasol/services/SolicitudServiceTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/client/CompradoresEventoClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/client/CompradoresEventoClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/client/NotificacionEventoClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/client/NotificacionEventoClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/config/InternalAuthInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/config/InternalAuthInterceptor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/java/msvevento/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/InternalAuthInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/InternalAuthInterceptor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/msv-usuario/src/main/java/com/msvusuario/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/Verificar-Bases.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/Verificar-Bases.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/system/Test-System.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/tests/system/Test-System.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOCUMENTACION-TICKETYA.md" beforeDir="false" afterPath="$PROJECT_DIR$/DOCUMENTACION-TICKETYA.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Historias-de-usuario-TicketYa.md" beforeDir="false" afterPath="$PROJECT_DIR$/Historias-de-usuario-TicketYa.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TicketYa-roles.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/TicketYa-roles.postman_collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/static/openapi.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/TicketYa-Eventos.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/TicketYa-Eventos.postman_collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/docs/PRUEBAS-POSTMAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/docs/PRUEBAS-POSTMAN.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/resources/static/openapi.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

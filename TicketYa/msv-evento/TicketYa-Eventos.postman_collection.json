@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "TicketYa Eventos - Entrega 1",
-    "description": "Ejecutar completa en orden contra el Gateway seguro con JWT de ORGANIZADOR/ADMINISTRADOR (baseUrl=http://127.0.0.1:8080). Cada iteracion crea lugar, artista, evento, sector e inventario propios, captura IDs y limpia evento, inventario, sector, artista y lugar. La publicacion requiere inventario configurado. Ver docs/PRUEBAS-POSTMAN.md.",
+    "description": "Ejecutar completa en orden contra el Gateway con jwtToken de ADMINISTRADOR (baseUrl=http://127.0.0.1:8080). La misma cuenta es titular del evento de prueba. Cada iteración crea sus propios datos y usa la cancelación coordinada de Compras. La publicación requiere inventario configurado. Ver docs/PRUEBAS-POSTMAN.md.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -917,10 +917,10 @@
     {
       "name": "30 Cancelar evento",
       "request": {
-        "method": "PATCH",
+        "method": "POST",
         "header": [],
-        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/cancelar",
-        "description": ""
+        "url": "{{baseUrl}}/compras/eventos/{{idEvento}}/cancelacion",
+        "description": "ADMINISTRADOR. Cancela el evento, coordina el inventario y procesa los reintegros aplicables."
       },
       "event": [
         {
@@ -930,7 +930,7 @@
             "exec": [
               "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
               "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
-              "pm.test(\"Estado CANCELADO/SUSPENDIDO\", () => { pm.expect(pm.response.json().estado).to.eql(\"CANCELADO\"); pm.expect(pm.response.json().estadoPublicacion).to.eql(\"SUSPENDIDO\"); });"
+              "pm.test(\"Inventario cancelado\", () => pm.expect(pm.response.json().inventarioCancelado).to.eql(true));"
             ]
           }
         }
@@ -939,9 +939,9 @@
     {
       "name": "31 Cancelar nuevamente es idempotente",
       "request": {
-        "method": "PATCH",
+        "method": "POST",
         "header": [],
-        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/cancelar",
+        "url": "{{baseUrl}}/compras/eventos/{{idEvento}}/cancelacion",
         "description": ""
       },
       "event": [
@@ -952,18 +952,18 @@
             "exec": [
               "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
               "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
-              "pm.test(\"Estado cancelado\", () => pm.expect(pm.response.json().estado).to.eql(\"CANCELADO\"));"
+              "pm.test(\"Sin reintegros duplicados\", () => pm.expect(pm.response.json().entradasReintegradas).to.eql(0));"
             ]
           }
         }
       ]
     },
     {
-      "name": "31.1 Cancelar inventario del evento",
+      "name": "31.1 El evento cancelado no aparece en el catálogo público",
       "request": {
-        "method": "POST",
+        "method": "GET",
         "header": [],
-        "url": "{{baseUrl}}/eventos/{{idEvento}}/inventario/cancelacion"
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}"
       },
       "event": [
         {
@@ -971,8 +971,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('HTTP 204 cancelacion de inventario', () => pm.expect(pm.response.code).to.be.oneOf([204]));",
-              "if (![204].includes(pm.response.code)) { pm.execution.setNextRequest(null); throw new Error('Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba'); }"
+              "pm.test('Evento cancelado fuera del catálogo', () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error('Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba'); }"
             ]
           }
         }

@@ -1571,7 +1571,7 @@
                 "programacion"
               ]
             },
-            "description": "ORGANIZADOR o ADMINISTRADOR, sujeto a permisos sobre el evento.\n\nRequiere un evento publicado activo y al menos fechaHora o idLugar. Si envías fechaHora debe ser futura.",
+            "description": "ORGANIZADOR o ADMINISTRADOR titular del evento. Requiere un evento publicado activo y al menos fechaHora o idLugar. La nueva programación debe ser futura. Un cambio efectivo avisa a los compradores.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"fechaHora\": \"2027-06-16T20:30:00\",\n  \"idLugar\": 1\n}",
@@ -1624,6 +1624,36 @@
           }
         },
         {
+          "name": "GET /api/reportes/eventos/{idEvento}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reportes/eventos/{{idEvento}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reportes", "eventos", "{{idEvento}}"]
+            },
+            "description": "Usá el JWT del organizador titular o de un administrador. Devuelve totales y desglose por sector. Un organizador ajeno o un cliente recibe 403."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Reporte disponible para titular o administrador', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const reporte = pm.response.json();",
+                  "  pm.expect(reporte.idEvento).to.eql(Number(pm.variables.get('idEvento')));",
+                  "  pm.expect(reporte).to.include.keys('entradasVendidas', 'entradasDevueltas', 'ocupacionPorcentaje', 'ingresosNetos');",
+                  "  pm.expect(reporte.sectores).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "PATCH /api/eventos/{id}/suspender",
           "request": {
             "method": "PATCH",
@@ -1640,11 +1670,11 @@
                 "suspender"
               ]
             },
-            "description": "sin body."
+            "description": "Sin body. Requiere el JWT de un ADMINISTRADOR y un evento publicado."
           }
         },
         {
-          "name": "PATCH /api/eventos/{id}/cancelar",
+          "name": "PATCH /api/eventos/{id}/cancelar · acceso público bloqueado",
           "request": {
             "method": "PATCH",
             "header": [],
@@ -1660,8 +1690,17 @@
                 "cancelar"
               ]
             },
-            "description": "sin body. ADMINISTRADOR para clientes HTTP."
-          }
+            "description": "Prueba negativa. Usá un JWT de administrador. El Gateway devuelve 403: para cancelar con reintegros e inventario usá POST /compras/eventos/{idEvento}/cancelacion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('El Gateway bloquea la cancelación interna', () => pm.response.to.have.status(403));"]
+              }
+            }
+          ]
         },
         {
           "name": "DELETE /api/eventos/{id}",
@@ -1941,7 +1980,7 @@
                 "fila"
               ]
             },
-            "description": "sin body.\n\nUsa un evento publicado que admita nuevos turnos y tenga demanda=true."
+            "description": "Sin body. Solo CLIENTE. Usá un evento publicado que admita nuevos turnos y tenga demanda=true."
           },
           "event": [
             {
@@ -1976,7 +2015,7 @@
                 "mi-turno"
               ]
             },
-            "description": "sin body.\nPara eventos con demanda=true, consultá el turno y usá la\nautorizacionCompra que devuelve la fila cuando te habilita.\nTipos de evento para eventos y preferencias:\nRECITAL, TEATRO, DEPORTE, CONFERENCIA, FESTIVAL, OTRO.\n\nUsa un evento publicado que admita nuevos turnos y tenga demanda=true."
+            "description": "Sin body. Solo CLIENTE. Consultá tu turno para un evento publicado de alta demanda y usá autorizacionCompra cuando el estado sea ADMITIDO."
           },
           "event": [
             {
@@ -2517,7 +2556,7 @@
                 "cancelacion"
               ]
             },
-            "description": "sin body."
+            "description": "Sin body. Requiere JWT de ADMINISTRADOR. Coordina la cancelación, el inventario y los reintegros. Se puede repetir sin duplicar reintegros."
           }
         },
         {
@@ -3758,29 +3797,6 @@
                 "notificaciones",
                 "clientes",
                 "{{idCliente}}"
-              ]
-            },
-            "description": "sin body.",
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "GET /api/reportes/eventos/{idEvento}",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{notificacionesUrl}}/api/reportes/eventos/{{idEvento}}",
-              "host": [
-                "{{notificacionesUrl}}"
-              ],
-              "path": [
-                "api",
-                "reportes",
-                "eventos",
-                "{{idEvento}}"
               ]
             },
             "description": "sin body.",
