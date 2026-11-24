@@ -1,5 +1,19 @@
-
-# Respaldos SQL locales de la migracion de bases.
-.local/
-
+# Variables de entorno con credenciales reales
 .env
+.env.*
+!.env.example
+!.env.*.example
+
+# Compilación Maven de todos los microservicios
+**/target/
+
+# Archivos generados por el frontend
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.astro/
+
+# Archivos locales
+.local/
+.idea/
+*.iml
+*.log
