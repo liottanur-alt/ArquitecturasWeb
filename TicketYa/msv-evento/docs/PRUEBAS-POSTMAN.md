@@ -2,11 +2,11 @@
 
 ## Archivos
 
-- `src/main/resources/static/openapi.json`: OpenAPI 3.0.3 de las 19 operaciones actuales.
-- `TicketYa-Eventos.postman_collection.json`: 41 solicitudes ordenadas con aserciones automáticas y captura de IDs.
+- `src/main/resources/static/openapi.json`: contrato OpenAPI 3.0.3 de Eventos y reportes para organizadores.
+- `TicketYa-Eventos.postman_collection.json`: recorrido ordenado con aserciones automáticas y captura de IDs.
 - `datos-prueba.postman.json`: dos iteraciones de ejemplo, para Tandil y Azul.
 
-La colección usa `X-Organizador-Id` al editar y publicar; para consultar borradores propios usa `GET /api/eventos/mis-eventos`. `GET /api/eventos` y `GET /api/eventos/{id}` son consultas públicas y solo muestran eventos publicados.
+La colección debe enviar `Authorization: Bearer <token>` con `sub` numérico en todas las solicitudes. Eventos y el Gateway reemplazan `X-Organizador-Id` con ese `sub`, por lo que la cabecera de la colección ya no decide la propiedad. Para consultar borradores propios usa `GET /api/eventos/mis-eventos`. `GET /api/eventos` y `GET /api/eventos/{id}` solo muestran eventos publicados.
 
 La documentación se sirve en http://localhost:8005/openapi.json cuando Eventos está iniciado. Puede importarse en Swagger Editor/Swagger UI o en Postman. La especificación es estática y debe actualizarse si cambia el código.
 
@@ -14,13 +14,13 @@ La documentación se sirve en http://localhost:8005/openapi.json cuando Eventos 
 
 Desde la raíz del repositorio iniciar el MySQL compartido con `docker compose up -d --wait`. Después iniciar Eventos desde su carpeta: `.\mvnw.cmd spring-boot:run` en Windows o `sh ./mvnw spring-boot:run` en Linux/macOS, con JDK 21 o superior.
 
-En Postman, importar la colección. Dejar Authorization en No Auth y baseUrl en http://localhost:8005, sin barra final. El catálogo de Eventos todavía no está en el Gateway: no usar 8080 salvo que posteriormente se incorporen esas rutas.
+En Postman, importar la colección, configurar `baseUrl=http://localhost:8080` y cargar el JWT de un administrador en `jwtToken`. La misma cuenta queda como titular del evento creado. La suspensión y la cancelación coordinada requieren ese rol.
 
-idOrganizadorPrueba tiene un valor externo ilustrativo (900001). Puede cambiarse por el ID real de un organizador, pero Eventos actualmente no consulta Usuarios ni comprueba su rol. El recorrido no requiere Usuarios ni SectorAsiento: no prueba una compra completa ni cancelaciones distribuidas.
+idOrganizadorPrueba tiene un valor externo ilustrativo (900001), pero Eventos usa el `sub` del JWT como organizador y sobrescribe el valor del cuerpo o de `X-Organizador-Id`. El token debe pertenecer al titular para editar o publicar. El recorrido prueba la cancelación coordinada de un evento de prueba sin ventas.
 
 ## Ejecución
 
-Usar Run collection y ejecutar los 41 requests en orden. Seleccionar opcionalmente datos-prueba.postman.json como archivo de datos para ejecutar las dos iteraciones. La primera solicitud genera un identificador único, nombres exclusivos y una fecha futura. Se capturan los IDs reales del lugar, artista y evento creados.
+Usar Run collection y ejecutar los requests en orden. Seleccionar opcionalmente datos-prueba.postman.json como archivo de datos para ejecutar las dos iteraciones. La primera solicitud genera un identificador único, nombres exclusivos y una fecha futura. Se capturan los IDs reales del lugar, artista y evento creados.
 
 No definir variables de entorno con los nombres generados idLugar, idArtista, idEvento, runId, nombreLugarPrueba, nombreArtistaPrueba, nombreEventoPrueba o fechaEvento: podrían ocultar las variables capturadas. Personalizar únicamente baseUrl, idOrganizadorPrueba o los nombres/ciudad del archivo de datos.
 
@@ -34,7 +34,7 @@ Se comprueban:
 6. Búsqueda publicada con tipo, organizador, artista, ciudad y rango de fechas; orden por fecha y nombre; paginación y resultados vacíos.
 7. Errores 400 por enum, fecha, ID no numérico y ordenamiento inválidos.
 8. Suspensión, exclusión de búsquedas y rechazo de suspensión/publicación repetidas incompatibles.
-9. Cancelación y rechazo de cancelación repetida.
+9. Cancelación por Compras, reintento sin reintegros duplicados y exclusión del evento cancelado del catálogo.
 10. Eliminación del evento antes que sus relaciones, 404 posteriores y referencias de artista/lugar inexistentes.
 
 No se prueba como 400 el envío de un objeto vacío a crear un evento: el código no tiene esa validación y puede devolver 500. Tampoco se prueba como 409 el borrado de lugares/artistas asociados: hoy esas restricciones pueden terminar en 500. Son limitaciones documentadas, no garantías inventadas por la colección.
@@ -54,13 +54,13 @@ Con el servicio ya iniciado, desde la carpeta msv-evento:
 Windows:
 
 ```powershell
-npx.cmd --yes newman run ./TicketYa-Eventos.postman_collection.json --env-var baseUrl=http://localhost:8005 --iteration-data ./datos-prueba.postman.json --bail
+npx.cmd --yes newman run ./TicketYa-Eventos.postman_collection.json --env-var baseUrl=http://localhost:8080 --env-var "jwtToken=$env:POSTMAN_JWT" --iteration-data ./datos-prueba.postman.json --bail
 ```
 
 Linux/macOS:
 
 ```bash
-npx --yes newman run ./TicketYa-Eventos.postman_collection.json --env-var baseUrl=http://localhost:8005 --iteration-data ./datos-prueba.postman.json --bail
+npx --yes newman run ./TicketYa-Eventos.postman_collection.json --env-var baseUrl=http://localhost:8080 --env-var "jwtToken=$POSTMAN_JWT" --iteration-data ./datos-prueba.postman.json --bail
 ```
 
 Node.js/npm son necesarios solo para Newman. No hacen falta para importar y ejecutar la colección en Postman. Las pruebas usan la base de la URL seleccionada: crean y eliminan su fixture; no ejecutarlas contra un entorno que no se quiera modificar.

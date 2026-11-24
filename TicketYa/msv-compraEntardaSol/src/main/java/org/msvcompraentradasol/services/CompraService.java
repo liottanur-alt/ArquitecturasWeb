@@ -15,6 +15,8 @@ import org.msvcompraentradasol.dtos.CompraResponseDTO;
 import org.msvcompraentradasol.dtos.EventoFechaResponseDTO;
 import org.msvcompraentradasol.dtos.ReservaRequestDTO;
 import org.msvcompraentradasol.dtos.ReservaResponseDTO;
+import org.msvcompraentradasol.dtos.ValidarAutorizacionFilaRequestDTO;
+import org.msvcompraentradasol.dtos.ValidarAutorizacionFilaResponseDTO;
 import org.msvcompraentradasol.entities.Compra;
 import org.msvcompraentradasol.entities.Entrada;
 import org.msvcompraentradasol.entities.Solicitud;
@@ -28,6 +30,7 @@ import org.msvcompraentradasol.repositories.CompraRepository;
 import org.msvcompraentradasol.repositories.EntradaRepository;
 import org.msvcompraentradasol.repositories.SolicitudRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +51,7 @@ public class CompraService {
     private final ReservaClientFeign reservaClient;
     private final EventoClientFeign eventoClient;
     private final PagoSimuladoService pagoSimuladoService;
+    private final ApplicationEventPublisher eventos;
 
     public CompraService(
             CompraRepository compraRepository,
@@ -56,7 +60,8 @@ public class CompraService {
             EntradaService entradaService,
             ReservaClientFeign reservaClient,
             EventoClientFeign eventoClient,
-            PagoSimuladoService pagoSimuladoService
+            PagoSimuladoService pagoSimuladoService,
+            ApplicationEventPublisher eventos
     ) {
         this.compraRepository = compraRepository;
         this.entradaRepository = entradaRepository;
@@ -65,9 +70,10 @@ public class CompraService {
         this.reservaClient = reservaClient;
         this.eventoClient = eventoClient;
         this.pagoSimuladoService = pagoSimuladoService;
+        this.eventos = eventos;
     }
 
-    public CompraResponseDTO crearCompra(CompraRequestDTO dto) {
+    public CompraResponseDTO crearCompra(CompraRequestDTO dto, Long idCliente) {
         List<Long> idsAsientos = dto.getIdsAsientos() == null
                 ? List.of()
                 : List.copyOf(dto.getIdsAsientos());
@@ -85,17 +91,18 @@ public class CompraService {
         var compraExistente = compraRepository.findByClaveIdempotencia(dto.getClaveIdempotencia());
         if (compraExistente.isPresent()) {
             Compra existente = compraExistente.get();
-            if (!coincideConPedido(existente, dto, idsAsientos, cantidad)) {
+            if (!coincideConPedido(existente, dto, idCliente, idsAsientos, cantidad)) {
                 throw new IllegalStateException("La clave de idempotencia ya corresponde a otra compra");
             }
             return CompraResponseDTO.from(existente);
         }
 
-        validarEventoVendible(dto.getIdEvento());
+        validarEventoVendible(dto.getIdEvento(), false);
+        String autorizacionFila = validarAutorizacionFila(dto, idCliente);
 
         ReservaResponseDTO reserva = reservaClient.reservar(new ReservaRequestDTO(
                 dto.getClaveIdempotencia(),
-                dto.getIdCliente(),
+                idCliente,
                 dto.getIdEvento(),
                 dto.getIdSector(),
                 cantidad,
@@ -112,7 +119,7 @@ public class CompraService {
                 : List.copyOf(reserva.idAsientos());
 
         Compra compra = new Compra();
-        compra.setIdCliente(dto.getIdCliente());
+        compra.setIdCliente(idCliente);
         compra.setIdEvento(dto.getIdEvento());
         compra.setMedioDePago(dto.getMedioDePago());
         compra.setIdSector(dto.getIdSector());
@@ -120,6 +127,7 @@ public class CompraService {
         compra.setCantidadEntradas((long) cantidad);
         compra.setClaveIdempotencia(dto.getClaveIdempotencia());
         compra.setIdReserva(reserva.id());
+        compra.setAutorizacionCompra(autorizacionFila);
         compra.setPrecioUnitario(reserva.precioUnitario());
         compra.setImporteTotal(reserva.precioUnitario().multiply(BigDecimal.valueOf(cantidad)));
         compra.setDescripcion("Compra pendiente de pago");
@@ -129,7 +137,7 @@ public class CompraService {
             return CompraResponseDTO.from(compraRepository.saveAndFlush(compra));
         } catch (DataIntegrityViolationException exception) {
             return compraRepository.findByClaveIdempotencia(dto.getClaveIdempotencia())
-                    .filter(existente -> coincideConPedido(existente, dto, idsAsientos, cantidad))
+                    .filter(existente -> coincideConPedido(existente, dto, idCliente, idsAsientos, cantidad))
                     .map(CompraResponseDTO::from)
                     .orElseThrow(() -> new IllegalStateException(
                             "No se pudo registrar la compra por un conflicto de datos"
@@ -167,7 +175,7 @@ public class CompraService {
             throw new IllegalStateException("La compra ya fue procesada con otro resultado");
         }
 
-        validarEventoVendible(compra.getIdEvento());
+        EventoFechaResponseDTO evento = validarEventoVendible(compra.getIdEvento(), true);
 
         PagoSimuladoService.ResultadoPago resultadoPago = pagoSimuladoService.procesar(
                 compra.getImporteTotal(),
@@ -233,7 +241,10 @@ public class CompraService {
             }
         }
 
-        return CompraResponseDTO.from(compraRepository.save(compra));
+        CompraResponseDTO respuesta = CompraResponseDTO.from(compraRepository.save(compra));
+        completarTurnoFila(compra);
+        eventos.publishEvent(new NotificarCompraConfirmada.CompraConfirmada(respuesta, evento.nombre()));
+        return respuesta;
     }
 
     @Transactional
@@ -336,6 +347,41 @@ public class CompraService {
         }
     }
 
+    private String validarAutorizacionFila(CompraRequestDTO dto, Long idCliente) {
+        String autorizacion = dto.getAutorizacionCompra();
+        ValidarAutorizacionFilaResponseDTO resultado = eventoClient.validarAutorizacionFila(
+                new ValidarAutorizacionFilaRequestDTO(
+                        dto.getIdEvento(), idCliente, autorizacion, dto.getClaveIdempotencia()
+                )
+        );
+        if (resultado == null || !resultado.autorizado()) {
+            String motivo = resultado == null ? "sin respuesta" : resultado.motivo();
+            String mensaje = autorizacion == null || autorizacion.isBlank()
+                    ? "Este evento requiere autorización de fila para iniciar la compra: " + motivo
+                    : "La autorización de la fila no es válida: " + motivo;
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, mensaje
+            );
+        }
+        return resultado.requiereFila() ? autorizacion : null;
+    }
+
+    private void completarTurnoFila(Compra compra) {
+        String autorizacion = compra.getAutorizacionCompra();
+        if (autorizacion == null || autorizacion.isBlank()) return;
+
+        ValidarAutorizacionFilaResponseDTO resultado = eventoClient.completarCompraEnFila(
+                new ValidarAutorizacionFilaRequestDTO(
+                        compra.getIdEvento(), compra.getIdCliente(), autorizacion,
+                        compra.getClaveIdempotencia()
+                )
+        );
+        if (resultado == null || !resultado.autorizado()) {
+            String motivo = resultado == null ? "sin respuesta" : resultado.motivo();
+            throw new IllegalStateException("La compra se confirmó, pero no se pudo liberar el turno de fila: " + motivo);
+        }
+    }
+
     private boolean cancelarInventario(Long idEvento) {
         try {
             reservaClient.cancelarInventario(idEvento);
@@ -348,7 +394,7 @@ public class CompraService {
         }
     }
 
-    private EventoFechaResponseDTO validarEventoVendible(Long idEvento) {
+    private EventoFechaResponseDTO validarEventoVendible(Long idEvento, boolean tieneReserva) {
         EventoFechaResponseDTO evento;
         try {
             evento = eventoClient.obtenerEvento(idEvento);
@@ -361,7 +407,8 @@ public class CompraService {
         if (!"PUBLICADO".equals(evento.estadoPublicacion())) {
             throw new IllegalStateException("El evento no está publicado");
         }
-        if (evento.estado() != null && ESTADOS_EVENTO_NO_VENDIBLES.contains(evento.estado())) {
+        if (evento.estado() != null && ESTADOS_EVENTO_NO_VENDIBLES.contains(evento.estado())
+                && !(tieneReserva && "AGOTADO".equals(evento.estado()))) {
             throw new IllegalStateException("El evento no admite nuevas compras");
         }
         if (evento.fechaHora() == null
@@ -374,10 +421,11 @@ public class CompraService {
     private boolean coincideConPedido(
             Compra compra,
             CompraRequestDTO dto,
+            Long idCliente,
             List<Long> idsAsientos,
             int cantidad
     ) {
-        return Objects.equals(compra.getIdCliente(), dto.getIdCliente())
+        return Objects.equals(compra.getIdCliente(), idCliente)
                 && Objects.equals(compra.getIdEvento(), dto.getIdEvento())
                 && Objects.equals(compra.getIdSector(), dto.getIdSector())
                 && Objects.equals(compra.getCantidadEntradas(), (long) cantidad)

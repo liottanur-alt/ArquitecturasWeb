@@ -3,15 +3,19 @@
   "info": {
     "title": "TicketYa - API de Eventos",
     "version": "1.2.0",
-    "description": "Contrato actual sin JWT. Incluye catálogo de eventos, lugares y artistas. Documenta limitaciones reales, sin prometer validaciones no implementadas. Consultar REST.md y docs/PRUEBAS-POSTMAN.md."
+    "description": "Contrato actual con validación local de JWT HS256 (issuer msv-usuario). Incluye catálogo de eventos, lugares y artistas. Las operaciones de organizador usan el sub del JWT; las rutas interno requieren ROLE_SERVICIO_INTERNO. Consultar REST.md y docs/PRUEBAS-POSTMAN.md."
   },
   "servers": [
     {
-      "url": "http://localhost:8005",
-      "description": "Microservicio directo; el catálogo aún no está en el Gateway."
+      "url": "http://localhost:8080",
+      "description": "API Gateway para operaciones públicas. Las operaciones internas requieren acceso directo a Eventos y JWT de servicio."
     }
   ],
-  "security": [],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "tags": [
     {
       "name": "Eventos"
@@ -21,9 +25,251 @@
     },
     {
       "name": "Artistas"
+    },
+    {
+      "name": "Reportes"
     }
   ],
   "paths": {
+    "/api/reportes/eventos/{idEvento}": {
+      "get": {
+        "tags": [
+          "Reportes"
+        ],
+        "operationId": "consultarReporteEvento",
+        "summary": "Consultar ventas y ocupación por evento y sector",
+        "description": "Acceso por API Gateway con JWT del organizador titular o de un administrador. La ocupación se calcula con entradas vendidas menos devueltas sobre la capacidad configurada. La recaudación es neta de devoluciones.",
+        "parameters": [
+          {
+            "name": "idEvento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reporte del evento con desglose por sector.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReporteEvento"
+                },
+                "example": {
+                  "idEvento": 42,
+                  "entradasVendidas": 8,
+                  "entradasDevueltas": 2,
+                  "capacidadTotal": 10,
+                  "ingresosNetos": 9000,
+                  "ocupacionPorcentaje": 60,
+                  "sectores": [
+                    {
+                      "idSector": 3,
+                      "entradasVendidas": 8,
+                      "entradasDevueltas": 2,
+                      "capacidad": 10,
+                      "ingresosNetos": 9000,
+                      "ocupacionPorcentaje": 60
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Iniciá sesión con un JWT válido."
+          },
+          "403": {
+            "description": "Tu cuenta no tiene el rol o la titularidad necesaria."
+          },
+          "404": {
+            "description": "Evento no encontrado."
+          },
+          "503": {
+            "description": "No se pudieron consultar Compras o Sectores."
+          }
+        }
+      }
+    },
+    "/api/eventos/{id}/programacion": {
+      "patch": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "reprogramarEvento",
+        "summary": "Cambiar fecha y hora o lugar de un evento publicado",
+        "description": "Requiere JWT con rol ORGANIZADOR o ADMINISTRADOR y que su titular sea dueño del evento. El cambio efectivo debe dejar una programación futura. Un cambio confirmado genera avisos para los compradores; repetir los mismos valores no genera otro aviso.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramacionEvento"
+              },
+              "example": {
+                "fechaHora": "2027-06-16T20:30:00",
+                "idLugar": 3
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento con la programación resultante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta indicar fechaHora o idLugar, la programación no es futura o el cuerpo es inválido."
+          },
+          "401": {
+            "description": "Iniciá sesión con un JWT válido."
+          },
+          "403": {
+            "description": "Tu cuenta no tiene el rol o la titularidad necesaria."
+          },
+          "404": {
+            "description": "Evento o lugar no encontrado."
+          },
+          "409": {
+            "description": "El evento no es un publicado activo."
+          }
+        }
+      }
+    },
+    "/api/eventos/{eventoId}/fila": {
+      "post": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "entrarFilaEvento",
+        "summary": "Entrar a la fila virtual",
+        "description": "Solo CLIENTE. Requiere un evento publicado, de alta demanda y que admita nuevos turnos. Repetir el ingreso conserva el turno vigente.",
+        "parameters": [
+          {
+            "name": "eventoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado del turno del cliente autenticado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnoFilaResponse"
+                },
+                "example": {
+                  "eventoId": 42,
+                  "turnoId": "turno-ejemplo",
+                  "estado": "EN_ESPERA",
+                  "posicion": 3,
+                  "autorizacionCompra": null,
+                  "venceEn": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Iniciá sesión con un JWT válido."
+          },
+          "403": {
+            "description": "Tu cuenta no tiene el rol o la titularidad necesaria."
+          },
+          "404": {
+            "description": "Evento publicado o turno no encontrado."
+          },
+          "409": {
+            "description": "El evento no requiere fila virtual o no admite nuevos turnos."
+          }
+        }
+      }
+    },
+    "/api/eventos/{eventoId}/fila/mi-turno": {
+      "get": {
+        "tags": [
+          "Eventos"
+        ],
+        "operationId": "consultarMiTurnoEvento",
+        "summary": "Consultar mi turno",
+        "description": "Solo CLIENTE. Devuelve el turno del usuario autenticado. Usá autorizacionCompra al reservar cuando el estado sea ADMITIDO.",
+        "parameters": [
+          {
+            "name": "eventoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado del turno del cliente autenticado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnoFilaResponse"
+                },
+                "example": {
+                  "eventoId": 42,
+                  "turnoId": "turno-ejemplo",
+                  "estado": "EN_ESPERA",
+                  "posicion": 3,
+                  "autorizacionCompra": null,
+                  "venceEn": null
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Iniciá sesión con un JWT válido."
+          },
+          "403": {
+            "description": "Tu cuenta no tiene el rol o la titularidad necesaria."
+          },
+          "404": {
+            "description": "Evento publicado o turno no encontrado."
+          },
+          "409": {
+            "description": "El evento no requiere fila virtual o no admite nuevos turnos."
+          }
+        }
+      }
+    },
     "/api/artistas": {
       "get": {
         "tags": [
@@ -1016,7 +1262,7 @@
         ],
         "operationId": "put_api_eventos_id",
         "summary": "Actualizar evento",
-        "description": "Edita únicamente borradores del organizador indicado en X-Organizador-Id. El estado y estadoPublicacion se conservan; lugar y participantes se actualizan con sus IDs. No es parcial.",
+        "description": "Edita únicamente borradores del organizador identificado por el sub del JWT. Cualquier X-Organizador-Id del cliente se sobrescribe. El estado y estadoPublicacion se conservan; lugar y participantes se actualizan con sus IDs. No es parcial.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1222,7 +1468,7 @@
         ],
         "operationId": "patch_api_eventos_id_publicar",
         "summary": "Publicar evento",
-        "description": "Solo admite borradores del organizador indicado en X-Organizador-Id y los cambia a PUBLICADO tras validar datos y sectores. Si otro organizador lo intenta, devuelve 403. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
+        "description": "Solo admite borradores del organizador identificado por el sub del JWT y los cambia a PUBLICADO tras validar datos y sectores. Si otro organizador lo intenta, devuelve 403. Repetir o intentar republicar un suspendido devuelve 409. Sin body.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1351,7 +1597,7 @@
         ],
         "operationId": "patch_api_eventos_id_suspender",
         "summary": "Suspender evento",
-        "description": "Solo admite PUBLICADO; cambia estadoPublicacion a SUSPENDIDO. No cambia estado. Sin body.",
+        "description": "Solo ADMINISTRADOR. Requiere un evento PUBLICADO y cambia estadoPublicacion a SUSPENDIDO. Sin body.",
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1461,7 +1707,8 @@
         ],
         "operationId": "patch_api_eventos_id_cancelar",
         "summary": "Cancelar evento",
-        "description": "Cambia estado a CANCELADO y estadoPublicacion a SUSPENDIDO. CANCELADO o FINALIZADO devuelven 409. No llama automáticamente a inventario, pagos ni notificaciones. Sin body.",
+        "description": "Operación interna para SERVICIO_INTERNO. Marca el evento CANCELADO y SUSPENDIDO. Repetirla sobre un evento cancelado devuelve su estado actual. Por Gateway, un administrador debe usar POST /compras/eventos/{idEvento}/cancelacion para coordinar inventario y reintegros.",
+        "servers": [{ "url": "http://eventos:8005", "description": "Red interna de Docker" }],
         "responses": {
           "200": {
             "description": "Operación exitosa.",
@@ -1575,7 +1822,8 @@
           {
             "name": "X-Organizador-Id",
             "in": "header",
-            "required": true,
+            "required": false,
+            "description": "Se ignora: el servidor usa el sub del JWT verificado.",
             "schema": {
               "type": "integer",
               "format": "int64"
@@ -1600,6 +1848,7 @@
       }
     },
     "/api/eventos/interno/{id}": {
+      "servers": [{ "url": "http://eventos:8005", "description": "Red interna de Docker" }],
       "get": {
         "tags": [
           "Eventos"
@@ -1636,6 +1885,7 @@
       }
     },
     "/api/eventos/interno/{id}/disponibilidad": {
+      "servers": [{ "url": "http://eventos:8005", "description": "Red interna de Docker" }],
       "patch": {
         "tags": [
           "Eventos"
@@ -1689,7 +1939,8 @@
           {
             "name": "X-Organizador-Id",
             "in": "header",
-            "required": true,
+            "required": false,
+            "description": "Se ignora: el servidor usa el sub del JWT verificado.",
             "schema": {
               "type": "integer",
               "format": "int64"
@@ -1895,8 +2146,16 @@
             "example": 10
           },
           {
+            "name": "q",
+            "in": "query",
+            "description": "Texto opcional para buscar por nombre, participantes o descripción",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
             "name": "ordenar",
             "in": "query",
+            "description": "Precio mínimo configurado por evento o relevancia del texto q. Sin texto, la relevancia usa la fecha como desempate.",
             "required": false,
             "schema": {
               "type": "string",
@@ -1905,7 +2164,11 @@
                 "fechaHora,asc",
                 "fechaHora,desc",
                 "nombre,asc",
-                "nombre,desc"
+                "nombre,desc",
+                "precio,asc",
+                "precio,desc",
+                "relevancia,asc",
+                "relevancia,desc"
               ]
             },
             "example": "fechaHora,asc"
@@ -1914,6 +2177,7 @@
       }
     },
     "/interno/eventos/recomendaciones/candidatos": {
+      "servers": [{ "url": "http://eventos:8005", "description": "Red interna de Docker" }],
       "post": {
         "tags": [
           "Recomendaciones internas"
@@ -1950,6 +2214,7 @@
       }
     },
     "/interno/eventos/recomendaciones/por-ids": {
+      "servers": [{ "url": "http://eventos:8005", "description": "Red interna de Docker" }],
       "post": {
         "tags": [
           "Recomendaciones internas"
@@ -1987,7 +2252,162 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT HS256 emitido por msv-usuario. Las rutas interno exigen roles=[SERVICIO_INTERNO]."
+      }
+    },
     "schemas": {
+      "ReporteEvento": {
+        "type": "object",
+        "required": [
+          "idEvento",
+          "entradasVendidas",
+          "entradasDevueltas",
+          "ingresosNetos",
+          "ocupacionPorcentaje",
+          "capacidadTotal",
+          "sectores"
+        ],
+        "properties": {
+          "idEvento": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "entradasVendidas": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "entradasDevueltas": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "ingresosNetos": {
+            "type": "number"
+          },
+          "ocupacionPorcentaje": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "capacidadTotal": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "sectores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReporteSectorEvento"
+            }
+          }
+        }
+      },
+      "ReporteSectorEvento": {
+        "type": "object",
+        "required": [
+          "idSector",
+          "entradasVendidas",
+          "entradasDevueltas",
+          "ingresosNetos",
+          "ocupacionPorcentaje",
+          "capacidad"
+        ],
+        "properties": {
+          "idSector": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "entradasVendidas": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "entradasDevueltas": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "ingresosNetos": {
+            "type": "number"
+          },
+          "ocupacionPorcentaje": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "capacidad": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "ProgramacionEvento": {
+        "type": "object",
+        "anyOf": [
+          {
+            "required": [
+              "fechaHora"
+            ]
+          },
+          {
+            "required": [
+              "idLugar"
+            ]
+          }
+        ],
+        "properties": {
+          "fechaHora": {
+            "type": "string",
+            "description": "Fecha y hora local del evento en America/Argentina/Buenos_Aires, sin desplazamiento horario.",
+            "example": "2027-06-16T20:30:00"
+          },
+          "idLugar": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        }
+      },
+      "TurnoFilaResponse": {
+        "type": "object",
+        "properties": {
+          "eventoId": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "turnoId": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "posicion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "nullable": true
+          },
+          "autorizacionCompra": {
+            "type": "string",
+            "nullable": true
+          },
+          "venceEn": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
       "ArtistaRequest": {
         "type": "object",
         "properties": {

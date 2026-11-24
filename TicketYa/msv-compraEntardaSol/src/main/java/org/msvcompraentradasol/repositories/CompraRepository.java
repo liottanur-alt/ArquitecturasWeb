@@ -12,6 +12,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CompraRepository extends JpaRepository<Compra, Long> {
+    @Query(value = """
+            SELECT DISTINCT c.id_cliente FROM compra c JOIN entrada e ON e.id_compra = c.id
+            WHERE c.id_evento = :idEvento AND (
+                (c.estado_compra = 'APROBADA'
+                 AND e.estado_entrada IN ('PAGA', 'SOLICITUD_DEVOLUCION', 'DEVOLUCION_RECHAZADA'))
+                OR (:cancelacion = TRUE AND c.estado_compra = 'CANCELADA' AND e.estado_entrada = 'EVENTO_CANCELADO')
+            )
+            """, nativeQuery = true)
+    List<Long> compradoresParaAviso(@Param("idEvento") Long idEvento, @Param("cancelacion") boolean cancelacion);
 
     @Query(value = """
             SELECT DISTINCT c.id_evento

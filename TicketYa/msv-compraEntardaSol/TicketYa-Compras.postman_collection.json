@@ -239,9 +239,10 @@
           "request": {
             "method": "PATCH",
             "url": {
-              "raw": "{{baseUrl}}/entradas/{{idEntrada}}/uso",
+              "raw": "{{baseUrl}}/entradas/{{idEntrada}}/uso?idEvento={{idEvento}}",
               "host": ["{{baseUrl}}"],
-              "path": ["entradas", "{{idEntrada}}", "uso"]
+              "path": ["entradas", "{{idEntrada}}", "uso"],
+              "query": [{ "key": "idEvento", "value": "{{idEvento}}" }]
             }
           }
         },
@@ -250,9 +251,10 @@
           "request": {
             "method": "PATCH",
             "url": {
-              "raw": "{{baseUrl}}/entradas/qr/{{qr}}/uso",
+              "raw": "{{baseUrl}}/entradas/qr/{{qr}}/uso?idEvento={{idEvento}}",
               "host": ["{{baseUrl}}"],
-              "path": ["entradas", "qr", "{{qr}}", "uso"]
+              "path": ["entradas", "qr", "{{qr}}", "uso"],
+              "query": [{ "key": "idEvento", "value": "{{idEvento}}" }]
             }
           }
         }

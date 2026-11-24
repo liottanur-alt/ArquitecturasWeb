@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record EventoFechaResponseDTO(
         Long id,
+        String nombre,
         LocalDateTime fechaHora,
         String estado,
         String estadoPublicacion,

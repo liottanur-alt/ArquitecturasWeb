@@ -25,13 +25,17 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.msvcompraentradasol.dtos.CancelacionEventoResponseDTO;
+import org.msvcompraentradasol.dtos.CompraRequestDTO;
 import org.msvcompraentradasol.dtos.CompraResponseDTO;
+import org.msvcompraentradasol.dtos.ValidarAutorizacionFilaResponseDTO;
 import org.msvcompraentradasol.entities.Compra;
 import org.msvcompraentradasol.entities.Entrada;
 import org.msvcompraentradasol.enums.EstadoCompra;
 import org.msvcompraentradasol.enums.EstadoEntrada;
 import org.msvcompraentradasol.enums.EstadoReintegro;
 import org.msvcompraentradasol.feigns.EventoClientFeign;
+import org.msvcompraentradasol.feigns.DestinatarioCompraClient;
+import org.msvcompraentradasol.feigns.NotificacionCompraClient;
 import org.msvcompraentradasol.feigns.ReservaClientFeign;
 import org.msvcompraentradasol.repositories.CompraRepository;
 import org.msvcompraentradasol.repositories.EntradaRepository;
@@ -68,11 +72,21 @@ class CompraServiceTests {
     @MockitoBean
     private EventoClientFeign eventoClient;
 
+    @MockitoBean
+    private DestinatarioCompraClient destinatarios;
+
+    @MockitoBean
+    private NotificacionCompraClient notificaciones;
+
     @BeforeEach
     void limpiarBase() {
         solicitudRepository.deleteAll();
         entradaRepository.deleteAll();
         compraRepository.deleteAll();
+        when(eventoClient.validarAutorizacionFila(any()))
+                .thenReturn(new ValidarAutorizacionFilaResponseDTO(true, false, "FILA_NO_REQUERIDA"));
+        when(destinatarios.porId(ID_CLIENTE))
+                .thenReturn(new DestinatarioCompraClient.Destinatario("cliente@example.com"));
     }
 
     @Test
@@ -81,7 +95,7 @@ class CompraServiceTests {
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "1500.00", List.of(11L, 12L)));
 
-        CompraResponseDTO compra = compraService.crearCompra(
+        CompraResponseDTO compra = crearCompra(
                 compraConAsientos("clave-1", ID_CLIENTE, ID_EVENTO, List.of(11L, 12L))
         );
 
@@ -106,7 +120,7 @@ class CompraServiceTests {
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "900.00", List.of()));
 
-        CompraResponseDTO compra = compraService.crearCompra(
+        CompraResponseDTO compra = crearCompra(
                 compraSinAsientos("clave-campo", ID_CLIENTE, ID_EVENTO, 3)
         );
 
@@ -121,10 +135,10 @@ class CompraServiceTests {
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "1500.00", List.of(11L)));
 
-        CompraResponseDTO primera = compraService.crearCompra(
+        CompraResponseDTO primera = crearCompra(
                 compraConAsientos("clave-repetida", ID_CLIENTE, ID_EVENTO, List.of(11L))
         );
-        CompraResponseDTO segunda = compraService.crearCompra(
+        CompraResponseDTO segunda = crearCompra(
                 compraConAsientos("clave-repetida", ID_CLIENTE, ID_EVENTO, List.of(11L))
         );
 
@@ -139,11 +153,11 @@ class CompraServiceTests {
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "1500.00", List.of(11L)));
 
-        compraService.crearCompra(
+        crearCompra(
                 compraConAsientos("clave-unica", ID_CLIENTE, ID_EVENTO, List.of(11L))
         );
 
-        assertThatThrownBy(() -> compraService.crearCompra(
+        assertThatThrownBy(() -> crearCompra(
                 compraConAsientos("clave-unica", ID_CLIENTE, ID_EVENTO, List.of(99L))
         ))
                 .isInstanceOf(IllegalStateException.class)
@@ -155,6 +169,7 @@ class CompraServiceTests {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(
                 new org.msvcompraentradasol.dtos.EventoFechaResponseDTO(
                         ID_EVENTO,
+                        "Recital",
                         java.time.LocalDateTime.now().plusDays(10),
                         "ACTIVO",
                         "BORRADOR",
@@ -162,7 +177,7 @@ class CompraServiceTests {
                 )
         );
 
-        assertThatThrownBy(() -> compraService.crearCompra(
+        assertThatThrownBy(() -> crearCompra(
                 compraConAsientos("clave-borrador", ID_CLIENTE, ID_EVENTO, List.of(11L))
         ))
                 .isInstanceOf(IllegalStateException.class)
@@ -176,7 +191,7 @@ class CompraServiceTests {
         when(eventoClient.obtenerEvento(ID_EVENTO))
                 .thenThrow(feignError(404, "obtenerEvento"));
 
-        assertThatThrownBy(() -> compraService.crearCompra(
+        assertThatThrownBy(() -> crearCompra(
                 compraConAsientos("clave-inexistente", ID_CLIENTE, ID_EVENTO, List.of(11L))
         ))
                 .isInstanceOf(ResponseStatusException.class)
@@ -195,6 +210,9 @@ class CompraServiceTests {
 
         assertThat(pagada.estadoCompra()).isEqualTo("APROBADA");
         assertThat(pagada.referenciaPago()).startsWith("SIM-");
+        verify(notificaciones).registrar(new NotificacionCompraClient.Suceso(
+                "compra-confirmada-" + pagada.id(), "COMPRA_CONFIRMADA", ID_EVENTO, pagada.id(), ID_CLIENTE,
+                "cliente@example.com", pagada.cantidadEntradas(), pagada.importeTotal(), "Evento: Recital."));
 
         List<Entrada> entradas = entradaRepository.findAllByCompra_Id(creada.id());
         assertThat(entradas).hasSize(2);
@@ -215,6 +233,29 @@ class CompraServiceTests {
 
         assertThat(entradaRepository.findAllByCompra_Id(creada.id())).hasSize(2);
         verify(reservaClient, times(1)).confirmar(ID_RESERVA);
+    }
+
+    @Test
+    void recuperaPagoSiSePierdeLaConfirmacionDelUltimoCupo() {
+        CompraResponseDTO creada = crearCompraPendiente();
+        when(reservaClient.confirmar(ID_RESERVA))
+                .thenThrow(new IllegalStateException("Se perdió la respuesta de inventario"))
+                .thenReturn(reserva(ID_RESERVA, "1500.00", "CONFIRMADA", List.of(11L, 12L)));
+
+        assertThatThrownBy(() -> compraService.procesarPago(creada.id(), true))
+                .hasMessageContaining("Se perdió la respuesta");
+        assertThat(compraRepository.findById(creada.id()).orElseThrow().getEstadoCompra())
+                .isEqualTo(EstadoCompra.PENDIENTE);
+        assertThat(entradaRepository.findAllByCompra_Id(creada.id())).isEmpty();
+
+        var evento = eventoFuturo(ID_EVENTO);
+        when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(
+                new org.msvcompraentradasol.dtos.EventoFechaResponseDTO(evento.id(), evento.nombre(),
+                        evento.fechaHora(), "AGOTADO", evento.estadoPublicacion(), evento.lugar()));
+        assertThat(compraService.procesarPago(creada.id(), true).estadoCompra()).isEqualTo("APROBADA");
+        compraService.procesarPago(creada.id(), true);
+        assertThat(entradaRepository.findAllByCompra_Id(creada.id())).hasSize(2);
+        verify(reservaClient, times(2)).confirmar(ID_RESERVA);
     }
 
     @Test
@@ -296,6 +337,7 @@ class CompraServiceTests {
     @Test
     void cancelarEventoReintegraEntradasYCambiaEstados() {
         CompraResponseDTO creada = crearCompraPagada();
+        assertThat(compraRepository.compradoresParaAviso(ID_EVENTO, false)).containsExactly(ID_CLIENTE);
 
         CancelacionEventoResponseDTO resultado = compraService.cancelarEvento(ID_EVENTO);
 
@@ -314,6 +356,20 @@ class CompraServiceTests {
                         .isEqualTo(EstadoEntrada.EVENTO_CANCELADO));
 
         verify(reservaClient).cancelarInventario(ID_EVENTO);
+        assertThat(compraRepository.compradoresParaAviso(ID_EVENTO, true)).containsExactly(ID_CLIENTE);
+        assertThat(compraRepository.compradoresParaAviso(ID_EVENTO, false)).isEmpty();
+    }
+
+    @Test
+    void cancelarEventoRecuperaTrasUnFalloDeInventario() {
+        var compra = crearCompraPagada();
+        doThrow(feignError(503, "cancelarInventario")).doNothing().when(reservaClient).cancelarInventario(ID_EVENTO);
+
+        assertThatThrownBy(() -> compraService.cancelarEvento(ID_EVENTO)).isInstanceOf(FeignException.class);
+        assertThat(compraRepository.findById(compra.id()).orElseThrow().getEstadoCompra())
+                .isEqualTo(EstadoCompra.APROBADA);
+        assertThat(compraService.cancelarEvento(ID_EVENTO).entradasReintegradas()).isEqualTo(2);
+        assertThat(compraService.cancelarEvento(ID_EVENTO).entradasReintegradas()).isZero();
     }
 
     @Test
@@ -361,11 +417,15 @@ class CompraServiceTests {
         assertThat(resultado.comprasCanceladas()).isEqualTo(1);
     }
 
+    private CompraResponseDTO crearCompra(CompraRequestDTO dto) {
+        return compraService.crearCompra(dto, ID_CLIENTE);
+    }
+
     private CompraResponseDTO crearCompraPendiente() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
         when(reservaClient.reservar(any()))
                 .thenReturn(reservaActiva(ID_RESERVA, "1500.00", List.of(11L, 12L)));
-        return compraService.crearCompra(
+        return crearCompra(
                 compraConAsientos("clave-" + System.nanoTime(), ID_CLIENTE, ID_EVENTO, List.of(11L, 12L))
         );
     }

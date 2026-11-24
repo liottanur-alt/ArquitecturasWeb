@@ -29,8 +29,17 @@ Variables de entorno:
 | `DDL_AUTO` | `update` |
 | `MSVC_EVENTOS_URL` | `http://localhost:8005` |
 | `MSVC_SECTORES_URL` | `http://localhost:8002` |
+| `JWT_SECRET` | Obligatorio en perfiles principales; HS256 compartido con Gateway, Usuarios, Eventos y Sectores. |
+| `security.jwt.issuer` | `msv-usuario` |
+| `app.service-name` | `msv-compra-entrada-sol` |
 
 `DDL_AUTO=update` crea/actualiza el esquema de desarrollo. Para una instalacion con datos previos se recomienda respaldo y una migracion revisada.
+
+## Autenticacion y identidad
+
+Compras valida localmente el JWT HS256 con issuer `msv-usuario` y el mismo `JWT_SECRET` del Gateway. Todas las rutas exigen token, salvo `/actuator/health` y `/error`. `GET /entradas/qr/**` requiere `PERSONAL_ACCESO` o `ADMINISTRADOR` y `PUT /solicitudes/{id}/resolver` requiere `ADMINISTRADOR`.
+
+`POST /compras` y `POST /solicitudes` ignoran el `idCliente` del cuerpo: usan el `sub` numérico del JWT. `PUT /solicitudes/{id}/resolver` usa el mismo `sub` como `idAdministrador`, sin tomar el valor enviado. Las rutas con segmento `interno` solo aceptan JWT de servicio con `ROLE_SERVICIO_INTERNO`. Las llamadas Feign a Eventos y Sectores reemplazan el encabezado del cliente por un JWT de servicio firmado con la misma clave; cuando corresponde, incluyen el claim `usuarioId` para reservas y turnos.
 
 ## Flujo de compra
 

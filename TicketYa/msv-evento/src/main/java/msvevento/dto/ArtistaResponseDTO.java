@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ArtistaResponseDTO {
+public class ArtistaResponseDTO implements java.io.Serializable {
     private Long id;
     private String nombre;
     private String genero;

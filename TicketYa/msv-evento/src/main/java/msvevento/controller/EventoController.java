@@ -8,6 +8,8 @@ import msvevento.service.EventoService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -52,9 +54,11 @@ public class EventoController {
     // Crear un evento
     @PostMapping
     public ResponseEntity<EventoResponseDTO> crearEvento(
+            @RequestHeader("X-Organizador-Id") Long idOrganizador,
             @RequestBody EventoRequestDTO dto
     ) {
 
+        dto.setIdOrganizador(idOrganizador);
         EventoResponseDTO eventoCreado = eventoService.crearEvento(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(eventoCreado);
@@ -70,6 +74,15 @@ public class EventoController {
 
         return ResponseEntity.ok(eventoService.actualizarEvento(id, idOrganizador, dto));
     }
+    @PatchMapping("/{id}/programacion")
+    public EventoResponseDTO reprogramarEvento(@PathVariable Long id,
+            @AuthenticationPrincipal Jwt usuario, @RequestBody Programacion programacion) {
+        return eventoService.reprogramarEvento(id, Long.valueOf(usuario.getSubject()),
+                programacion.fechaHora(), programacion.idLugar());
+    }
+
+    public record Programacion(LocalDateTime fechaHora, Long idLugar) {}
+
     // Publicar un evento
     @PatchMapping("/{id}/publicar")
     public ResponseEntity<EventoResponseDTO> publicarEvento(
@@ -122,6 +135,7 @@ public class EventoController {
             @RequestParam(required = false) Long idOrganizador,
             @RequestParam(required = false) Long idParticipante,
             @RequestParam(required = false) String ciudad,
+            @RequestParam(required = false) String q,
             @RequestParam(required = false)
             LocalDateTime fechaDesde,
             @RequestParam(required = false)
@@ -141,7 +155,8 @@ public class EventoController {
                         fechaHasta,
                         pagina,
                         tamanio,
-                        ordenar
+                        ordenar,
+                        q
                 )
         );
     }

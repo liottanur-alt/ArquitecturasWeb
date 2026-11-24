@@ -2,12 +2,17 @@ package com.universidad.msvsectoerasiento;
 
 import com.universidad.msvsectoerasiento.client.*;
 import com.universidad.msvsectoerasiento.config.FeignConfig;
+import com.universidad.msvsectoerasiento.config.InternalAuthInterceptor;
+import com.universidad.msvsectoerasiento.config.ServiceTokenProvider;
+import feign.RequestTemplate;
 import org.junit.jupiter.api.Test;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.http.HttpHeaders;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 class FeignClientsTests {
     @Test
@@ -49,5 +54,18 @@ class FeignClientsTests {
             assertThat(metodo.template().url()).isIn("/compras/{id}", "/entradas/{id}");
             assertThat(metodo.indexToName().get(0)).contains("id");
         });
+    }
+
+    @Test
+    void interceptorSobrescribeAuthorizationConTokenDeServicio() {
+        var tokens = mock(ServiceTokenProvider.class);
+        when(tokens.token()).thenReturn("token-de-servicio");
+        var plantilla = new RequestTemplate();
+        plantilla.header(HttpHeaders.AUTHORIZATION, "Bearer anterior");
+
+        new InternalAuthInterceptor(tokens).apply(plantilla);
+
+        assertThat(plantilla.headers().get(HttpHeaders.AUTHORIZATION))
+                .containsExactly("Bearer token-de-servicio");
     }
 }

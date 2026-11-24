@@ -14,19 +14,26 @@ $BaseUrl = $BaseUrl.TrimEnd('/')
 $fixtureReport = Get-Content -LiteralPath $FixturePath -Raw | ConvertFrom-Json
 if ($fixtureReport.baseUrl -ne $BaseUrl) { throw 'El fixture pertenece a otro servidor.' }
 if (-not $fixtureReport.passed) { throw 'Ejecutar primero Test-System.ps1 con integracion exitosa.' }
+if ($null -eq $fixtureReport.fixture.auth -or
+    [string]::IsNullOrWhiteSpace($fixtureReport.fixture.auth.clientePassword)) {
+    throw 'El fixture no tiene credenciales de carga; ejecutar de nuevo Test-System.ps1.'
+}
 $paths = @('/api/eventos', $fixtureReport.fixture.availabilityPath, "/compras/cliente/$($fixtureReport.fixture.CLIENTE.id)")
+$token = Get-Token $fixtureReport.fixture.auth.clienteEmail $fixtureReport.fixture.auth.clientePassword
+$headers = Headers-ConToken $token
 # Calentamiento fuera de las mediciones; detener si el entorno no esta disponible.
-foreach ($path in $paths) { Invoke-Api GET $path | Out-Null }
+foreach ($path in $paths) { Invoke-Api GET $path $null $headers | Out-Null }
 $timer = [Diagnostics.Stopwatch]::StartNew()
 $samples = @(1..$Requests | ForEach-Object -Parallel {
     $pathsLocal = $using:paths
     $path = $pathsLocal[($_ - 1) % $pathsLocal.Count]
     $base = $using:BaseUrl
+    $tokenLocal = $using:token
     $watch = [Diagnostics.Stopwatch]::StartNew()
     $status = 0
     $errorText = $null
     try {
-        $response = Invoke-WebRequest -Uri "$base$path" -SkipHttpErrorCheck -TimeoutSec 30
+        $response = Invoke-WebRequest -Uri "$base$path" -Headers @{ Authorization = "Bearer $tokenLocal" } -SkipHttpErrorCheck -TimeoutSec 30
         $status = [int]$response.StatusCode
         $null = $response.Content | ConvertFrom-Json -ErrorAction Stop
     } catch { $errorText = $_.Exception.Message }

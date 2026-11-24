@@ -1,5 +1,6 @@
 package com.msvusuario.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -30,6 +31,10 @@ public class Usuario {
     // El indice hace que MongoDB rechace emails duplicados.
     @Indexed(unique = true)
     private String email;
+
+    // Hash BCrypt. Las cuentas creadas antes de la autenticacion no lo tienen.
+    @JsonIgnore
+    private String passwordHash;
 
     // La unicidad del DNI tambien se comprueba en la base, incluso con altas simultaneas.
     @Indexed(unique = true)

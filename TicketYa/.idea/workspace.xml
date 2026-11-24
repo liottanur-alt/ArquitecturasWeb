@@ -4,45 +4,29 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="Merge remote-tracking branch 'origin/main' into feature/frontend-inicial&#10;# Please enter a commit message to explain why this merge is necessary,&#10;# especially if it merges an updated upstream into a topic branch.&#10;#&#10;# Lines starting with '#' will be ignored, and an empty message aborts&#10;# the commit.">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="930bf185-e2c7-46f4-98d7-dc2f70b0516e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/LOGIN.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/LOGIN.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/PERFIL.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/PERFIL.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/astro.config.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/astro.config.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/AccountMenu.astro" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/AccountMenu.astro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/eventos/[id].astro" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/index.astro" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/index.astro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/login.astro" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/login.astro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/perfil.astro" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/perfil.astro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/registro.astro" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/registro.astro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/cart.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/cart.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/event.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/event.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/home.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/home.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/login.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/login.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/profile.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/profile.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/refunds.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/refunds.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/register.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/register.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/session.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/session.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/scripts/tickets.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/scripts/tickets.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/styles/event.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles/event.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/styles/global.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles/global.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/styles/login.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles/login.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/styles/profile.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles/profile.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/styles/register.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles/register.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/styles/tickets.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles/tickets.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DOCUMENTACION-TICKETYA.md" beforeDir="false" afterPath="$PROJECT_DIR$/DOCUMENTACION-TICKETYA.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Historias-de-usuario-TicketYa.md" beforeDir="false" afterPath="$PROJECT_DIR$/Historias-de-usuario-TicketYa.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TicketYa-roles.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/TicketYa-roles.postman_collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-compraEntardaSol/src/main/resources/static/openapi.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/TicketYa-Eventos.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/TicketYa-Eventos.postman_collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/docs/PRUEBAS-POSTMAN.md" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/docs/PRUEBAS-POSTMAN.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/msv-evento/src/main/resources/static/openapi.json" beforeDir="false" afterPath="$PROJECT_DIR$/msv-evento/src/main/resources/static/openapi.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="ComposerSettings">
+    <execution>
+      <executable />
+    </execution>
+  </component>
   <component name="DatabaseLocalColorSettings">
     <colors>
+      <entry key="207c57de-8f44-4d78-9ce0-e90f42b87890" value="" />
       <entry key="e22e94ba-c61f-4dc5-8432-801df71237a5" value="" />
     </colors>
   </component>
@@ -74,61 +58,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.5000146446939837" />
-      <entry key="MS500" value="2.019279381017041" />
-      <entry key="S2" value="3.6088703658480243" />
-      <entry key="S5" value="6.564330355422854" />
-      <entry key="S10" value="9.430532047001623" />
-      <entry key="S30" value="12.710217780643182" />
-      <entry key="S60" value="13.930156945902842" />
-      <entry key="M2" value="15.8213918764976" />
-      <entry key="M5" value="20.73905713405571" />
-      <entry key="M10" value="24.75510493423134" />
-      <entry key="M15" value="26.680866956487186" />
-      <entry key="M30" value="29.047610346691805" />
-      <entry key="H1" value="30.439354167084414" />
-      <entry key="H2" value="31.196918332616487" />
-      <entry key="H4" value="31.59254622585397" />
-      <entry key="D1" value="31.931249964078127" />
-      <entry key="W1" value="31.9901577037794" />
+      <entry key="MS100" value="2.036202686365295E-16" />
+      <entry key="MS500" value="0.0012778453655872208" />
+      <entry key="S2" value="0.43385316990391626" />
+      <entry key="S5" value="1.601002577084807" />
+      <entry key="S10" value="2.7152487578877222" />
+      <entry key="S30" value="11.171761801916075" />
+      <entry key="S60" value="23.330782374786956" />
+      <entry key="M2" value="35.156003899913415" />
+      <entry key="M5" value="45.58979559363892" />
+      <entry key="M10" value="51.17226130930415" />
+      <entry key="M15" value="54.40664964081121" />
+      <entry key="M30" value="59.62196646569958" />
+      <entry key="H1" value="63.57870158553047" />
+      <entry key="H2" value="66.06987220236432" />
+      <entry key="H4" value="67.47469292443772" />
+      <entry key="D1" value="68.73691435512534" />
+      <entry key="W1" value="68.96219231208866" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="2.4368582810300508E-264" />
-      <entry key="S2" value="1.3041189447958949E-66" />
-      <entry key="S5" value="5.597037048682978E-27" />
-      <entry key="S10" value="1.0125517006030276E-13" />
-      <entry key="S30" value="7.320561923310578E-5" />
-      <entry key="S60" value="0.012083665551988105" />
-      <entry key="M2" value="0.15540567309609352" />
-      <entry key="M5" value="0.7197295410231864" />
-      <entry key="M10" value="1.199758287315212" />
-      <entry key="M15" value="1.4225619633159545" />
-      <entry key="M30" value="1.6867469673636424" />
-      <entry key="H1" value="1.8367066687428129" />
-      <entry key="H2" value="1.9166148919196333" />
-      <entry key="H4" value="1.9578635302048812" />
-      <entry key="D1" value="1.992914794049572" />
-      <entry key="W1" value="1.9989862874431374" />
+      <entry key="MS100" value="1.0002690198170714" />
+      <entry key="MS500" value="1.199866608385016" />
+      <entry key="S2" value="1.9489456234502809" />
+      <entry key="S5" value="2.4544786245494805" />
+      <entry key="S10" value="2.699597797937015" />
+      <entry key="S30" value="2.892902177519178" />
+      <entry key="S60" value="2.945523372350369" />
+      <entry key="M2" value="2.972569049455217" />
+      <entry key="M5" value="3.016323898852032" />
+      <entry key="M10" value="3.2284343296610944" />
+      <entry key="M15" value="3.4746957666951896" />
+      <entry key="M30" value="3.976299944455051" />
+      <entry key="H1" value="4.397751370245668" />
+      <entry key="H2" value="4.672065978486917" />
+      <entry key="H4" value="4.828718346001634" />
+      <entry key="D1" value="4.970380593500625" />
+      <entry key="W1" value="4.995741621469106" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.4028168612878482" />
-      <entry key="MS500" value="1.9181596723536958" />
-      <entry key="S2" value="3.441555950299648" />
-      <entry key="S5" value="6.456782299458027" />
-      <entry key="S10" value="9.365791222457435" />
-      <entry key="S30" value="12.685505031608619" />
-      <entry key="S60" value="13.929002602185536" />
-      <entry key="M2" value="15.967808671481446" />
-      <entry key="M5" value="21.451584190267116" />
-      <entry key="M10" value="25.94969790720458" />
-      <entry key="M15" value="28.099491397401852" />
-      <entry key="M30" value="30.732090766254423" />
-      <entry key="H1" value="32.274841740143685" />
-      <entry key="H2" value="33.11290060515203" />
-      <entry key="H4" value="33.55008746266744" />
-      <entry key="D1" value="33.92411019248784" />
-      <entry key="W1" value="33.989136175060366" />
+      <entry key="MS100" value="2.80583747146834E-4" />
+      <entry key="MS500" value="0.2392952751366431" />
+      <entry key="S2" value="1.711958986452809" />
+      <entry key="S5" value="3.658815447463034" />
+      <entry key="S10" value="5.182633461083066" />
+      <entry key="S30" value="13.974366633351751" />
+      <entry key="S60" value="26.22696224382202" />
+      <entry key="M2" value="38.102129219799075" />
+      <entry key="M5" value="48.59479208861552" />
+      <entry key="M10" value="54.39427903250111" />
+      <entry key="M15" value="57.876531393592224" />
+      <entry key="M30" value="63.59531933342882" />
+      <entry key="H1" value="67.97475247857551" />
+      <entry key="H2" value="70.74101391913398" />
+      <entry key="H4" value="72.30292796895583" />
+      <entry key="D1" value="73.70721120386614" />
+      <entry key="W1" value="73.95792188826765" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -136,6 +120,9 @@
     &quot;fromUser&quot;: false
     }</component>
   <component name="ProjectId" id="3LWbdCPXuKdJckDGAx1iZVwSp5z" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -155,7 +142,7 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;Spring Boot.MsvUsuarioApplication.executor&quot;: &quot;Run&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/frontend-inicial&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/franc/IdeaProjects/ArquitecturasWeb/TicketYa&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -167,11 +154,11 @@
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.30689654&quot;,
     &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.general&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\franc\\AppData\\Local\\JetBrains\\IntelliJIdea2026.3\\ts-go-native-preview\\v7.1.0-dev.jetbrains.20261006.2\\node_modules\\@typescript\\typescript-win32-x64\\lib&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.general&quot;
   },
   &quot;keyToStringList&quot;: {
     &quot;DatabaseDriversLRU&quot;: [
+      &quot;mongo&quot;,
       &quot;mysql&quot;
     ]
   }

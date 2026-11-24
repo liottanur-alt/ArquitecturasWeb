@@ -44,7 +44,7 @@ El vencimiento se procesa al consultar/operar y por una tarea periodica de 30 se
 
 ## API y errores
 
-OpenAPI 3.0 en `src/main/resources/static/openapi.json`, servido en http://localhost:8002/openapi.json. Se puede importar en Swagger Editor o Postman. Incluye las rutas, DTOs y ejemplos. No incluye autenticacion: corresponde a la entrega 1. Los endpoints internos de confirmacion, devolucion y cancelacion deben protegerse por roles/servicios en la entrega 2.
+OpenAPI 3.0 en `src/main/resources/static/openapi.json`, servido en http://localhost:8002/openapi.json. Incluye rutas, DTOs, ejemplos y el esquema `bearerAuth`. Sectores valida localmente el JWT HS256 con issuer `msv-usuario` y el mismo `JWT_SECRET` del Gateway. Las rutas con segmento `interno` y todas las rutas `/reservas/**` requieren `ROLE_SERVICIO_INTERNO`; el resto exige un token de usuario válido. `POST /reservas` sobrescribe `idCliente` con el claim `usuarioId` del JWT de servicio para que Compras no pueda reservar para otro cliente. El Gateway no expone estas rutas internas.
 
 400: datos invalidos. 404: recurso inexistente. 409: capacidad, duplicados, limite o transicion invalida. 502: contrato remoto incompleto. 503: proveedor no disponible o bloqueo ocupado; reintentar usando la misma clave. No se inventan respuestas exitosas ante fallos de red. Feign tiene timeouts de 3/5 segundos y no reintenta automaticamente.
 

@@ -24,6 +24,7 @@ public final class TestFixtures {
     public static EventoFechaResponseDTO eventoEn(Long id, LocalDateTime fechaHora) {
         return new EventoFechaResponseDTO(
                 id,
+                "Recital",
                 fechaHora,
                 "ACTIVO",
                 "PUBLICADO",

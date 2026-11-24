@@ -69,7 +69,7 @@ public class RecomendacionPreferenciasService {
                 evento.fechaHora(), ciudad, puntuacion, motivos);
     }
 
-    private String normalizarCiudad(String ciudad) {
+    public static String normalizarCiudad(String ciudad) {
         if (ciudad == null) return "";
         return Normalizer.normalize(ciudad, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
                 .trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);

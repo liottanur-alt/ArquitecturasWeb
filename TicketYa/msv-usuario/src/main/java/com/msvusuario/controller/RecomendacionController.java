@@ -6,6 +6,7 @@ import com.msvusuario.dto.RecomendacionesResponse;
 import com.msvusuario.dto.ResultadoFuenteRecomendacion;
 import com.msvusuario.service.RecomendacionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,17 +22,20 @@ public class RecomendacionController {
     private final RecomendacionService recomendaciones;
 
     @GetMapping("/{id}/recomendaciones")
+    @PreAuthorize("hasRole('ADMINISTRADOR') or #id.toString() == authentication.name")
     public RecomendacionesResponse recomendar(@PathVariable Long id,
             @RequestParam(defaultValue = "10") int limite) {
         return recomendaciones.recomendar(id, limite);
     }
 
     @GetMapping("/{id}/recomendaciones/por-preferencias")
+    @PreAuthorize("hasRole('ADMINISTRADOR') or #id.toString() == authentication.name")
     public ResponseEntity<List<RecomendacionResponse>> recomendarPorPreferencias(@PathVariable Long id) {
         return respuestaFuente(recomendaciones.recomendarPorPreferencias(id));
     }
 
     @GetMapping("/{id}/recomendaciones/por-compras")
+    @PreAuthorize("hasRole('ADMINISTRADOR') or #id.toString() == authentication.name")
     public ResponseEntity<List<RecomendacionCompraResponse>> recomendarPorCompras(@PathVariable Long id) {
         return respuestaFuente(recomendaciones.recomendarPorCompras(id));
     }

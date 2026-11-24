@@ -13,10 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -42,30 +44,56 @@ public class ApiExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException exception) {
         String detalle = exception.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .map(error -> error.getField() + ": " + mensajeCampo(error))
                 .collect(Collectors.joining("; "));
         return build(HttpStatus.BAD_REQUEST, "Solicitud inválida", detalle);
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ApiError> handleConstraint(ConstraintViolationException exception) {
-        return build(HttpStatus.BAD_REQUEST, "Solicitud inválida", exception.getMessage());
+    private String mensajeCampo(FieldError error) {
+        if (error.getCode() == null) {
+            return "Revisá el valor ingresado.";
+        }
+        return switch (error.getCode()) {
+            case "NotNull", "NotBlank", "NotEmpty" -> "Este campo es obligatorio.";
+            case "Positive" -> "Ingresá un valor mayor que cero.";
+            case "Size" -> "El valor tiene una longitud o cantidad fuera del límite permitido.";
+            default -> error.getDefaultMessage();
+        };
     }
 
-    @ExceptionHandler({
-            HttpMessageNotReadableException.class,
-            MissingServletRequestParameterException.class
-    })
-    public ResponseEntity<ApiError> handleUnreadable(Exception exception) {
-        return build(HttpStatus.BAD_REQUEST, "Solicitud inválida", exception.getMessage());
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraint(ConstraintViolationException exception) {
+        String detalle = exception.getConstraintViolations().stream()
+                .map(violacion -> violacion.getMessage())
+                .distinct()
+                .collect(Collectors.joining(". "));
+        return build(HttpStatus.BAD_REQUEST, "Solicitud inválida", detalle);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException exception) {
+        return build(HttpStatus.BAD_REQUEST, "Solicitud inválida",
+                "Revisá que el cuerpo de la solicitud sea JSON válido y que los campos tengan el formato esperado.");
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiError> handleMissingParameter(MissingServletRequestParameterException exception) {
+        return build(HttpStatus.BAD_REQUEST, "Solicitud inválida",
+                "Falta el parámetro «" + exception.getParameterName() + "».");
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleInvalidParameter(MethodArgumentTypeMismatchException exception) {
+        return build(HttpStatus.BAD_REQUEST, "Solicitud inválida",
+                "El valor de «" + exception.getName() + "» tiene un formato incorrecto.");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException exception) {
         return build(
                 HttpStatus.CONFLICT,
-                "Conflicto de datos",
-                "La operación viola una restricción de la base de datos"
+                "La operación entra en conflicto con datos existentes",
+                "Revisá si la compra, entrada o solicitud ya fue registrada."
         );
     }
 
@@ -73,7 +101,7 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiError> handleServiceUnavailable(RetryableException exception) {
         return build(
                 HttpStatus.SERVICE_UNAVAILABLE,
-                "No se pudo conectar con un servicio requerido",
+                "El servicio no está disponible en este momento. Intentá nuevamente en unos instantes.",
                 null
         );
     }
@@ -84,13 +112,17 @@ public class ApiExceptionHandler {
         if (remoteStatus >= 400 && remoteStatus < 500) {
             return build(
                     HttpStatusCode.valueOf(remoteStatus),
-                    "El servicio requerido rechazó la operación",
+                    switch (remoteStatus) {
+                        case 404 -> "No encontramos uno de los recursos necesarios. Revisá el evento o la reserva.";
+                        case 409 -> "La operación ya no se puede completar. Actualizá los datos y volvé a intentarlo.";
+                        default -> "No se pudo completar la operación. Revisá los datos y los permisos de tu cuenta.";
+                    },
                     null
             );
         }
         return build(
                 HttpStatus.BAD_GATEWAY,
-                "Un servicio requerido devolvió un error",
+                "No pudimos completar la operación. Intentá nuevamente en unos instantes.",
                 null
         );
     }
@@ -98,7 +130,8 @@ public class ApiExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception exception) {
         log.error("Error no controlado", exception);
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor", null);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un problema al procesar la solicitud.",
+                "Si el problema continúa, contactá a soporte con el identificador de la operación.");
     }
 
     private ResponseEntity<ApiError> build(

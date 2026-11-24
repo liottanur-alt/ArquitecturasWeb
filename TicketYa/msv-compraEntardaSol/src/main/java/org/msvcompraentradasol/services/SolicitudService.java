@@ -53,11 +53,11 @@ public class SolicitudService {
     }
 
     @Transactional
-    public SolicitudResponseDTO crearSolicitud(SolicitudRequestDTO dto) {
+    public SolicitudResponseDTO crearSolicitud(SolicitudRequestDTO dto, Long idCliente) {
         Entrada entrada = entradaRepository.findById(dto.getIdEntrada())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
 
-        if (!Objects.equals(entrada.getIdCliente(), dto.getIdCliente())) {
+        if (!Objects.equals(entrada.getIdCliente(), idCliente)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "La entrada no pertenece al cliente indicado"
@@ -85,7 +85,7 @@ public class SolicitudService {
 
         Solicitud solicitud = new Solicitud();
         solicitud.setEntrada(entrada);
-        solicitud.setIdCliente(dto.getIdCliente());
+        solicitud.setIdCliente(idCliente);
         solicitud.setFechaSolicitud(Instant.now());
         solicitud.setDescripcion(dto.getDescripcion());
         solicitud.setEstadoSolicitud(EstadoSolicitud.PENDIENTE);
@@ -193,7 +193,10 @@ public class SolicitudService {
                     )
             );
         } catch (FeignException.Conflict exception) {
-            throw new IllegalStateException("SectorAsiento rechazó la devolución de la entrada");
+            throw new IllegalStateException(
+                    "No se pudo liberar el lugar de la entrada. Revisá el estado de la reserva antes de reintentar.",
+                    exception
+            );
         }
         if (!Set.of("CONFIRMADA", "DEVUELTA").contains(liberacion.estado())) {
             throw new IllegalStateException("SectorAsiento no liberó el lugar de la entrada");

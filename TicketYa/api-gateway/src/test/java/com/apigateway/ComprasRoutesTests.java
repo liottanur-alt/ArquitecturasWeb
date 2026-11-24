@@ -5,17 +5,21 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.http.*;
 import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ComprasRoutesTests {
+@ActiveProfiles("test")
+class ComprasRoutesTests extends GatewayTestSupport {
     private static final HttpServer backend = backend();
     @Value("${local.server.port}") private int port;
     private final HttpClient client = HttpClient.newHttpClient();
@@ -46,10 +50,13 @@ class ComprasRoutesTests {
 
     @Test
     void comprasEntradasYSolicitudesLleganAlMicroservicio() throws Exception {
-        for (String path : new String[]{"/compras/1", "/compras/cliente/2", "/entradas/1",
-                "/entradas/qr/abc", "/entradas/compra/1", "/solicitudes/1", "/solicitudes/pendientes"}) {
-            var response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
-                    .GET().build(), HttpResponse.BodyHandlers.ofString());
+        String cliente = bearer(token("7", "CLIENTE"));
+        String personal = bearer(token("9", "PERSONAL_ACCESO"));
+        String[] paths = {"/compras/1", "/compras/cliente/2", "/entradas/1",
+                "/entradas/qr/abc", "/entradas/compra/1", "/solicitudes/1", "/solicitudes/pendientes"};
+        for (String path : paths) {
+            String auth = path.startsWith("/entradas/qr/") ? personal : cliente;
+            var response = get(path, auth);
             assertEquals(200, response.statusCode());
             assertEquals("GET " + path + "|", response.body());
         }
@@ -57,13 +64,16 @@ class ComprasRoutesTests {
 
     @Test
     void conservaMetodoQueryYBody() throws Exception {
+        String auth = bearer(token("7", "CLIENTE"));
         var pago = client.send(HttpRequest.newBuilder(
                         URI.create("http://localhost:" + port + "/compras/1/pago?aprobado=true"))
+                .header("Authorization", auth)
                 .PUT(HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
         assertEquals(200, pago.statusCode());
         assertEquals("PUT /compras/1/pago?aprobado=true|", pago.body());
 
         var compra = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/compras"))
+                .header("Authorization", auth)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString("{\"idCliente\":2}")).build(),
                 HttpResponse.BodyHandlers.ofString());
@@ -71,17 +81,19 @@ class ComprasRoutesTests {
         assertEquals("POST /compras|{\"idCliente\":2}", compra.body());
 
         var uso = client.send(HttpRequest.newBuilder(
-                        URI.create("http://localhost:" + port + "/entradas/1/uso"))
+                        URI.create("http://localhost:" + port + "/entradas/qr/qr/uso?idEvento=7"))
+                .header("Authorization", auth)
                 .method("PATCH", HttpRequest.BodyPublishers.noBody()).build(),
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(200, uso.statusCode());
-        assertEquals("PATCH /entradas/1/uso|", uso.body());
+        assertEquals("PATCH /entradas/qr/qr/uso?idEvento=7|", uso.body());
     }
 
     @Test
     void cancelacionDeEventoVaAComprasNoASectores() throws Exception {
         var response = client.send(HttpRequest.newBuilder(
                         URI.create("http://localhost:" + port + "/compras/eventos/1/cancelacion"))
+                .header("Authorization", bearer(token("1", "ADMINISTRADOR")))
                 .POST(HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
         assertEquals(200, response.statusCode());
         assertEquals("POST /compras/eventos/1/cancelacion|", response.body());
@@ -89,8 +101,11 @@ class ComprasRoutesTests {
 
     @Test
     void conserva404DelMicroservicio() throws Exception {
-        var response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/compras/999"))
-                .GET().build(), HttpResponse.BodyHandlers.ofString());
-        assertEquals(404, response.statusCode());
+        assertEquals(404, get("/compras/999", bearer(token("7", "CLIENTE"))).statusCode());
+    }
+
+    private HttpResponse<String> get(String path, String authorization) throws Exception {
+        return client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                .header("Authorization", authorization).GET().build(), HttpResponse.BodyHandlers.ofString());
     }
 }

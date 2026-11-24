@@ -10,6 +10,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     Optional<Reserva> findByClaveIdempotencia(String clave);
     List<Reserva> findBySectorEventoIdEvento(Long evento);
     List<Reserva> findBySectorEventoIdEventoAndEstado(Long evento, EstadoReserva estado);
+    List<Reserva> findBySectorEventoIdEventoAndEstadoAndVenceEnLessThanEqual(
+            Long evento, EstadoReserva estado, Instant ahora);
     @Query("select r.sectorEvento.idEvento from Reserva r where r.id = :id")
     Optional<Long> buscarEvento(@Param("id") Long id);
     @Query("select distinct r.sectorEvento.idEvento from Reserva r where r.estado = :estado and r.venceEn <= :ahora")

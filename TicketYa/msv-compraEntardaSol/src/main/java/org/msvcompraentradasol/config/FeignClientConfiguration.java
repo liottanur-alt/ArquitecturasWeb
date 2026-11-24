@@ -23,4 +23,9 @@ public class FeignClientConfiguration {
             }
         };
     }
+
+    @Bean
+    RequestInterceptor internalAuthInterceptor(ServiceTokenProvider serviceTokenProvider) {
+        return new InternalAuthInterceptor(serviceTokenProvider);
+    }
 }

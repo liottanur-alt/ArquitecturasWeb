@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -41,12 +42,12 @@ public class EntradaController {
     }
 
     @PatchMapping("/{id}/uso")
-    public ResponseEntity<EntradaResponseDTO> marcarUsada(@PathVariable Long id) {
-        return ResponseEntity.ok(entradaService.marcarUsada(id));
+    public ResponseEntity<EntradaResponseDTO> marcarUsada(@PathVariable Long id, @RequestParam Long idEvento) {
+        return ResponseEntity.ok(entradaService.marcarUsada(id, idEvento));
     }
 
     @PatchMapping("/qr/{qr}/uso")
-    public ResponseEntity<EntradaResponseDTO> marcarUsadaPorQr(@PathVariable String qr) {
-        return ResponseEntity.ok(entradaService.marcarUsadaPorQr(qr));
+    public ResponseEntity<EntradaResponseDTO> marcarUsadaPorQr(@PathVariable String qr, @RequestParam Long idEvento) {
+        return ResponseEntity.ok(entradaService.marcarUsadaPorQr(qr, idEvento));
     }
 }

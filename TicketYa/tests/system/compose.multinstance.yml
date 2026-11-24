@@ -1,0 +1,199 @@
+# Arnes de prueba aislado: dos instancias de Compras y Sectores detras de dos Gateway.
+# Todas las bases son temporales (prefijo conc_<tag>_) y el secreto JWT es exclusivo de la corrida.
+# No define volumenes: usa MySQL, MongoDB y Redis del stack principal sin modificarlos.
+services:
+  eventos:
+    image: ticketya-db-eventos:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      DB_URL: jdbc:mysql://mysql:3306/${MC_EVENTOS_DB}
+      DB_USERNAME: ${MC_DB_USER}
+      EVENTO_DB_PASSWORD: ${MC_DB_PASSWORD}
+      MSVC_SECTORES_URL: http://${MC_RUN}-sectores-a:8002
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${MC_JWT_SECRET}
+    ports: ["127.0.0.1:0:8005"]
+    networks:
+      datos:
+        aliases: ["${MC_RUN}-eventos"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8005/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+
+  sectores-a:
+    image: ticketya-db-sectores:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      DB_URL: jdbc:mysql://mysql:3306/${MC_SECTORES_DB}
+      DB_USERNAME: ${MC_DB_USER}
+      SECTOR_DB_PASSWORD: ${MC_DB_PASSWORD}
+      MSVC_EVENTOS_URL: http://${MC_RUN}-eventos:8005
+      MSVC_COMPRAS_URL: http://${MC_RUN}-compras-a:8003
+      JWT_SECRET: ${MC_JWT_SECRET}
+    ports: ["127.0.0.1:0:8002"]
+    networks:
+      datos:
+        aliases: ["${MC_RUN}-sectores-a"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8002/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+
+  sectores-b:
+    image: ticketya-db-sectores:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      DB_URL: jdbc:mysql://mysql:3306/${MC_SECTORES_DB}
+      DB_USERNAME: ${MC_DB_USER}
+      SECTOR_DB_PASSWORD: ${MC_DB_PASSWORD}
+      MSVC_EVENTOS_URL: http://${MC_RUN}-eventos:8005
+      MSVC_COMPRAS_URL: http://${MC_RUN}-compras-b:8003
+      JWT_SECRET: ${MC_JWT_SECRET}
+    ports: ["127.0.0.1:0:8002"]
+    networks:
+      datos:
+        aliases: ["${MC_RUN}-sectores-b"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8002/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+
+  compras-a:
+    image: ticketya-db-compras:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      DB_URL: jdbc:mysql://mysql:3306/${MC_COMPRAS_DB}
+      DB_USERNAME: ${MC_DB_USER}
+      DB_PASSWORD: ${MC_DB_PASSWORD}
+      MSVC_EVENTOS_URL: http://${MC_RUN}-eventos:8005
+      MSVC_SECTORES_URL: http://${MC_RUN}-sectores-a:8002
+      JWT_SECRET: ${MC_JWT_SECRET}
+    ports: ["127.0.0.1:0:8003"]
+    networks:
+      datos:
+        aliases: ["${MC_RUN}-compras-a"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8003/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+    depends_on:
+      eventos:
+        condition: service_healthy
+      sectores-a:
+        condition: service_healthy
+
+  compras-b:
+    image: ticketya-db-compras:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      DB_URL: jdbc:mysql://mysql:3306/${MC_COMPRAS_DB}
+      DB_USERNAME: ${MC_DB_USER}
+      DB_PASSWORD: ${MC_DB_PASSWORD}
+      MSVC_EVENTOS_URL: http://${MC_RUN}-eventos:8005
+      MSVC_SECTORES_URL: http://${MC_RUN}-sectores-b:8002
+      JWT_SECRET: ${MC_JWT_SECRET}
+    ports: ["127.0.0.1:0:8003"]
+    networks:
+      datos:
+        aliases: ["${MC_RUN}-compras-b"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8003/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+    depends_on:
+      eventos:
+        condition: service_healthy
+      sectores-b:
+        condition: service_healthy
+
+  usuarios:
+    image: ticketya-db-usuarios:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      MONGODB_URI: mongodb://mongodb:27017/${MC_USUARIOS_DB}
+      MSV_EVENTO_URL: http://${MC_RUN}-eventos:8005
+      MSV_COMPRAS_URL: http://${MC_RUN}-compras-a:8003
+      MSV_SECTORES_URL: http://${MC_RUN}-sectores-a:8002
+      JWT_SECRET: ${MC_JWT_SECRET}
+      ADMIN_SEED_PASSWORD: ${MC_ADMIN_SEED_PASSWORD}
+    ports: ["127.0.0.1:0:8004"]
+    networks:
+      datos:
+        aliases: ["${MC_RUN}-usuarios"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8004/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+
+  gateway-a:
+    image: ticketya-db-gateway:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx128m
+      MSVC_USUARIOS_URL: http://${MC_RUN}-usuarios:8004
+      MSVC_EVENTOS_URL: http://${MC_RUN}-eventos:8005
+      MSVC_SECTORES_URL: http://${MC_RUN}-sectores-a:8002
+      MSVC_COMPRAS_URL: http://${MC_RUN}-compras-a:8003
+      JWT_SECRET: ${MC_JWT_SECRET}
+    ports: ["127.0.0.1:0:8080"]
+    networks: [datos]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+    depends_on:
+      usuarios:
+        condition: service_healthy
+      eventos:
+        condition: service_healthy
+      sectores-a:
+        condition: service_healthy
+      compras-a:
+        condition: service_healthy
+
+  gateway-b:
+    image: ticketya-db-gateway:latest
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx128m
+      MSVC_USUARIOS_URL: http://${MC_RUN}-usuarios:8004
+      MSVC_EVENTOS_URL: http://${MC_RUN}-eventos:8005
+      MSVC_SECTORES_URL: http://${MC_RUN}-sectores-b:8002
+      MSVC_COMPRAS_URL: http://${MC_RUN}-compras-b:8003
+      JWT_SECRET: ${MC_JWT_SECRET}
+    ports: ["127.0.0.1:0:8080"]
+    networks: [datos]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 36
+      start_period: 30s
+    depends_on:
+      usuarios:
+        condition: service_healthy
+      eventos:
+        condition: service_healthy
+      sectores-b:
+        condition: service_healthy
+      compras-b:
+        condition: service_healthy
+
+networks:
+  datos:
+    external: true
+    name: ticketya-db_default

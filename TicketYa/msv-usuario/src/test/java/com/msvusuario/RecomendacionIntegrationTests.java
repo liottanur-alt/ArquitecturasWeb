@@ -31,9 +31,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-class RecomendacionIntegrationTests extends MongoIntegrationSupport {
+class RecomendacionIntegrationTests extends TestSecuritySupport {
     @Autowired MockMvc mvc;
     @Autowired UsuarioService usuarios;
     @Autowired UsuarioRepository repository;

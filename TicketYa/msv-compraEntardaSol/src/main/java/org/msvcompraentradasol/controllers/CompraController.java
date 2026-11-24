@@ -2,6 +2,7 @@ package org.msvcompraentradasol.controllers;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import org.msvcompraentradasol.config.SecurityConfig;
 import org.msvcompraentradasol.dtos.CancelacionEventoResponseDTO;
 import org.msvcompraentradasol.dtos.CompraRequestDTO;
 import org.msvcompraentradasol.dtos.CompraResponseDTO;
@@ -29,7 +30,8 @@ public class CompraController {
 
     @PostMapping
     public ResponseEntity<CompraResponseDTO> crearCompra(@Valid @RequestBody CompraRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(compraService.crearCompra(dto));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(compraService.crearCompra(dto, SecurityConfig.authenticatedUserId()));
     }
 
     @GetMapping("/{id}")

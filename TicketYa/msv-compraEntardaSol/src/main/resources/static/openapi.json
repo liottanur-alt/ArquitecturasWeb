@@ -3,12 +3,17 @@
   "info": {
     "title": "TicketYa - Compras, entradas y solicitudes",
     "version": "1.2.0",
-    "description": "Microservicio de compra (HU-08 a HU-14): reserva, pago simulado, emision de entradas con QR, devoluciones, reintegros y cancelacion de eventos."
+    "description": "Microservicio de compra (HU-08 a HU-14) con validacion local de JWT HS256 (issuer msv-usuario). El cliente se toma del sub del token; las rutas interno exigen ROLE_SERVICIO_INTERNO."
   },
   "servers": [
     {
       "url": "http://localhost:8003",
       "description": "Ejecucion local"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
     }
   ],
   "tags": [
@@ -181,6 +186,7 @@
         ],
         "summary": "Cancelar un evento, cerrar inventario y reintegrar las entradas vendidas",
         "operationId": "cancelarEvento",
+        "description": "Requiere JWT de ADMINISTRADOR. Es la operación de cancelación disponible por Gateway. Repetir una cancelación no duplica reintegros.",
         "parameters": [
           {
             "$ref": "#/components/parameters/IdEvento"
@@ -196,6 +202,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "JWT ausente o inválido."
+          },
+          "403": {
+            "description": "La cuenta no tiene rol ADMINISTRADOR."
           },
           "502": {
             "$ref": "#/components/responses/BadGateway"
@@ -332,6 +344,9 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/IdEntrada"
+          },
+          {
+            "$ref": "#/components/parameters/IdEventoEscaneo"
           }
         ],
         "responses": {
@@ -364,6 +379,9 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/Qr"
+          },
+          {
+            "$ref": "#/components/parameters/IdEventoEscaneo"
           }
         ],
         "responses": {
@@ -683,6 +701,14 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT HS256 emitido por msv-usuario. Las rutas interno exigen roles=[SERVICIO_INTERNO]."
+      }
+    },
     "parameters": {
       "IdCompra": {
         "name": "id",
@@ -719,6 +745,13 @@
           "type": "integer",
           "format": "int64"
         }
+      },
+      "IdEventoEscaneo": {
+        "name": "idEvento",
+        "in": "query",
+        "required": true,
+        "description": "ID del evento en cuyo ingreso se escanea la entrada",
+        "schema": { "type": "integer", "format": "int64", "minimum": 1 }
       },
       "IdEvento": {
         "name": "idEvento",

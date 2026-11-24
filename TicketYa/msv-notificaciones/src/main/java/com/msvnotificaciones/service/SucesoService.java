@@ -26,13 +26,13 @@ public class SucesoService {
 
     @Transactional
     public SucesoNegocio registrar(@NotNull @Valid SucesoRequest request) {
-        var existente = sucesos.findByClaveIdempotencia(request.claveIdempotencia());
+        var existente = sucesos.findByClaveIdempotencia(request.claveIdempotencia().trim());
         if (existente.isPresent()) return existente.get();
         SucesoNegocio suceso = sucesos.save(new SucesoNegocio(
             request.claveIdempotencia().trim(), request.tipo(), request.idEvento(), request.idCompra(),
             request.idCliente(), limpiar(request.destinatario()), request.cantidadEntradas(),
             request.importe(), request.capacidadTotal(),
-            request.fechaSuceso() == null ? Instant.now() : request.fechaSuceso()));
+            request.fechaSuceso() == null ? Instant.now() : request.fechaSuceso(), request.detalle()));
         eventos.publishEvent(new NotificacionAsyncService.SucesoRegistrado(suceso));
         return suceso;
     }

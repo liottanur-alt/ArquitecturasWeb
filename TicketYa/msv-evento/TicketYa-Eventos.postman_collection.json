@@ -1,22 +1,19 @@
 {
   "info": {
     "name": "TicketYa Eventos - Entrega 1",
-    "description": "Ejecutar completa en orden. Usa la API directa en 8005, sin JWT. Cada iteración crea lugar/artista/evento propios, captura IDs y limpia evento antes que sus relaciones. Se detiene ante una respuesta inesperada. idOrganizadorPrueba es una referencia externa ilustrativa: Eventos no la valida en Usuarios. Ver docs/PRUEBAS-POSTMAN.md.",
+    "description": "Ejecutar completa en orden contra el Gateway con jwtToken de ADMINISTRADOR (baseUrl=http://127.0.0.1:8080). La misma cuenta es titular del evento de prueba. Cada iteración crea sus propios datos y usa la cancelación coordinada de Compras. La publicación requiere inventario configurado. Ver docs/PRUEBAS-POSTMAN.md.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
-    "type": "noauth"
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwtToken}}",
+        "type": "string"
+      }
+    ]
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:8005"
-    },
-    {
-      "key": "idOrganizadorPrueba",
-      "value": "900001"
-    }
-  ],
   "item": [
     {
       "name": "01 Crear lugar e iniciar datos",
@@ -303,6 +300,109 @@
               "pm.test(\"ID generado positivo\", () => pm.expect(pm.response.json().id).to.be.above(0));",
               "pm.test(\"Estado EN_CURSO/BORRADOR\", () => { pm.expect(pm.response.json().estado).to.eql(\"EN_CURSO\"); pm.expect(pm.response.json().estadoPublicacion).to.eql(\"BORRADOR\"); });",
               "pm.test(\"Relaciones anidadas\", () => { const e=pm.response.json(); pm.expect(e.lugar.id).to.eql(Number(pm.collectionVariables.get(\"idLugar\"))); pm.expect(e.participantes.map(a=>a.id)).to.include(Number(pm.collectionVariables.get(\"idArtista\"))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09.1 Crear sector para inventario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/sectores",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"idLugar\":{{idLugar}},\"nombre\":\"Campo Postman {{runId}}\",\"tipo\":\"CAMPO\",\"capacidadTotal\":10}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201 sector', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+              "if (![201].includes(pm.response.code)) { pm.execution.setNextRequest(null); throw new Error('Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba'); }",
+              "pm.collectionVariables.set(\"idSector\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09.2 Configurar inventario del evento",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/eventos/{{idEvento}}/inventario",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"limitePorCliente\":10}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204 inventario', () => pm.expect(pm.response.code).to.be.oneOf([204]));",
+              "if (![204].includes(pm.response.code)) { pm.execution.setNextRequest(null); throw new Error('Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09.3 Habilitar sector en el inventario",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/eventos/{{idEvento}}/sectores",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"idSector\":{{idSector}},\"precio\":100,\"capacidadHabilitada\":10}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 sector habilitado', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "if (![200].includes(pm.response.code)) { pm.execution.setNextRequest(null); throw new Error('Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba'); }"
             ]
           }
         }
@@ -817,9 +917,31 @@
     {
       "name": "30 Cancelar evento",
       "request": {
-        "method": "PATCH",
+        "method": "POST",
         "header": [],
-        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/cancelar",
+        "url": "{{baseUrl}}/compras/eventos/{{idEvento}}/cancelacion",
+        "description": "ADMINISTRADOR. Cancela el evento, coordina el inventario y procesa los reintegros aplicables."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
+              "pm.test(\"Inventario cancelado\", () => pm.expect(pm.response.json().inventarioCancelado).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "31 Cancelar nuevamente es idempotente",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/compras/eventos/{{idEvento}}/cancelacion",
         "description": ""
       },
       "event": [
@@ -830,19 +952,18 @@
             "exec": [
               "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
               "if (pm.response.code !== 200) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
-              "pm.test(\"Estado CANCELADO/SUSPENDIDO\", () => { pm.expect(pm.response.json().estado).to.eql(\"CANCELADO\"); pm.expect(pm.response.json().estadoPublicacion).to.eql(\"SUSPENDIDO\"); });"
+              "pm.test(\"Sin reintegros duplicados\", () => pm.expect(pm.response.json().entradasReintegradas).to.eql(0));"
             ]
           }
         }
       ]
     },
     {
-      "name": "31 Cancelar nuevamente devuelve conflicto",
+      "name": "31.1 El evento cancelado no aparece en el catálogo público",
       "request": {
-        "method": "PATCH",
+        "method": "GET",
         "header": [],
-        "url": "{{baseUrl}}/api/eventos/{{idEvento}}/cancelar",
-        "description": ""
+        "url": "{{baseUrl}}/api/eventos/{{idEvento}}"
       },
       "event": [
         {
@@ -850,9 +971,8 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
-              "if (pm.response.code !== 409) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
-              "pm.test(\"Estado del error\", () => pm.expect(pm.response.json().status).to.eql(pm.response.code));"
+              "pm.test('Evento cancelado fuera del catálogo', () => pm.response.to.have.status(404));",
+              "if (pm.response.code !== 404) { pm.execution.setNextRequest(null); throw new Error('Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba'); }"
             ]
           }
         }
@@ -875,6 +995,26 @@
               "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));",
               "if (pm.response.code !== 204) { pm.execution.setNextRequest(null); throw new Error(\"Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba\"); }",
               "pm.test(\"Sin cuerpo\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "32.1 Sector configurado no se elimina (409)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/sectores/{{idSector}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 409 sector protegido', () => pm.expect(pm.response.code).to.be.oneOf([409]));",
+              "if (![409].includes(pm.response.code)) { pm.execution.setNextRequest(null); throw new Error('Respuesta inesperada: se detiene el recorrido para proteger los IDs de prueba'); }"
             ]
           }
         }
@@ -1128,6 +1268,24 @@
           }
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "jwtToken",
+      "value": ""
+    },
+    {
+      "key": "idOrganizadorPrueba",
+      "value": "900001"
+    },
+    {
+      "key": "idSector",
+      "value": ""
     }
   ]
 }

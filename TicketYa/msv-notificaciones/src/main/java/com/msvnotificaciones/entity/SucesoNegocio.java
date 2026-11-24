@@ -24,6 +24,8 @@ public class SucesoNegocio {
     private Long idCliente;
     @Column(name = "destinatario", length = 320)
     private String destinatario;
+    @Column(length = 900)
+    private String detalle;
     @Column(name = "cantidad_entradas")
     private Integer cantidadEntradas;
     @Column(precision = 14, scale = 2)
@@ -39,13 +41,14 @@ public class SucesoNegocio {
 
     public SucesoNegocio(String claveIdempotencia, TipoSuceso tipo, Long idEvento, Long idCompra,
                          Long idCliente, String destinatario, Integer cantidadEntradas,
-                         BigDecimal importe, Integer capacidadTotal, Instant fechaSuceso) {
+                         BigDecimal importe, Integer capacidadTotal, Instant fechaSuceso, String detalle) {
         this.claveIdempotencia = claveIdempotencia;
         this.tipo = tipo;
         this.idEvento = idEvento;
         this.idCompra = idCompra;
         this.idCliente = idCliente;
         this.destinatario = destinatario;
+        this.detalle = detalle;
         this.cantidadEntradas = cantidadEntradas;
         this.importe = importe;
         this.capacidadTotal = capacidadTotal;
@@ -60,6 +63,7 @@ public class SucesoNegocio {
     public Long getIdCompra() { return idCompra; }
     public Long getIdCliente() { return idCliente; }
     public String getDestinatario() { return destinatario; }
+    public String getDetalle() { return detalle; }
     public Integer getCantidadEntradas() { return cantidadEntradas; }
     public BigDecimal getImporte() { return importe; }
     public Integer getCapacidadTotal() { return capacidadTotal; }

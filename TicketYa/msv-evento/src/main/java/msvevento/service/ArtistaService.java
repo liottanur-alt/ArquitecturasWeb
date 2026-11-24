@@ -5,6 +5,7 @@ import msvevento.dto.ArtistaResponseDTO;
 import msvevento.entity.Artista;
 import msvevento.repository.ArtistaRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,6 +46,7 @@ public class ArtistaService {
     }
 
     //CREAR UN ARTISTA
+    @CacheEvict(cacheNames = {"eventos-catalogo", "eventos-busqueda", "evento-detalle"}, allEntries = true)
     public ArtistaResponseDTO crearArtista(ArtistaRequestDTO dto) {
 
         Artista artista = new Artista();
@@ -58,6 +60,7 @@ public class ArtistaService {
     }
 
     // ACTUALIZAR UN ARTISTA
+    @CacheEvict(cacheNames = {"eventos-catalogo", "eventos-busqueda", "evento-detalle"}, allEntries = true)
     public ArtistaResponseDTO actualizarArtista(Long id, ArtistaRequestDTO dto) {
 
         Artista artista = artistaRepository.findById(id)
@@ -75,6 +78,7 @@ public class ArtistaService {
     }
 
     // ELIMINAR UN ARTISTA
+    @CacheEvict(cacheNames = {"eventos-catalogo", "eventos-busqueda", "evento-detalle"}, allEntries = true)
     public void eliminarArtista(Long id) {
 
         if (!artistaRepository.existsById(id)) {

@@ -5,9 +5,13 @@ import msvevento.client.SectorEventoClient;
 import msvevento.entity.*;
 import msvevento.repository.*;
 import msvevento.service.EventoService;
+import msvevento.service.NotificarEvento;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -67,10 +71,14 @@ class SectorEventoFeignTests {
     static void detener() { REMOTO.stop(0); }
 
     EventoService servicio(Evento evento) {
+        return servicio(evento, mock(ApplicationEventPublisher.class));
+    }
+
+    EventoService servicio(Evento evento, ApplicationEventPublisher eventos) {
         var repositorio = mock(EventoRepository.class);
-        when(repositorio.findById(7L)).thenReturn(Optional.of(evento));
+        when(repositorio.buscarParaActualizar(7L)).thenReturn(Optional.of(evento));
         when(repositorio.save(evento)).thenReturn(evento);
-        return new EventoService(repositorio, mock(LugarRepository.class), mock(ArtistaRepository.class), cliente);
+        return new EventoService(repositorio, mock(LugarRepository.class), mock(ArtistaRepository.class), cliente, eventos);
     }
 
     Evento borrador() {
@@ -85,6 +93,66 @@ class SectorEventoFeignTests {
         evento.setEstadoPublicacion(EstadoPublicacion.BORRADOR);
         evento.setEstado(EstadoEvento.EN_CURSO);
         return evento;
+    }
+
+    @Test
+    void ordenaPorPrecioGlobalAntesDePaginar() {
+        var caro = borrador();
+        var barato = borrador();
+        barato.setId(8L);
+        var sinPrecio = borrador();
+        sinPrecio.setId(9L);
+        var repo = mock(EventoRepository.class);
+        when(repo.buscarConFiltros(null, null, null, null, null, null, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(caro, sinPrecio, barato)));
+        var sectores = mock(SectorEventoClient.class);
+        when(sectores.preciosMinimos(any())).thenReturn(java.util.Map.of(
+                7L, new java.math.BigDecimal("200"), 8L, new java.math.BigDecimal("100")));
+        var servicio = new EventoService(repo, mock(LugarRepository.class), mock(ArtistaRepository.class),
+                sectores, mock(ApplicationEventPublisher.class));
+
+        assertThat(servicio.buscarEventos(null, null, null, null, null, null, 0, 1, "precio,asc", null))
+                .extracting("id").containsExactly(8L);
+        assertThat(servicio.buscarEventos(null, null, null, null, null, null, 0, 3, "precio,desc", null))
+                .extracting("id").containsExactly(7L, 8L, 9L);
+    }
+
+    @Test
+    void relevanciaPriorizaNombreParticipantesYDescripcion() {
+        var exacto = borrador();
+        exacto.setNombre("Canción");
+        var participante = borrador();
+        participante.setId(8L);
+        participante.getParticipantes().getFirst().setNombre("La Cancion");
+        var descripcion = borrador();
+        descripcion.setId(9L);
+        descripcion.setDescripcion("Presenta su nueva canción");
+        var sinCoincidencia = borrador();
+        sinCoincidencia.setId(10L);
+        var repo = mock(EventoRepository.class);
+        when(repo.buscarConFiltros(null, null, null, "Tandil", null, null, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(descripcion, participante, exacto, sinCoincidencia)));
+        var servicio = new EventoService(repo, mock(LugarRepository.class), mock(ArtistaRepository.class),
+                cliente, mock(ApplicationEventPublisher.class));
+
+        assertThat(servicio.buscarEventos(null, null, null, "Tandil", null, null, 0, 10, "relevancia", "CANCION"))
+                .extracting("id").containsExactly(7L, 8L, 9L);
+    }
+
+    @Test
+    void reprogramarPublicaElCambioUnaVez() {
+        var evento = borrador();
+        evento.setEstadoPublicacion(EstadoPublicacion.PUBLICADO);
+        var fecha = evento.getFechaHora().plusDays(1);
+        var eventos = mock(ApplicationEventPublisher.class);
+        var servicio = servicio(evento, eventos);
+
+        servicio.reprogramarEvento(7L, 3L, fecha, null);
+        servicio.reprogramarEvento(7L, 3L, fecha, null);
+
+        assertThat(evento.getFechaHora()).isEqualTo(fecha);
+        verify(eventos).publishEvent(argThat((Object aviso) -> aviso instanceof NotificarEvento.Cambio cambio
+                && cambio.id().equals(7L) && cambio.tipo().equals("EVENTO_MODIFICADO")));
     }
 
     @Test

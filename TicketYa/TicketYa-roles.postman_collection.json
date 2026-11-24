@@ -1,0 +1,3811 @@
+{
+  "info": {
+    "name": "TicketYa - API y pruebas por rol",
+    "description": "Inicio: 1. Estado del Gateway. 2. Registrar cliente. 3. Login cliente. 4. Mi usuario. Para administrar, carga adminPassword localmente y ejecuta Login administrador. El último login exitoso selecciona la sesión de las rutas protegidas. Usa docker compose up -d --build --wait si la imagen del contenedor quedó desactualizada. Los IDs de recursos deben existir en tu entorno.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "usuariosUrl",
+      "value": "http://localhost:8004",
+      "type": "string"
+    },
+    {
+      "key": "eventosUrl",
+      "value": "http://localhost:8005",
+      "type": "string"
+    },
+    {
+      "key": "comprasUrl",
+      "value": "http://localhost:8003",
+      "type": "string"
+    },
+    {
+      "key": "sectoresUrl",
+      "value": "http://localhost:8002",
+      "type": "string"
+    },
+    {
+      "key": "notificacionesUrl",
+      "value": "http://notificaciones:8006",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "serviceToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idArtista",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idEvento",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "eventoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idSector",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idCliente",
+      "value": "5",
+      "type": "string"
+    },
+    {
+      "key": "idCompra",
+      "value": "11",
+      "type": "string"
+    },
+    {
+      "key": "idEntrada",
+      "value": "11",
+      "type": "string"
+    },
+    {
+      "key": "qr",
+      "value": "REEMPLAZAR_QR",
+      "type": "string"
+    },
+    {
+      "key": "clienteEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clienteDni",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clientePassword",
+      "value": "TicketYa-demo-2027!",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@admin.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "usuarioAutenticadoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idUsuario",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idRol",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idLugar",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idSolicitud",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idReserva",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "autorizacionCompra",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "claveCompraCampo",
+      "value": "ticketya-campo-001",
+      "type": "string"
+    },
+    {
+      "key": "claveCompraNumerada",
+      "value": "ticketya-numerada-001",
+      "type": "string"
+    },
+    {
+      "key": "idAsiento",
+      "value": "11",
+      "type": "string"
+    },
+    {
+      "key": "rolObjetivo",
+      "value": "ORGANIZADOR",
+      "type": "string"
+    },
+    {
+      "key": "rolObjetivoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cuentaRolesPerfil",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Inicio - Autenticación",
+      "item": [
+        {
+          "name": "1. GET /actuator/health | Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "sin body. Disponible en el Gateway (8080) y\ndirectamente en Sectores (8002), Compras (8003), Usuarios (8004) y Eventos (8005).",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "2. POST /auth/registro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "Crea un CLIENTE (201). Nombre, email válido, DNI y ciudad son obligatorios. La clave requiere al menos 4 caracteres y hasta 72 bytes UTF-8. El correo y el DNI deben ser únicos (409). Se generan valores nuevos para cada registro de prueba.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cliente de prueba\",\n  \"email\": \"{{registroEmail}}\",\n  \"dni\": \"{{registroDni}}\",\n  \"ciudad\": \"Tandil\",\n  \"password\": \"{{clientePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = pm.variables.replaceIn('{{$guid}}').replace(/-/g, '').slice(0, 16);",
+                  "pm.variables.set('registroEmail', 'ticketya-' + suffix + '@example.com');",
+                  "pm.variables.set('registroDni', 'TY' + suffix);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Registro creado (201)', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('clienteEmail', pm.variables.get('registroEmail'));",
+                  "    pm.collectionVariables.set('clienteDni', pm.variables.get('registroDni'));",
+                  "    pm.collectionVariables.set('idUsuario', String(pm.response.json().id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Ejecuta primero Registrar cliente o configura clienteEmail y clientePassword con una cuenta existente. Devuelve accessToken, tokenType y expiresIn. Un 401 indica credenciales inválidas o una cuenta sin contraseña configurada.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clienteEmail}}\",\n  \"password\": \"{{clientePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const token = pm.response.json().accessToken;",
+                  "    pm.test('La respuesta incluye accessToken', () => pm.expect(token).to.be.a('string').and.not.empty);",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('accessToken', token);",
+                  "        const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                  "        const claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '=')));",
+                  "        pm.collectionVariables.set('usuarioAutenticadoId', String(claims.sub));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. GET /usuarios/{id} | Mi usuario autenticado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{usuarioAutenticadoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuarioAutenticadoId}}"
+              ]
+            },
+            "description": "Comprueba el JWT del último login exitoso con el ID del claim sub. Espera 200."
+          }
+        },
+        {
+          "name": "POST /auth/login | Administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Configura adminPassword con la clave del administrador creado en el perfil dev. ADMIN_SEED_PASSWORD se lee al crear la cuenta por primera vez. MongoDB conserva la clave original si la cuenta ya existía. Mantén la contraseña en el valor local de Postman.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const token = pm.response.json().accessToken;",
+                  "    pm.test('La respuesta incluye accessToken', () => pm.expect(token).to.be.a('string').and.not.empty);",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('accessToken', token);",
+                  "        const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                  "        const claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '=')));",
+                  "        pm.collectionVariables.set('usuarioAutenticadoId', String(claims.sub));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login | Diagnóstico directo en Usuarios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/auth/login",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Usa las credenciales de administrador configuradas. Compara con el mismo POST vía Gateway. Si ambos devuelven 404, verifica que Usuarios esté construido con el código actual. Si solo Gateway falla, revisa su imagen y enrutamiento.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const token = pm.response.json().accessToken;",
+                  "    pm.test('La respuesta incluye accessToken', () => pm.expect(token).to.be.a('string').and.not.empty);",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('accessToken', token);",
+                  "        const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                  "        const claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '=')));",
+                  "        pm.collectionVariables.set('usuarioAutenticadoId', String(claims.sub));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cuentas y pruebas por rol",
+      "description": "Elige rolObjetivo en Variables y ejecuta los pasos en orden. Carga adminPassword localmente antes del paso 2. Repite desde el paso 1 para crear otra cuenta.",
+      "item": [
+        {
+          "name": "1. Registrar cuenta de prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "Crea un CLIENTE (201). Nombre, email válido, DNI y ciudad son obligatorios. La clave requiere al menos 4 caracteres y hasta 72 bytes UTF-8. El correo y el DNI deben ser únicos (409). Se generan valores nuevos para cada registro de prueba.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cliente de prueba\",\n  \"email\": \"{{registroEmail}}\",\n  \"dni\": \"{{registroDni}}\",\n  \"ciudad\": \"Tandil\",\n  \"password\": \"{{clientePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = pm.variables.replaceIn('{{$guid}}').replace(/-/g, '').slice(0, 16);",
+                  "pm.variables.set('registroEmail', 'ticketya-' + suffix + '@example.com');",
+                  "pm.variables.set('registroDni', 'TY' + suffix);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Registro creado (201)', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('clienteEmail', pm.variables.get('registroEmail'));",
+                  "    pm.collectionVariables.set('clienteDni', pm.variables.get('registroDni'));",
+                  "    pm.collectionVariables.set('idUsuario', String(pm.response.json().id));",
+                  "    pm.collectionVariables.set('cuentaRolesPerfil', JSON.stringify(pm.response.json()));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Login como administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Configura adminPassword con la clave del administrador creado en el perfil dev. ADMIN_SEED_PASSWORD se lee al crear la cuenta por primera vez. MongoDB conserva la clave original si la cuenta ya existía. Mantén la contraseña en el valor local de Postman.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const token = pm.response.json().accessToken;",
+                  "    pm.test('La respuesta incluye accessToken', () => pm.expect(token).to.be.a('string').and.not.empty);",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('accessToken', token);",
+                  "        const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                  "        const claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '=')));",
+                  "        pm.collectionVariables.set('usuarioAutenticadoId', String(claims.sub));",
+                  "        pm.collectionVariables.set('adminToken', token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Buscar ID del rol elegido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "Selecciona la variable rolObjetivo. Valores: CLIENTE, ORGANIZADOR, PERSONAL_ACCESO o ADMINISTRADOR. El ID se obtiene de GET /roles y puede variar por base de datos.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Administrador puede listar roles', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.unset('rolObjetivoId');",
+                  "if (pm.response.code === 200) {",
+                  "    const target = pm.collectionVariables.get('rolObjetivo').trim().toUpperCase();",
+                  "    const role = pm.response.json().find(candidate => candidate.name === target);",
+                  "    pm.test('Existe el rol ' + target, () => pm.expect(role).to.exist);",
+                  "    if (role) pm.collectionVariables.set('rolObjetivoId', String(role.id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Asignar rol a la cuenta registrada",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{cuentaRolesId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{cuentaRolesId}}"
+              ]
+            },
+            "description": "Usa el perfil de la cuenta registrada en el paso 1 y envía nombre, email, dni, ciudad e idRol. La operación se autoriza con el token administrador del paso 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{{cuentaRolesBody}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const stored = pm.collectionVariables.get('cuentaRolesPerfil');",
+                  "const roleId = Number(pm.collectionVariables.get('rolObjetivoId'));",
+                  "if (!stored || !Number.isSafeInteger(roleId) || roleId < 1) throw new Error('Ejecuta los pasos 1, 2 y 3 primero.');",
+                  "const {id, nombre, email, dni, ciudad} = JSON.parse(stored);",
+                  "pm.variables.set('cuentaRolesId', String(id));",
+                  "pm.variables.set('cuentaRolesBody', JSON.stringify({nombre, email, dni, ciudad, idRol:roleId}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rol asignado (200)', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Volver a iniciar sesión con la cuenta creada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Genera un JWT nuevo para la cuenta de prueba. El rol está en el claim roles del JWT y un token emitido antes de la actualización conserva el rol previo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clienteEmail}}\",\n  \"password\": \"{{clientePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const token = pm.response.json().accessToken;",
+                  "    pm.test('La respuesta incluye accessToken', () => pm.expect(token).to.be.a('string').and.not.empty);",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('accessToken', token);",
+                  "        const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                  "        const claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '=')));",
+                  "        pm.collectionVariables.set('usuarioAutenticadoId', String(claims.sub));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Probar ruta exclusiva de administrador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "Esta prueba usa el token de la cuenta del paso 5 y compara el estado HTTP esperado según rolObjetivo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const role = pm.collectionVariables.get('rolObjetivo').trim().toUpperCase();",
+                  "const expected = [\"ADMINISTRADOR\"].includes(role) ? 200 : 403;",
+                  "pm.test(role + ' recibe HTTP ' + expected, () => pm.response.to.have.status(expected));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Probar ruta de organizador o administrador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/mis-eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "mis-eventos"
+              ]
+            },
+            "description": "Esta prueba usa el token de la cuenta del paso 5 y compara el estado HTTP esperado según rolObjetivo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const role = pm.collectionVariables.get('rolObjetivo').trim().toUpperCase();",
+                  "const expected = [\"ORGANIZADOR\",\"ADMINISTRADOR\"].includes(role) ? 200 : 403;",
+                  "pm.test(role + ' recibe HTTP ' + expected, () => pm.response.to.have.status(expected));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AUTENTICACIÓN Y USUARIOS",
+      "item": [
+        {
+          "name": "2. POST /auth/registro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "Crea un CLIENTE (201). Nombre, email válido, DNI y ciudad son obligatorios. La clave requiere al menos 4 caracteres y hasta 72 bytes UTF-8. El correo y el DNI deben ser únicos (409). Se generan valores nuevos para cada registro de prueba.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cliente de prueba\",\n  \"email\": \"{{registroEmail}}\",\n  \"dni\": \"{{registroDni}}\",\n  \"ciudad\": \"Tandil\",\n  \"password\": \"{{clientePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const suffix = pm.variables.replaceIn('{{$guid}}').replace(/-/g, '').slice(0, 16);",
+                  "pm.variables.set('registroEmail', 'ticketya-' + suffix + '@example.com');",
+                  "pm.variables.set('registroDni', 'TY' + suffix);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Registro creado (201)', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('clienteEmail', pm.variables.get('registroEmail'));",
+                  "    pm.collectionVariables.set('clienteDni', pm.variables.get('registroDni'));",
+                  "    pm.collectionVariables.set('idUsuario', String(pm.response.json().id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Ejecuta primero Registrar cliente o configura clienteEmail y clientePassword con una cuenta existente. Devuelve accessToken, tokenType y expiresIn. Un 401 indica credenciales inválidas o una cuenta sin contraseña configurada.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clienteEmail}}\",\n  \"password\": \"{{clientePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login exitoso (200)', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const token = pm.response.json().accessToken;",
+                  "    pm.test('La respuesta incluye accessToken', () => pm.expect(token).to.be.a('string').and.not.empty);",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('accessToken', token);",
+                  "        const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                  "        const claims = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '=')));",
+                  "        pm.collectionVariables.set('usuarioAutenticadoId', String(claims.sub));",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "sin body. Solo ADMINISTRADOR."
+          }
+        },
+        {
+          "name": "GET /usuarios/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}"
+              ]
+            },
+            "description": "sin body. Titular o ADMINISTRADOR."
+          }
+        },
+        {
+          "name": "DELETE /usuarios/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}"
+              ]
+            },
+            "description": "sin body. Titular o ADMINISTRADOR."
+          }
+        },
+        {
+          "name": "POST /usuarios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "description": "Solo ADMINISTRADOR. Consultá GET /roles para elegir el idRol.\n\nCrea una ficha sin contraseña mediante UsuarioService. Para crear una cuenta que pueda iniciar sesión usa POST /auth/registro. Un administrador puede cambiar luego el rol con PUT /usuarios/{id}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana Pérez\",\n  \"email\": \"ana@example.com\",\n  \"dni\": \"35123456\",\n  \"ciudad\": \"Tandil\",\n  \"idRol\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /usuarios/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}"
+              ]
+            },
+            "description": "Titular o ADMINISTRADOR. Para cambiar de rol se requiere ADMINISTRADOR.\n\nNombre, email válido, DNI, ciudad e idRol positivo son obligatorios. El rol debe existir y el email/DNI no pueden pertenecer a otra cuenta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana Pérez\",\n  \"email\": \"ana@example.com\",\n  \"dni\": \"35123456\",\n  \"ciudad\": \"Tandil\",\n  \"idRol\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /usuarios/{id}/preferencias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}/preferencias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}",
+                "preferencias"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "PUT /usuarios/{id}/preferencias",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}/preferencias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}",
+                "preferencias"
+              ]
+            },
+            "description": "Reemplaza ambas preferencias. Omitir un campo o enviar null lo vacía.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tiposEventoPreferidos\": [\n    \"RECITAL\",\n    \"TEATRO\"\n  ],\n  \"ciudadPreferida\": \"Tandil\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /usuarios/{id}/artistas-favoritos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}/artistas-favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}",
+                "artistas-favoritos"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "PUT /usuarios/{id}/artistas-favoritos/{idArtista}",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}/artistas-favoritos/{{idArtista}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}",
+                "artistas-favoritos",
+                "{{idArtista}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "DELETE /usuarios/{id}/artistas-favoritos/{idArtista}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}/artistas-favoritos/{{idArtista}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}",
+                "artistas-favoritos",
+                "{{idArtista}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /usuarios/{id}/recomendaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}/recomendaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}",
+                "recomendaciones"
+              ],
+              "query": [
+                {
+                  "key": "limite",
+                  "value": "10",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "sin body. Query opcional: ?limite=10."
+          }
+        },
+        {
+          "name": "GET /usuarios/{id}/recomendaciones/por-preferencias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}/recomendaciones/por-preferencias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}",
+                "recomendaciones",
+                "por-preferencias"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /usuarios/{id}/recomendaciones/por-compras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{idUsuario}}/recomendaciones/por-compras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{idUsuario}}",
+                "recomendaciones",
+                "por-compras"
+              ]
+            },
+            "description": "sin body.\nPreferencias, favoritos y recomendaciones: titular o ADMINISTRADOR."
+          }
+        },
+        {
+          "name": "GET /roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /roles/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{idRol}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{idRol}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "DELETE /roles/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{idRol}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{idRol}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "POST /roles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ORGANIZADOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /roles/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{idRol}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles",
+                "{{idRol}}"
+              ]
+            },
+            "description": "Todas las rutas /roles requieren ADMINISTRADOR. Valores de name:\nCLIENTE, ORGANIZADOR, ADMINISTRADOR y PERSONAL_ACCESO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ORGANIZADOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "EVENTOS, LUGARES, ARTISTAS Y FILA",
+      "item": [
+        {
+          "name": "GET /api/eventos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /api/eventos/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /api/eventos/mis-eventos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/mis-eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "mis-eventos"
+              ]
+            },
+            "description": "sin body. ORGANIZADOR o ADMINISTRADOR."
+          }
+        },
+        {
+          "name": "GET /api/eventos/buscar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/buscar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "buscar"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "RECITAL",
+                  "disabled": true
+                },
+                {
+                  "key": "idOrganizador",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "idParticipante",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "ciudad",
+                  "value": "Tandil",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": "2027-01-01T00:00:00",
+                  "disabled": true
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": "2027-12-31T23:59:59",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "tamanio",
+                  "value": "10",
+                  "disabled": true
+                },
+                {
+                  "key": "ordenar",
+                  "value": "fechaHora,asc",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "sin body. Parámetros de query opcionales:\ntipo, idOrganizador, idParticipante, ciudad, fechaDesde, fechaHasta,\npagina (0), tamanio (10), ordenar (fechaHora,asc).\nEjemplo: /api/eventos/buscar?tipo=RECITAL&ciudad=Tandil&pagina=0&tamanio=10\nFechas locales como 2027-06-15T20:30:00."
+          }
+        },
+        {
+          "name": "POST /api/eventos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos"
+              ]
+            },
+            "description": "ORGANIZADOR o ADMINISTRADOR. El Gateway envía X-Organizador-Id a partir\ndel JWT. Usá IDs de un lugar y artistas que ya existan.\n\nCrea un borrador. Luego ejecuta PUT de inventario, PUT de sector y PATCH publicar. Usa un evento futuro.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Festival del Centro\",\n  \"descripcion\": \"Música en vivo\",\n  \"tipo\": \"RECITAL\",\n  \"participantesIds\": [\n    1\n  ],\n  \"fechaHora\": \"2027-06-15T20:30:00\",\n  \"idLugar\": 1,\n  \"demanda\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /api/eventos/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}"
+              ]
+            },
+            "description": "El DTO también declara idOrganizador, estado y estadoPublicacion.\nLa identidad se deriva del JWT. Para cambios de estado usá las rutas\nespecíficas de abajo. Usá programacion para reprogramar un publicado.\n\nEventoService solo permite editar borradores del organizador correspondiente.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Festival del Centro\",\n  \"descripcion\": \"Música en vivo\",\n  \"tipo\": \"RECITAL\",\n  \"participantesIds\": [\n    1\n  ],\n  \"fechaHora\": \"2027-06-15T20:30:00\",\n  \"idLugar\": 1,\n  \"demanda\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/eventos/{id}/programacion",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}/programacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}",
+                "programacion"
+              ]
+            },
+            "description": "ORGANIZADOR o ADMINISTRADOR titular del evento. Requiere un evento publicado activo y al menos fechaHora o idLugar. La nueva programación debe ser futura. Un cambio efectivo avisa a los compradores.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaHora\": \"2027-06-16T20:30:00\",\n  \"idLugar\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/eventos/{id}/publicar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}/publicar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}",
+                "publicar"
+              ]
+            },
+            "description": "sin body. ORGANIZADOR o ADMINISTRADOR.\n\nUsa el JWT del organizador que creó el borrador y configura inventario disponible antes de publicar."
+          }
+        },
+        {
+          "name": "PATCH /api/eventos/{id}/finalizar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}/finalizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}",
+                "finalizar"
+              ]
+            },
+            "description": "sin body.\n\nRequiere evento publicado, sin cancelación y que ya haya alcanzado su fecha y hora."
+          }
+        },
+        {
+          "name": "GET /api/reportes/eventos/{idEvento}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reportes/eventos/{{idEvento}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reportes", "eventos", "{{idEvento}}"]
+            },
+            "description": "Usá el JWT del organizador titular o de un administrador. Devuelve totales y desglose por sector. Un organizador ajeno o un cliente recibe 403."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Reporte disponible para titular o administrador', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const reporte = pm.response.json();",
+                  "  pm.expect(reporte.idEvento).to.eql(Number(pm.variables.get('idEvento')));",
+                  "  pm.expect(reporte).to.include.keys('entradasVendidas', 'entradasDevueltas', 'ocupacionPorcentaje', 'ingresosNetos');",
+                  "  pm.expect(reporte.sectores).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /api/eventos/{id}/suspender",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}/suspender",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}",
+                "suspender"
+              ]
+            },
+            "description": "Sin body. Requiere el JWT de un ADMINISTRADOR y un evento publicado."
+          }
+        },
+        {
+          "name": "PATCH /api/eventos/{id}/cancelar · acceso público bloqueado",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}",
+                "cancelar"
+              ]
+            },
+            "description": "Prueba negativa. Usá un JWT de administrador. El Gateway devuelve 403: para cancelar con reintegros e inventario usá POST /compras/eventos/{idEvento}/cancelacion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('El Gateway bloquea la cancelación interna', () => pm.response.to.have.status(403));"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/eventos/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}"
+              ]
+            },
+            "description": "sin body.\nAntes de publicar, configurá el inventario y al menos un sector del evento."
+          }
+        },
+        {
+          "name": "GET /api/lugares",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/lugares",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lugares"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /api/lugares/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/lugares/{{idLugar}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lugares",
+                "{{idLugar}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "DELETE /api/lugares/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/lugares/{{idLugar}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lugares",
+                "{{idLugar}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "POST /api/lugares",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/lugares",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lugares"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Teatro del Centro\",\n  \"direccion\": \"San Martín 123\",\n  \"latitud\": -37.3288,\n  \"longitud\": -59.1367,\n  \"ciudad\": \"Tandil\",\n  \"tipo\": \"TEATRO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /api/lugares/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/lugares/{{idLugar}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "lugares",
+                "{{idLugar}}"
+              ]
+            },
+            "description": "Tipo de lugar: ESTADIO, TEATRO, SALA u OTRO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Teatro del Centro\",\n  \"direccion\": \"San Martín 123\",\n  \"latitud\": -37.3288,\n  \"longitud\": -59.1367,\n  \"ciudad\": \"Tandil\",\n  \"tipo\": \"TEATRO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /api/artistas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artistas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artistas"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /api/artistas/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artistas/{{idArtista}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artistas",
+                "{{idArtista}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "DELETE /api/artistas/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/artistas/{{idArtista}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artistas",
+                "{{idArtista}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "POST /api/artistas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/artistas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artistas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Banda del Centro\",\n  \"genero\": \"Rock\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /api/artistas/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/artistas/{{idArtista}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "artistas",
+                "{{idArtista}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Banda del Centro\",\n  \"genero\": \"Rock\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /api/eventos/{eventoId}/fila",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}/fila",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}",
+                "fila"
+              ]
+            },
+            "description": "Sin body. Solo CLIENTE. Usá un evento publicado que admita nuevos turnos y tenga demanda=true."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const authorization = pm.response.json().autorizacionCompra;",
+                  "    if (authorization) pm.collectionVariables.set('autorizacionCompra', authorization);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/eventos/{eventoId}/fila/mi-turno",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/eventos/{{idEvento}}/fila/mi-turno",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "{{idEvento}}",
+                "fila",
+                "mi-turno"
+              ]
+            },
+            "description": "Sin body. Solo CLIENTE. Consultá tu turno para un evento publicado de alta demanda y usá autorizacionCompra cuando el estado sea ADMITIDO."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const authorization = pm.response.json().autorizacionCompra;",
+                  "    if (authorization) pm.collectionVariables.set('autorizacionCompra', authorization);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SECTORES, ASIENTOS E INVENTARIO",
+      "item": [
+        {
+          "name": "GET /sectores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sectores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sectores"
+              ],
+              "query": [
+                {
+                  "key": "idLugar",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "sin body. Query opcional: ?idLugar=1."
+          }
+        },
+        {
+          "name": "GET /sectores/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sectores/{{idSector}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sectores",
+                "{{idSector}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "DELETE /sectores/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sectores/{{idSector}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sectores",
+                "{{idSector}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "POST /sectores",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sectores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sectores"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLugar\": 1,\n  \"nombre\": \"Campo\",\n  \"tipo\": \"CAMPO\",\n  \"capacidadTotal\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /sectores/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sectores/{{idSector}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sectores",
+                "{{idSector}}"
+              ]
+            },
+            "description": "Tipo de sector: CAMPO o NUMERADO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLugar\": 1,\n  \"nombre\": \"Campo\",\n  \"tipo\": \"CAMPO\",\n  \"capacidadTotal\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /asientos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/asientos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "asientos"
+              ],
+              "query": [
+                {
+                  "key": "idSector",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "sin body. Query opcional: ?idSector=1."
+          }
+        },
+        {
+          "name": "GET /asientos/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/asientos/{{idAsiento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "asientos",
+                "{{idAsiento}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "DELETE /asientos/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/asientos/{{idAsiento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "asientos",
+                "{{idAsiento}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "POST /asientos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/asientos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "asientos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSector\": 2,\n  \"fila\": \"A\",\n  \"columna\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /asientos/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/asientos/{{idAsiento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "asientos",
+                "{{idAsiento}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSector\": 2,\n  \"fila\": \"A\",\n  \"columna\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /eventos/{idEvento}/inventario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/eventos/{{idEvento}}/inventario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos",
+                "{{idEvento}}",
+                "inventario"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limitePorCliente\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT /eventos/{idEvento}/sectores",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/eventos/{{idEvento}}/sectores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos",
+                "{{idEvento}}",
+                "sectores"
+              ]
+            },
+            "description": "\n\nConfigura antes el inventario. El sector debe pertenecer al lugar y la capacidad habilitada debe respetar la capacidad física. En NUMERADO debe coincidir con los asientos creados.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSector\": 1,\n  \"precio\": 1500,\n  \"capacidadHabilitada\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /eventos/{idEvento}/sectores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/eventos/{{idEvento}}/sectores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos",
+                "{{idEvento}}",
+                "sectores"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /eventos/{idEvento}/sectores/{idSector}/disponibilidad",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/eventos/{{idEvento}}/sectores/{{idSector}}/disponibilidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos",
+                "{{idEvento}}",
+                "sectores",
+                "{{idSector}}",
+                "disponibilidad"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "POST /eventos/{idEvento}/inventario/cancelacion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/eventos/{{idEvento}}/inventario/cancelacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "eventos",
+                "{{idEvento}}",
+                "inventario",
+                "cancelacion"
+              ]
+            },
+            "description": "sin body."
+          }
+        }
+      ]
+    },
+    {
+      "name": "COMPRAS, ENTRADAS Y SOLICITUDES",
+      "item": [
+        {
+          "name": "POST /compras | CAMPO",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ]
+            },
+            "description": "Sector CAMPO. Envía cantidadEntradas. Requiere un evento publicado que aún admita ventas y disponibilidad en Sectores. El cliente se toma del JWT. La clave debe mantenerse para reintentar el mismo pedido y cambiar para cada nueva compra. Si demanda=true, entra a la fila con ese cliente y agrega autorizacionCompra vigente al body.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claveIdempotencia\": \"{{claveCompraCampo}}\",\n  \"idCliente\": {{idCliente}},\n  \"idEvento\": {{idEvento}},\n  \"idSector\": 1,\n  \"cantidadEntradas\": 2,\n  \"medioDePago\": \"TARJETA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /compras | NUMERADO",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras"
+              ]
+            },
+            "description": "Sector NUMERADO. Consulta disponibilidad y completa idsAsientos. Requiere un evento publicado que aún admita ventas y disponibilidad en Sectores. El cliente se toma del JWT. La clave debe mantenerse para reintentar el mismo pedido y cambiar para cada nueva compra. Si demanda=true, entra a la fila con ese cliente y agrega autorizacionCompra vigente al body.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claveIdempotencia\": \"{{claveCompraNumerada}}\",\n  \"idCliente\": {{idCliente}},\n  \"idEvento\": {{idEvento}},\n  \"idSector\": 2,\n  \"idsAsientos\": [\n    11,\n    12\n  ],\n  \"medioDePago\": \"TARJETA\",\n  \"autorizacionCompra\": \"{{autorizacionCompra}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /compras/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras/{{idCompra}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras",
+                "{{idCompra}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /compras/cliente/{idCliente}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras/cliente/{{idCliente}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras",
+                "cliente",
+                "{{idCliente}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "PUT /compras/{id}/pago",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras/{{idCompra}}/pago?aprobado=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras",
+                "{{idCompra}}",
+                "pago"
+              ],
+              "query": [
+                {
+                  "key": "aprobado",
+                  "value": "true",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "sin body. Query obligatoria: ?aprobado=true o ?aprobado=false."
+          }
+        },
+        {
+          "name": "POST /compras/eventos/{idEvento}/cancelacion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compras/eventos/{{idEvento}}/cancelacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras",
+                "eventos",
+                "{{idEvento}}",
+                "cancelacion"
+              ]
+            },
+            "description": "Sin body. Requiere JWT de ADMINISTRADOR. Coordina la cancelación, el inventario y los reintegros. Se puede repetir sin duplicar reintegros."
+          }
+        },
+        {
+          "name": "GET /entradas/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/entradas/{{idEntrada}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "entradas",
+                "{{idEntrada}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /entradas/qr/{qr}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/entradas/qr/{{qr}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "entradas",
+                "qr",
+                "{{qr}}"
+              ]
+            },
+            "description": "sin body. PERSONAL_ACCESO o ADMINISTRADOR."
+          }
+        },
+        {
+          "name": "GET /entradas/compra/{idCompra}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/entradas/compra/{{idCompra}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "entradas",
+                "compra",
+                "{{idCompra}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /entradas/cliente/{idCliente}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/entradas/cliente/{{idCliente}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "entradas",
+                "cliente",
+                "{{idCliente}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "PATCH /entradas/{id}/uso",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/entradas/{{idEntrada}}/uso?idEvento={{idEvento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "entradas",
+                "{{idEntrada}}",
+                "uso"
+              ],
+              "query": [
+                {
+                  "key": "idEvento",
+                  "value": "{{idEvento}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "sin body. Query obligatoria: ?idEvento=1."
+          }
+        },
+        {
+          "name": "PATCH /entradas/qr/{qr}/uso",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/entradas/qr/{{qr}}/uso?idEvento={{idEvento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "entradas",
+                "qr",
+                "{{qr}}",
+                "uso"
+              ],
+              "query": [
+                {
+                  "key": "idEvento",
+                  "value": "{{idEvento}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "sin body. Query obligatoria: ?idEvento=1.\nEn las rutas con QR, codificá como URL el valor si contiene caracteres especiales."
+          }
+        },
+        {
+          "name": "POST /solicitudes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "solicitudes"
+              ]
+            },
+            "description": "\n\nLa entrada debe ser del usuario autenticado y estar disponible para devolución. El servicio comprueba el estado del evento y exige al menos 72 horas de anticipación.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEntrada\": 11,\n  \"idCliente\": 5,\n  \"descripcion\": \"Quiero solicitar la devolución de la entrada.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /solicitudes/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{idSolicitud}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{idSolicitud}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /solicitudes/entrada/{idEntrada}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/entrada/{{idEntrada}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "solicitudes",
+                "entrada",
+                "{{idEntrada}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /solicitudes/pendientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/pendientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "solicitudes",
+                "pendientes"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "GET /solicitudes/cliente/{idCliente}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/cliente/{{idCliente}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "solicitudes",
+                "cliente",
+                "{{idCliente}}"
+              ]
+            },
+            "description": "sin body."
+          }
+        },
+        {
+          "name": "PUT /solicitudes/{id}/resolver",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/solicitudes/{{idSolicitud}}/resolver",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "solicitudes",
+                "{{idSolicitud}}",
+                "resolver"
+              ]
+            },
+            "description": "Solo ADMINISTRADOR. Para aprobar o rechazar usá ACEPTADA o RECHAZADA.\n\nEl administrador se obtiene del JWT tras validar el formato del body. Resuelve una solicitud pendiente con ACEPTADA o RECHAZADA.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idAdministrador\": 1,\n  \"estadoSolicitud\": \"ACEPTADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SALUD Y OPENAPI",
+      "item": [
+        {
+          "name": "GET /actuator/health | Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "sin body. Disponible en el Gateway (8080) y\ndirectamente en Sectores (8002), Compras (8003), Usuarios (8004) y Eventos (8005).",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /actuator/health | Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/actuator/health",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "sin body. Disponible en el Gateway (8080) y\ndirectamente en Sectores (8002), Compras (8003), Usuarios (8004) y Eventos (8005).",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /actuator/health | Eventos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{eventosUrl}}/actuator/health",
+              "host": [
+                "{{eventosUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "sin body. Disponible en el Gateway (8080) y\ndirectamente en Sectores (8002), Compras (8003), Usuarios (8004) y Eventos (8005).",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /actuator/health | Sectores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{sectoresUrl}}/actuator/health",
+              "host": [
+                "{{sectoresUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "sin body. Disponible en el Gateway (8080) y\ndirectamente en Sectores (8002), Compras (8003), Usuarios (8004) y Eventos (8005).",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /actuator/health | Compras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{comprasUrl}}/actuator/health",
+              "host": [
+                "{{comprasUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "sin body. Disponible en el Gateway (8080) y\ndirectamente en Sectores (8002), Compras (8003), Usuarios (8004) y Eventos (8005).",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /openapi.json | Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/openapi.json",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "openapi.json"
+              ]
+            },
+            "description": "sin body. Archivo servido directamente por Sectores,\nCompras, Usuarios y Eventos en esos mismos puertos. Aplican las reglas\nde autenticación del servicio correspondiente.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /openapi.json | Eventos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{eventosUrl}}/openapi.json",
+              "host": [
+                "{{eventosUrl}}"
+              ],
+              "path": [
+                "openapi.json"
+              ]
+            },
+            "description": "sin body. Archivo servido directamente por Sectores,\nCompras, Usuarios y Eventos en esos mismos puertos. Aplican las reglas\nde autenticación del servicio correspondiente."
+          }
+        },
+        {
+          "name": "GET /openapi.json | Sectores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{sectoresUrl}}/openapi.json",
+              "host": [
+                "{{sectoresUrl}}"
+              ],
+              "path": [
+                "openapi.json"
+              ]
+            },
+            "description": "sin body. Archivo servido directamente por Sectores,\nCompras, Usuarios y Eventos en esos mismos puertos. Aplican las reglas\nde autenticación del servicio correspondiente."
+          }
+        },
+        {
+          "name": "GET /openapi.json | Compras",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{comprasUrl}}/openapi.json",
+              "host": [
+                "{{comprasUrl}}"
+              ],
+              "path": [
+                "openapi.json"
+              ]
+            },
+            "description": "sin body. Archivo servido directamente por Sectores,\nCompras, Usuarios y Eventos en esos mismos puertos. Aplican las reglas\nde autenticación del servicio correspondiente."
+          }
+        }
+      ]
+    },
+    {
+      "name": "OPERACIONES ENTRE SERVICIOS",
+      "item": [
+        {
+          "name": "GET /interno/notificaciones/destinatarios/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuariosUrl}}/interno/notificaciones/destinatarios/{{id}}",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "interno",
+                "notificaciones",
+                "destinatarios",
+                "{{id}}"
+              ]
+            },
+            "description": "sin body.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /interno/notificaciones/destinatarios/favoritos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/interno/notificaciones/destinatarios/favoritos",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "interno",
+                "notificaciones",
+                "destinatarios",
+                "favoritos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ciudad\": \"Tandil\",\n  \"artistas\": [\n    1,\n    2\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/eventos/interno/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{eventosUrl}}/api/eventos/interno/{{idEvento}}",
+              "host": [
+                "{{eventosUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "interno",
+                "{{idEvento}}"
+              ]
+            },
+            "description": "sin body.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/eventos/interno/{id}/disponibilidad",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{eventosUrl}}/api/eventos/interno/{{idEvento}}/disponibilidad?agotado=true",
+              "host": [
+                "{{eventosUrl}}"
+              ],
+              "path": [
+                "api",
+                "eventos",
+                "interno",
+                "{{idEvento}}",
+                "disponibilidad"
+              ],
+              "query": [
+                {
+                  "key": "agotado",
+                  "value": "true",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "sin body. Query obligatoria: ?agotado=true o ?agotado=false.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /interno/eventos/recomendaciones/candidatos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{eventosUrl}}/interno/eventos/recomendaciones/candidatos",
+              "host": [
+                "{{eventosUrl}}"
+              ],
+              "path": [
+                "interno",
+                "eventos",
+                "recomendaciones",
+                "candidatos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tiposEventoPreferidos\": [\n    \"RECITAL\"\n  ],\n  \"artistasFavoritos\": [\n    1\n  ],\n  \"ciudadPreferida\": \"Tandil\",\n  \"fechaDesde\": \"2027-01-01T00:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /interno/eventos/recomendaciones/por-ids",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{eventosUrl}}/interno/eventos/recomendaciones/por-ids",
+              "host": [
+                "{{eventosUrl}}"
+              ],
+              "path": [
+                "interno",
+                "eventos",
+                "recomendaciones",
+                "por-ids"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idsEventos\": [\n    1,\n    2\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /interno/fila/autorizaciones/validar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{eventosUrl}}/interno/fila/autorizaciones/validar",
+              "host": [
+                "{{eventosUrl}}"
+              ],
+              "path": [
+                "interno",
+                "fila",
+                "autorizaciones",
+                "validar"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventoId\": 1,\n  \"clienteId\": 5,\n  \"autorizacionCompra\": \"REEMPLAZAR_CON_EL_VALOR_DE_LA_FILA\",\n  \"idOperacion\": \"compra-002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /interno/fila/autorizaciones/completar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{eventosUrl}}/interno/fila/autorizaciones/completar",
+              "host": [
+                "{{eventosUrl}}"
+              ],
+              "path": [
+                "interno",
+                "fila",
+                "autorizaciones",
+                "completar"
+              ]
+            },
+            "description": "Para validar o completar, el JWT de servicio debe tener el claim usuarioId.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventoId\": 1,\n  \"clienteId\": 5,\n  \"autorizacionCompra\": \"REEMPLAZAR_CON_EL_VALOR_DE_LA_FILA\",\n  \"idOperacion\": \"compra-002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /interno/inventario/disponibilidad",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{sectoresUrl}}/interno/inventario/disponibilidad",
+              "host": [
+                "{{sectoresUrl}}"
+              ],
+              "path": [
+                "interno",
+                "inventario",
+                "disponibilidad"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idsEventos\": [\n    1,\n    2\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /reservas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{sectoresUrl}}/reservas",
+              "host": [
+                "{{sectoresUrl}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "description": "Para CAMPO enviá idAsientos vacío. Para NUMERADO enviá los IDs de los\nasientos elegidos. El JWT de servicio aporta el claim usuarioId.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claveIdempotencia\": \"reserva-001\",\n  \"idCliente\": 5,\n  \"idEvento\": 1,\n  \"idSector\": 1,\n  \"cantidad\": 2,\n  \"idAsientos\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /reservas/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{sectoresUrl}}/reservas/{{idReserva}}",
+              "host": [
+                "{{sectoresUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{idReserva}}"
+              ]
+            },
+            "description": "sin body.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /reservas/{id}/confirmacion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{sectoresUrl}}/reservas/{{idReserva}}/confirmacion",
+              "host": [
+                "{{sectoresUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{idReserva}}",
+                "confirmacion"
+              ]
+            },
+            "description": "sin body.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /reservas/{id}/liberacion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{sectoresUrl}}/reservas/{{idReserva}}/liberacion",
+              "host": [
+                "{{sectoresUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{idReserva}}",
+                "liberacion"
+              ]
+            },
+            "description": "sin body.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /reservas/{id}/devoluciones",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{sectoresUrl}}/reservas/{{idReserva}}/devoluciones",
+              "host": [
+                "{{sectoresUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{idReserva}}",
+                "devoluciones"
+              ]
+            },
+            "description": "En NUMERADO enviá en idAsientos los IDs de los asientos a devolver.\n\nRequiere una reserva confirmada vigente y al menos 72 horas de anticipación; solicitadaEn debe estar entre la creación de la reserva y la hora actual.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claveIdempotencia\": \"devolucion-001\",\n  \"cantidad\": 1,\n  \"solicitadaEn\": \"2027-06-14T15:30:00Z\",\n  \"idAsientos\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /interno/recomendaciones/clientes/{idCliente}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{comprasUrl}}/interno/recomendaciones/clientes/{{idCliente}}",
+              "host": [
+                "{{comprasUrl}}"
+              ],
+              "path": [
+                "interno",
+                "recomendaciones",
+                "clientes",
+                "{{idCliente}}"
+              ]
+            },
+            "description": "sin body.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /interno/recomendaciones/clientes/{idCliente}/historial-valido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{comprasUrl}}/interno/recomendaciones/clientes/{{idCliente}}/historial-valido",
+              "host": [
+                "{{comprasUrl}}"
+              ],
+              "path": [
+                "interno",
+                "recomendaciones",
+                "clientes",
+                "{{idCliente}}",
+                "historial-valido"
+              ]
+            },
+            "description": "sin body.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /interno/notificaciones/eventos/{id}/compradores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{comprasUrl}}/interno/notificaciones/eventos/{{id}}/compradores?cancelacion=false",
+              "host": [
+                "{{comprasUrl}}"
+              ],
+              "path": [
+                "interno",
+                "notificaciones",
+                "eventos",
+                "{{id}}",
+                "compradores"
+              ],
+              "query": [
+                {
+                  "key": "cancelacion",
+                  "value": "false",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "sin body. Query obligatoria: ?cancelacion=true o ?cancelacion=false.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{serviceToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "NOTIFICACIONES",
+      "item": [
+        {
+          "name": "POST /api/sucesos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{notificacionesUrl}}/api/sucesos",
+              "host": [
+                "{{notificacionesUrl}}"
+              ],
+              "path": [
+                "api",
+                "sucesos"
+              ]
+            },
+            "description": "Campos requeridos por el DTO: claveIdempotencia, tipo e idEvento.\nTipos: COMPRA_CONFIRMADA, DEVOLUCION_APROBADA, EVENTO_CANCELADO,\nEVENTO_MODIFICADO y ARTISTA_FAVORITO_PUBLICADO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claveIdempotencia\": \"compra-11-confirmada\",\n  \"tipo\": \"COMPRA_CONFIRMADA\",\n  \"idEvento\": 1,\n  \"idCompra\": 11,\n  \"idCliente\": 5,\n  \"destinatario\": \"ana@example.com\",\n  \"cantidadEntradas\": 2,\n  \"importe\": 3000,\n  \"capacidadTotal\": 100,\n  \"fechaSuceso\": \"2027-06-14T15:30:00Z\",\n  \"detalle\": \"Compra confirmada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "POST /api/logs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{notificacionesUrl}}/api/logs",
+              "host": [
+                "{{notificacionesUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ]
+            },
+            "description": "Requeridos: servicio, nivel y mensaje. idCorrelacion y fecha son opcionales.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"servicio\": \"compras\",\n  \"nivel\": \"INFO\",\n  \"mensaje\": \"Compra confirmada\",\n  \"idCorrelacion\": \"compra-11\",\n  \"fecha\": \"2027-06-14T15:30:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /api/logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{notificacionesUrl}}/api/logs?desde=2027-06-14T00:00:00Z&hasta=2027-06-15T00:00:00Z",
+              "host": [
+                "{{notificacionesUrl}}"
+              ],
+              "path": [
+                "api",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "servicio",
+                  "value": "compras",
+                  "disabled": true
+                },
+                {
+                  "key": "desde",
+                  "value": "2027-06-14T00:00:00Z",
+                  "disabled": false
+                },
+                {
+                  "key": "hasta",
+                  "value": "2027-06-15T00:00:00Z",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "sin body. Query: desde y hasta obligatorios, servicio opcional.\nEjemplo: /api/logs?desde=2027-06-14T00:00:00Z&hasta=2027-06-15T00:00:00Z&servicio=compras",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /api/bitacora",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{notificacionesUrl}}/api/bitacora?idEvento={{idEvento}}",
+              "host": [
+                "{{notificacionesUrl}}"
+              ],
+              "path": [
+                "api",
+                "bitacora"
+              ],
+              "query": [
+                {
+                  "key": "idEvento",
+                  "value": "{{idEvento}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "sin body. Query obligatoria: ?idEvento=1.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "GET /api/notificaciones/clientes/{idCliente}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{notificacionesUrl}}/api/notificaciones/clientes/{{idCliente}}",
+              "host": [
+                "{{notificacionesUrl}}"
+              ],
+              "path": [
+                "api",
+                "notificaciones",
+                "clientes",
+                "{{idCliente}}"
+              ]
+            },
+            "description": "sin body.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

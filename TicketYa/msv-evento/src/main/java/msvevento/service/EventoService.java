@@ -6,6 +6,7 @@ import msvevento.client.SectorEventoClient;
 import msvevento.dto.ArtistaResponseDTO;
 import msvevento.dto.EventoRequestDTO;
 import msvevento.dto.EventoResponseDTO;
+import msvevento.dto.EventosPorIdsRequest;
 import msvevento.dto.LugarResponseDTO;
 import msvevento.dto.SectorEventoResponseDTO;
 import msvevento.entity.*;
@@ -17,7 +18,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,7 +30,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -35,21 +45,25 @@ public class EventoService {
     private final LugarRepository lugarRepository;
     private final ArtistaRepository artistaRepository;
     private final SectorEventoClient sectorEventoClient;
+    private final ApplicationEventPublisher eventos;
 
     public EventoService(
             EventoRepository eventoRepository,
             LugarRepository lugarRepository,
             ArtistaRepository artistaRepository,
-            SectorEventoClient sectorEventoClient
+            SectorEventoClient sectorEventoClient,
+            ApplicationEventPublisher eventos
     ) {
         this.eventoRepository = eventoRepository;
         this.lugarRepository = lugarRepository;
         this.artistaRepository = artistaRepository;
         this.sectorEventoClient = sectorEventoClient;
+        this.eventos = eventos;
     }
 
     // Listar todos los eventos
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "eventos-catalogo")
     public List<EventoResponseDTO> listarEventosPublicos() {
         return eventoRepository.findByEstadoPublicacion(EstadoPublicacion.PUBLICADO)
                 .stream()
@@ -78,6 +92,7 @@ public class EventoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "evento-detalle", key = "#p0")
     public EventoResponseDTO buscarEventoPublicado(Long id) {
         Evento evento = eventoRepository.findByIdAndEstadoPublicacion(id, EstadoPublicacion.PUBLICADO)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento publicado no encontrado"));
@@ -185,9 +200,14 @@ public class EventoService {
     }
     // Publicar un evento
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public EventoResponseDTO publicarEvento(Long id, Long idOrganizador) {
 
-        Evento evento = eventoRepository.findById(id)
+        Evento evento = eventoRepository.buscarParaActualizar(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No se encontro el evento con ID: " + id
@@ -208,8 +228,49 @@ public class EventoService {
         evento.setEstadoPublicacion(EstadoPublicacion.PUBLICADO);
 
         Evento eventoGuardado = eventoRepository.save(evento);
+        eventos.publishEvent(new NotificarEvento.Publicado(eventoGuardado.getId(), eventoGuardado.getNombre(),
+                eventoGuardado.getLugar().getCiudad(), eventoGuardado.getFechaHora(),
+                eventoGuardado.getParticipantes().stream().map(Artista::getId).toList()));
 
         return convertirAResponseDTO(eventoGuardado);
+    }
+
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
+    public EventoResponseDTO reprogramarEvento(Long id, Long idOrganizador, LocalDateTime fechaHora, Long idLugar) {
+        Evento evento = eventoRepository.buscarParaActualizar(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento inexistente"));
+        validarOrganizador(evento, idOrganizador);
+        if (evento.getEstadoPublicacion() != EstadoPublicacion.PUBLICADO
+                || evento.getEstado() == EstadoEvento.CANCELADO || evento.getEstado() == EstadoEvento.FINALIZADO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Solo se pueden reprogramar eventos publicados activos");
+        }
+        if (fechaHora == null && idLugar == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Indicá fecha y hora o lugar");
+        }
+        Lugar lugarAnterior = evento.getLugar();
+        LocalDateTime fechaAnterior = evento.getFechaHora();
+        Lugar lugar = idLugar == null ? lugarAnterior : lugarRepository.findById(idLugar)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lugar inexistente"));
+        LocalDateTime fecha = fechaHora == null ? fechaAnterior : fechaHora;
+        if (Objects.equals(fechaAnterior, fecha) && Objects.equals(lugarAnterior.getId(), lugar.getId())) {
+            return convertirAResponseDTO(evento);
+        }
+        if (fecha == null || !fecha.isAfter(LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La nueva programación debe ser futura");
+        }
+        evento.setFechaHora(fecha);
+        evento.setLugar(lugar);
+        Evento guardado = eventoRepository.save(evento);
+        String detalle = "Evento: " + evento.getNombre() + ". Antes: " + NotificarEvento.fecha(fechaAnterior)
+                + " en " + lugarAnterior.getNombre() + ". Ahora: " + NotificarEvento.fecha(fecha)
+                + " en " + lugar.getNombre() + ".";
+        eventos.publishEvent(new NotificarEvento.Cambio(id, "evento-modificado-" + UUID.randomUUID(),
+                "EVENTO_MODIFICADO", detalle));
+        return convertirAResponseDTO(guardado);
     }
 
     private void validarOrganizador(Evento evento, Long idOrganizador) {
@@ -218,6 +279,11 @@ public class EventoService {
         }
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public void actualizarAgotamiento(Long id, boolean agotado) {
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
@@ -233,6 +299,11 @@ public class EventoService {
         eventoRepository.save(evento);
     }
 
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public EventoResponseDTO finalizarEvento(Long id, Long idOrganizador) {
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
@@ -319,6 +390,11 @@ public class EventoService {
 
 
     // Suspender un evento
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public EventoResponseDTO suspenderEvento(Long id) {
 
         Evento evento = eventoRepository.findById(id)
@@ -343,9 +419,14 @@ public class EventoService {
 
 
     // Cancelar un evento
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public EventoResponseDTO cancelarEvento(Long id) {
 
-        Evento evento = eventoRepository.findById(id)
+        Evento evento = eventoRepository.buscarParaActualizar(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No se encontro el evento con ID: " + id
@@ -367,9 +448,16 @@ public class EventoService {
 
         Evento eventoGuardado = eventoRepository.save(evento);
 
+        eventos.publishEvent(new NotificarEvento.Cambio(id, "evento-cancelado-" + id,
+                "EVENTO_CANCELADO", "Evento: " + eventoGuardado.getNombre() + "."));
         return convertirAResponseDTO(eventoGuardado);
     }
     // Eliminar un evento
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "eventos-catalogo", allEntries = true),
+            @CacheEvict(cacheNames = "eventos-busqueda", allEntries = true),
+            @CacheEvict(cacheNames = "evento-detalle", key = "#p0")
+    })
     public void eliminarEvento(Long id) {
 
         if (!eventoRepository.existsById(id)) {
@@ -384,6 +472,7 @@ public class EventoService {
 
     // Buscar eventos aplicando filtros
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "eventos-busqueda", condition = "!#p8.trim().startsWith('precio')")
     public List<EventoResponseDTO> buscarEventos(
             TipoEvento tipo,
             Long idOrganizador,
@@ -393,7 +482,8 @@ public class EventoService {
             LocalDateTime fechaHasta,
             int pagina,
             int tamanio,
-            String ordenar
+            String ordenar,
+            String texto
     ) {
 
         // Validar el campo por el que se quiere ordenar
@@ -401,7 +491,7 @@ public class EventoService {
 
         String campoOrden = partesOrden[0].trim();
 
-        if (!List.of("fechaHora", "nombre").contains(campoOrden)) {
+        if (!List.of("fechaHora", "nombre", "precio", "relevancia").contains(campoOrden)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Campo de ordenamiento no valido"
@@ -409,7 +499,7 @@ public class EventoService {
         }
 
         // Determinar la dirección del ordenamiento
-        Sort.Direction direccion = Sort.Direction.ASC;
+        Sort.Direction direccion = "relevancia".equals(campoOrden) ? Sort.Direction.DESC : Sort.Direction.ASC;
 
         if (partesOrden.length > 1) {
             try {
@@ -424,12 +514,14 @@ public class EventoService {
             }
         }
 
-        // Crear la configuración de paginación y ordenamiento
-        Pageable pageable = PageRequest.of(
-                pagina,
-                tamanio,
-                Sort.by(direccion, campoOrden)
-        );
+        String consulta = CiudadNormalizada.de(texto);
+        PageRequest paginaSolicitada = PageRequest.of(pagina, tamanio);
+        if (!consulta.isEmpty() || "precio".equals(campoOrden) || "relevancia".equals(campoOrden)) {
+            var candidatos = eventoRepository.buscarConFiltros(tipo, idOrganizador, idParticipante,
+                    ciudad, fechaDesde, fechaHasta, Pageable.unpaged()).getContent();
+            return ordenarBusqueda(candidatos, consulta, campoOrden, direccion, paginaSolicitada);
+        }
+        Pageable pageable = paginaSolicitada.withSort(Sort.by(direccion, campoOrden).and(Sort.by("id")));
 
         // Buscar eventos en el repositorio
         Page<Evento> eventos = eventoRepository.buscarConFiltros(
@@ -448,6 +540,62 @@ public class EventoService {
                 .map(this::convertirAResponseDTO)
                 .toList();
     }
+
+    private List<EventoResponseDTO> ordenarBusqueda(List<Evento> candidatos, String consulta, String campo,
+                                                     Sort.Direction direccion, Pageable pagina) {
+        var coincidencias = candidatos.stream()
+                .map(evento -> new Coincidencia(evento, relevancia(evento, consulta)))
+                .filter(resultado -> consulta.isEmpty() || resultado.relevancia() > 0)
+                .toList();
+        if (coincidencias.isEmpty()) {
+            return List.of();
+        }
+
+        Comparator<Coincidencia> orden;
+        if ("precio".equals(campo)) {
+            Map<Long, BigDecimal> precios;
+            try {
+                precios = sectorEventoClient.preciosMinimos(new EventosPorIdsRequest(
+                        coincidencias.stream().map(resultado -> resultado.evento().getId()).toList()));
+            } catch (FeignException exception) {
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "No se pudieron consultar los precios");
+            }
+            Comparator<BigDecimal> ordenPrecio = direccion.isAscending()
+                    ? Comparator.naturalOrder() : Comparator.reverseOrder();
+            orden = Comparator.comparing(resultado -> precios.get(resultado.evento().getId()),
+                    Comparator.nullsLast(ordenPrecio));
+        } else {
+            orden = switch (campo) {
+                case "nombre" -> Comparator.comparing(resultado -> resultado.evento().getNombre());
+                case "fechaHora" -> Comparator.comparing(resultado -> resultado.evento().getFechaHora());
+                default -> Comparator.comparingInt(Coincidencia::relevancia);
+            };
+            if (direccion.isDescending()) {
+                orden = orden.reversed();
+            }
+        }
+
+        return coincidencias.stream()
+                .sorted(orden.thenComparing(resultado -> resultado.evento().getFechaHora())
+                        .thenComparing(resultado -> resultado.evento().getId()))
+                .skip(pagina.getOffset())
+                .limit(pagina.getPageSize())
+                .map(resultado -> convertirAResponseDTO(resultado.evento()))
+                .toList();
+    }
+
+    private int relevancia(Evento evento, String consulta) {
+        if (consulta.isEmpty()) return 0;
+        String nombre = CiudadNormalizada.de(evento.getNombre());
+        if (nombre.equals(consulta)) return 5;
+        if (nombre.startsWith(consulta)) return 4;
+        if (nombre.contains(consulta)) return 3;
+        if (evento.getParticipantes().stream().anyMatch(
+                artista -> CiudadNormalizada.de(artista.getNombre()).contains(consulta))) return 2;
+        return CiudadNormalizada.de(evento.getDescripcion()).contains(consulta) ? 1 : 0;
+    }
+
+    private record Coincidencia(Evento evento, int relevancia) {}
 
     // Convertir entidad a ResponseDTO
     private EventoResponseDTO convertirAResponseDTO(Evento evento) {

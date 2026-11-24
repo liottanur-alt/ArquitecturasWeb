@@ -1,6 +1,6 @@
 # TicketYa | Historias de usuario
 
-> **Alcance** · 5 funcionalidades y 14 historias de usuario.
+> **Alcance** · Entrega 1: 5 funcionalidades y 14 historias. Entrega 2: 6 funcionalidades y 12 historias.
 
 ## Entrega 1 · Core del sistema
 
@@ -178,3 +178,164 @@
 - El sistema identifica las entradas vendidas y solicita los reintegros correspondientes, incluso si los compradores no iniciaron una devolución.
 - Si una entrada ya tiene un reintegro iniciado o completado, la cancelación no genera un segundo reintegro por esa entrada.
 - El sistema identifica y notifica a los compradores afectados por la cancelación. Este aviso forma parte del flujo del punto 7. La cobertura general de notificaciones se completa en la Entrega 2.
+
+## Entrega 2 · Sistema completo
+
+### Índice de funcionalidades
+
+- [F06 · Fila virtual](#f06)
+- [F07 · Caché del catálogo](#f07)
+- [F08 · Control de acceso por QR](#f08)
+- [F09 · Preferencias y recomendaciones](#f09)
+- [F10 · Notificaciones por correo](#f10)
+- [F11 · Reportes para organizadores](#f11)
+
+---
+
+<a id="f06"></a>
+
+### F06 · Fila virtual
+
+#### HU-15 · Ingresar a la fila de un evento de alta demanda
+
+> Como cliente, quiero ingresar a una fila virtual cuando comienza la venta de un evento de alta demanda para esperar mi turno de compra.
+
+**Criterios de aceptación**
+
+- Cuando la venta está abierta y el evento está marcado como de alta demanda, el sistema me agrega a la fila y me informa que quedé registrado.
+- Si repito la solicitud para el mismo evento, el sistema conserva mi lugar y no crea otra posición para mí.
+- Los eventos que no están marcados como de alta demanda siguen permitiendo el acceso al flujo habitual de compra, sin pasar por la fila.
+
+#### HU-16 · Consultar la posición y el estado en la fila
+
+> Como cliente, quiero consultar mi posición y el estado de mi turno para saber cuánto falta para poder comprar.
+
+**Criterios de aceptación**
+
+- El sistema informa si sigo esperando, si ya tengo permiso para comprar o si mi turno venció.
+- Mientras espero, mi posición se actualiza cuando otros clientes avanzan, abandonan la fila o vencen.
+- Solo puedo consultar la posición y el estado asociados a mi identidad y al evento correspondiente.
+
+#### HU-17 · Comprar por turnos y limitar el acceso simultáneo
+
+> Como cliente, quiero recibir un turno temporal cuando me corresponda para poder iniciar la compra sin que ingresen más compradores simultáneos que los permitidos.
+
+**Criterios de aceptación**
+
+- El sistema habilita clientes en orden de llegada y no supera el máximo de compradores simultáneos configurado para el evento.
+- El permiso de compra queda asociado al cliente y al evento, y deja de ser válido al vencer o al completar el turno.
+- Una solicitud de compra con un permiso vencido, utilizado por otro cliente o emitido para otro evento se rechaza.
+- Si una operación se reintenta con la misma clave de idempotencia, el sistema reconoce el intento original y no crea una compra o reserva duplicada.
+- El orden y el límite de compradores se mantienen aunque las solicitudes sean atendidas por distintas instancias del sistema.
+
+<a id="f07"></a>
+
+### F07 · Caché del catálogo
+
+#### HU-18 · Consultar eventos y búsquedas con caché
+
+> Como cliente, quiero consultar rápidamente eventos, detalles y resultados de búsqueda para encontrar opciones disponibles.
+
+**Criterios de aceptación**
+
+- El sistema puede cachear consultas públicas de listados, detalles y búsquedas de eventos publicados.
+- Las búsquedas con filtros, orden o paginación diferentes no comparten una respuesta incorrecta: esos parámetros se consideran al identificar cada resultado cacheado.
+- El tiempo de vida (TTL) de cada tipo de consulta se puede configurar y, al vencer, el sistema obtiene datos actualizados.
+- La disponibilidad de asientos o sectores, las reservas, las posiciones de fila y los turnos de compra no se sirven desde esta caché.
+
+#### HU-19 · Actualizar la caché cuando cambian los eventos
+
+> Como cliente, quiero que el catálogo y las búsquedas reflejen los cambios de los eventos para no recibir información desactualizada.
+
+**Criterios de aceptación**
+
+- Cuando se crea, edita, publica, suspende, cancela o elimina un evento, el sistema invalida o actualiza las respuestas cacheadas que puedan incluirlo.
+- Cuando cambia un precio o un estado de venta que se muestra en una consulta pública, el resultado cacheado afectado deja de servirse como vigente.
+- Si una invalidación no ocurre, el TTL limita cuánto tiempo puede conservarse la respuesta anterior.
+
+<a id="f08"></a>
+
+### F08 · Control de acceso por QR
+
+#### HU-20 · Validar una entrada en el ingreso del evento
+
+> Como personal de acceso, quiero escanear el QR en el evento al que estoy dando ingreso para validar la entrada una sola vez.
+
+**Criterios de aceptación**
+
+- Con rol de personal de acceso o administrador, un QR existente, vigente y sin usar se marca como escaneado al indicar el evento correcto.
+- Un QR de otro evento devuelve `409` y conserva su estado. Un QR inexistente devuelve `404`. Si falta el identificador del evento, la solicitud devuelve `400`.
+- Si dos solicitudes escanean el mismo QR simultáneamente, una confirma el ingreso y la otra devuelve `409`.
+
+<a id="f09"></a>
+
+### F09 · Preferencias y recomendaciones
+
+#### HU-21 · Guardar mis preferencias
+
+> Como cliente, quiero guardar mis tipos de evento preferidos, artistas favoritos y ciudad preferida para recibir sugerencias acordes.
+
+**Criterios de aceptación**
+
+- Puedo consultar y actualizar las preferencias de mi perfil. Al volver a consultarlas se conservan los valores guardados.
+- Puedo agregar y quitar artistas favoritos. Repetir la incorporación del mismo artista conserva una sola referencia.
+- Un cliente que intenta modificar las preferencias de otra cuenta recibe `403`.
+
+#### HU-22 · Recibir recomendaciones por preferencias e historial
+
+> Como cliente, quiero descubrir eventos relacionados con mis gustos y con lo que compraron otros clientes con compras en común.
+
+**Criterios de aceptación**
+
+- Se consideran coincidencias por tipo, artistas y ciudad preferida, y eventos que compraron clientes con historial en común.
+- Si un evento coincide por varias fuentes, aparece una sola vez con los motivos correspondientes.
+- Se excluyen los eventos que ya compré y para los que todavía tengo entradas vigentes. Si devuelvo todas esas entradas, el evento puede volver a ser candidato.
+- Cuando una fuente no está disponible y se puede responder con otras, la respuesta indica que el resultado es parcial.
+
+<a id="f10"></a>
+
+### F10 · Notificaciones por correo
+
+#### HU-23 · Recibir la confirmación de mi compra
+
+> Como cliente, quiero recibir un correo cuando el pago se aprueba y mi compra queda confirmada.
+
+**Criterios de aceptación**
+
+- Una compra confirmada genera un correo con la referencia de compra y la cantidad de entradas. Una reserva pendiente o un pago rechazado no generan ese aviso.
+- Reintentar la misma confirmación no genera otro correo para esa compra.
+
+#### HU-24 · Recibir avisos de cancelación y reprogramación
+
+> Como comprador, quiero enterarme si se cancela un evento o cambia su programación.
+
+**Criterios de aceptación**
+
+- Al cancelar un evento, cada comprador afectado recibe un aviso, aunque tenga varias entradas.
+- Un cambio efectivo de fecha, horario o lugar de un evento publicado notifica a los compradores con la programación anterior y la nueva.
+- Repetir la cancelación o enviar la misma programación no genera un segundo aviso por la misma operación.
+
+#### HU-25 · Recibir avisos de mis artistas favoritos en mi ciudad
+
+> Como cliente, quiero enterarme cuando se publica un evento en mi ciudad con un artista que marqué como favorito.
+
+**Criterios de aceptación**
+
+- Al publicar un evento, reciben el aviso los clientes que tengan al menos un participante como favorito y cuya ciudad de perfil coincida con la ciudad del lugar.
+- Un cliente recibe un solo aviso por ese evento, incluso si marcó como favoritos a varios participantes.
+- Los eventos en borrador y las publicaciones que no coinciden con la ciudad o los favoritos del cliente no generan el aviso para esa persona.
+
+<a id="f11"></a>
+
+### F11 · Reportes para organizadores
+
+#### HU-26 · Consultar ventas, devoluciones y ocupación de mi evento
+
+> Como organizador, quiero consultar el desempeño de mis eventos para conocer las ventas, las devoluciones y la recaudación.
+
+**Criterios de aceptación**
+
+- El organizador titular y un administrador pueden obtener el reporte por Gateway con JWT. Un organizador ajeno o un cliente recibe `403`.
+- El reporte muestra totales y desglose por sector de entradas vendidas y devueltas, capacidad, porcentaje de ocupación e ingresos netos.
+- La ocupación se calcula con las entradas vendidas menos las devueltas sobre la capacidad configurada. Si no hay capacidad para calcularla, el porcentaje es nulo.
+- Una devolución aprobada aumenta las devoluciones del sector y reduce su ocupación y sus ingresos netos.

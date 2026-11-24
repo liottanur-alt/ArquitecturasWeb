@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
@@ -30,6 +32,7 @@ class InventarioIntegrationTests {
     static final Instant BASE = Instant.parse("2030-01-01T12:00:00Z");
     static final AtomicLong SECUENCIA = new AtomicLong(100);
     static final AtomicLong CONSULTAS_EVENTOS = new AtomicLong();
+    static final AtomicReference<String> AUTORIZACION_EVENTOS = new AtomicReference<>();
     static final HttpServer REMOTO = iniciarProveedor();
     @Autowired InventarioService inventario;
     @Autowired SectorService sectores;
@@ -37,6 +40,7 @@ class InventarioIntegrationTests {
     @Autowired RelojMutable reloj;
     @Autowired org.springframework.test.web.servlet.MockMvc mvc;
     @Autowired com.universidad.msvsectoerasiento.repository.ReservaRepository reservas;
+    @Autowired JwtDecoder decoder;
 
     @TestConfiguration
     static class RelojPrueba {
@@ -55,6 +59,7 @@ class InventarioIntegrationTests {
             var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
             server.createContext("/api/eventos/interno/", exchange -> {
                 String ruta = exchange.getRequestURI().getPath().substring("/api/eventos/interno/".length());
+                AUTORIZACION_EVENTOS.set(exchange.getRequestHeaders().getFirst(HttpHeaders.AUTHORIZATION));
                 if (exchange.getRequestMethod().equals("PATCH") && ruta.endsWith("/disponibilidad")) {
                     exchange.sendResponseHeaders(204, -1);
                     exchange.close();
@@ -81,7 +86,7 @@ class InventarioIntegrationTests {
         properties.add("msvc.eventos.url", () -> "http://127.0.0.1:" + REMOTO.getAddress().getPort());
     }
     @AfterAll static void cerrar() { REMOTO.stop(0); }
-    @BeforeEach void reiniciarReloj() { reloj.ahora = BASE; }
+    @BeforeEach void reiniciarReloj() { reloj.ahora = BASE; AUTORIZACION_EVENTOS.set(null); }
 
     record Escenario(Long evento, Long sector, List<Long> asientos) {}
 
@@ -110,6 +115,27 @@ class InventarioIntegrationTests {
 
     boolean disponible(Long evento) {
         return inventario.consultarLote(new DisponibilidadLoteRequest(List.of(evento))).getFirst().disponible();
+    }
+
+    @Test void lotePreciosDevuelveElSectorMasBaratoPorEvento() throws Exception {
+        var evento = preparar(TipoSector.CAMPO, 2, 4);
+        var otro = preparar(TipoSector.CAMPO, 2, 4);
+        var sector = new SectorRequest();
+        sector.setIdLugar(1L);
+        sector.setNombre("Sector de menor precio");
+        sector.setTipo(TipoSector.CAMPO);
+        sector.setCapacidadTotal(2);
+        inventario.configurarSector(evento.evento(),
+                new SectorEventoRequest(sectores.crear(sector).id(), new BigDecimal("900.00"), 2));
+        String consulta = "{\"idsEventos\":[%d,%d,99999]}".formatted(evento.evento(), otro.evento());
+
+        mvc.perform(post("/interno/inventario/precios-minimos")
+                        .header(HttpHeaders.AUTHORIZATION, JwtTestSupport.bearer(JwtTestSupport.servicio()))
+                        .contentType("application/json").content(consulta))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$['" + evento.evento() + "']").value(900))
+                .andExpect(jsonPath("$['" + otro.evento() + "']").value(1500))
+                .andExpect(jsonPath("$['99999']").doesNotExist());
     }
 
     @Test void loteCampoDescuentaReservasVigentesYLiberaVencidasSinCrearReservas() {
@@ -169,32 +195,40 @@ class InventarioIntegrationTests {
 
     @Test void contratoLoteDeduplicaValidaYNoCachea() throws Exception {
         Escenario e = preparar(TipoSector.CAMPO, 2, 4);
-        mvc.perform(post("/interno/inventario/disponibilidad").contentType("application/json")
+        String servicio = JwtTestSupport.bearer(JwtTestSupport.servicio());
+        mvc.perform(post("/interno/inventario/disponibilidad").header(HttpHeaders.AUTHORIZATION, servicio)
+                .contentType("application/json")
                 .content("{\"idsEventos\":[" + e.evento() + "," + e.evento() + "]}"))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0].disponible").value(true));
         for (String invalido : List.of("{}", "{\"idsEventos\":null}", "{\"idsEventos\":[0]}",
                 "{\"idsEventos\":[-1]}", "{\"idsEventos\":[null]}")) {
-            mvc.perform(post("/interno/inventario/disponibilidad").contentType("application/json").content(invalido))
+            mvc.perform(post("/interno/inventario/disponibilidad").header(HttpHeaders.AUTHORIZATION, servicio)
+                    .contentType("application/json").content(invalido))
                     .andExpect(status().isBadRequest());
         }
-        mvc.perform(post("/interno/inventario/disponibilidad").contentType("application/json").content("{\"idsEventos\":[]}"))
+        mvc.perform(post("/interno/inventario/disponibilidad").header(HttpHeaders.AUTHORIZATION, servicio)
+                .contentType("application/json").content("{\"idsEventos\":[]}"))
                 .andExpect(status().isOk()).andExpect(content().json("[]"));
     }
 
     @Test void endpointsValidanYNoCachean() throws Exception {
         var e = preparar(TipoSector.CAMPO, 2, 4);
+        String servicio = JwtTestSupport.bearer(JwtTestSupport.servicio(1L));
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
-                "/eventos/" + e.evento() + "/sectores/" + e.sector() + "/disponibilidad"))
+                "/eventos/" + e.evento() + "/sectores/" + e.sector() + "/disponibilidad")
+                .header(HttpHeaders.AUTHORIZATION, servicio))
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Cache-Control", "no-store"));
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/reservas")
+                .header(HttpHeaders.AUTHORIZATION, servicio)
                 .contentType("application/json").content("{}"))
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
         String json = """
             {"claveIdempotencia":"%s","idCliente":1,"idEvento":%d,"idSector":%d,"cantidad":1,"idAsientos":[]}
             """.formatted(clave(), e.evento(), e.sector());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/reservas")
+                .header(HttpHeaders.AUTHORIZATION, servicio)
                 .contentType("application/json").content(json))
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.estado").value("ACTIVA"));
@@ -273,6 +307,92 @@ class InventarioIntegrationTests {
     @Test void servicioEventos404SeTraduce() {
         assertThatThrownBy(() -> inventario.configurarEvento(99999L, new InventarioRequest(4)))
             .isInstanceOfSatisfying(ResponseStatusException.class, e -> assertThat(e.getStatusCode().value()).isEqualTo(404));
+    }
+
+    @Test void seguridadRutasPublicasYTokenInvalido() throws Exception {
+        mvc.perform(get("/actuator/health")).andExpect(status().isOk());
+        mvc.perform(get("/sectores")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/sectores").header(HttpHeaders.AUTHORIZATION, "Bearer invalido"))
+            .andExpect(status().isUnauthorized());
+        mvc.perform(get("/sectores").header(HttpHeaders.AUTHORIZATION,
+                JwtTestSupport.bearer(JwtTestSupport.conOtroSecreto("7", "CLIENTE"))))
+            .andExpect(status().isUnauthorized());
+        mvc.perform(get("/sectores").header(HttpHeaders.AUTHORIZATION, JwtTestSupport.bearer(
+                JwtTestSupport.token(JwtTestSupport.ISSUER, "7", null, -60, "CLIENTE"))))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test void seguridadUsuarioPuedeLeerCatalogoYDisponibilidad() throws Exception {
+        var e = preparar(TipoSector.CAMPO, 2, 4);
+        String usuario = JwtTestSupport.bearer(JwtTestSupport.usuario("7", "CLIENTE"));
+        mvc.perform(get("/sectores").header(HttpHeaders.AUTHORIZATION, usuario))
+            .andExpect(status().isOk());
+        mvc.perform(get("/asientos").header(HttpHeaders.AUTHORIZATION, usuario))
+            .andExpect(status().isOk());
+        mvc.perform(get("/eventos/" + e.evento() + "/sectores").header(HttpHeaders.AUTHORIZATION, usuario))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test void seguridadRutasInternasYReservasRequierenServicio() throws Exception {
+        String usuario = JwtTestSupport.bearer(JwtTestSupport.usuario("7", "CLIENTE"));
+        String servicio = JwtTestSupport.bearer(JwtTestSupport.servicio());
+        String interna = "/interno/inventario/disponibilidad";
+        String cuerpo = "{\"idsEventos\":[]}";
+        mvc.perform(post(interna).contentType("application/json").content(cuerpo))
+            .andExpect(status().isForbidden());
+        mvc.perform(post(interna).header(HttpHeaders.AUTHORIZATION, "Bearer invalido")
+                .contentType("application/json").content(cuerpo))
+            .andExpect(status().isUnauthorized());
+        mvc.perform(post(interna).header(HttpHeaders.AUTHORIZATION, usuario)
+                .contentType("application/json").content(cuerpo))
+            .andExpect(status().isForbidden());
+        mvc.perform(post(interna).header(HttpHeaders.AUTHORIZATION, servicio)
+                .contentType("application/json").content(cuerpo))
+            .andExpect(status().isOk());
+
+        mvc.perform(post("/reservas").contentType("application/json").content("{}"))
+            .andExpect(status().isForbidden());
+        mvc.perform(post("/reservas").header(HttpHeaders.AUTHORIZATION, usuario)
+                .contentType("application/json").content("{}"))
+            .andExpect(status().isForbidden());
+        String confirmacion = "/reservas/" + Long.MAX_VALUE + "/confirmacion";
+        mvc.perform(post(confirmacion).header(HttpHeaders.AUTHORIZATION, usuario))
+            .andExpect(status().isForbidden());
+        mvc.perform(post(confirmacion).header(HttpHeaders.AUTHORIZATION, servicio))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test void seguridadReservaTomaIdClienteDelToken() throws Exception {
+        var e = preparar(TipoSector.CAMPO, 2, 4);
+        String clave = clave();
+        String json = """
+            {"claveIdempotencia":"%s","idCliente":999,"idEvento":%d,"idSector":%d,"cantidad":1,"idAsientos":[]}
+            """.formatted(clave, e.evento(), e.sector());
+        mvc.perform(post("/reservas").header(HttpHeaders.AUTHORIZATION,
+                        JwtTestSupport.bearer(JwtTestSupport.servicio(77L)))
+                .contentType("application/json").content(json))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.idCliente").value(77));
+        assertThat(reservas.findByClaveIdempotencia(clave).orElseThrow().getIdCliente()).isEqualTo(77L);
+
+        String sinCliente = JwtTestSupport.bearer(JwtTestSupport.servicio());
+        mvc.perform(post("/reservas").header(HttpHeaders.AUTHORIZATION, sinCliente)
+                .contentType("application/json").content(json.replace(clave, clave())))
+            .andExpect(status().isForbidden());
+        String noNumerico = JwtTestSupport.bearer(JwtTestSupport.servicio("no-numerico"));
+        mvc.perform(post("/reservas").header(HttpHeaders.AUTHORIZATION, noNumerico)
+                .contentType("application/json").content(json.replace(clave, clave())))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test void feignEnvíaTokenDeServicioEnLlamadasInternas() {
+        inventario.configurarEvento(SECUENCIA.incrementAndGet(), new InventarioRequest(4));
+        String autorizacion = AUTORIZACION_EVENTOS.get();
+        assertThat(autorizacion).startsWith("Bearer ");
+        var jwt = decoder.decode(autorizacion.substring("Bearer ".length()));
+        assertThat(jwt.getClaimAsString("iss")).isEqualTo(JwtTestSupport.ISSUER);
+        assertThat(jwt.getSubject()).isEqualTo(JwtTestSupport.SERVICIO);
+        assertThat(jwt.getClaimAsStringList("roles")).contains("SERVICIO_INTERNO");
+        assertThat((Object) jwt.getClaim("usuarioId")).isNull();
     }
 
     /** Varias transacciones independientes compiten por el ultimo lugar: solo una gana. */
