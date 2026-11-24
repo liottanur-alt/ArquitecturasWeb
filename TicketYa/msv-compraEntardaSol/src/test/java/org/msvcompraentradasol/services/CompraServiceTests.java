@@ -236,6 +236,29 @@ class CompraServiceTests {
     }
 
     @Test
+    void recuperaPagoSiSePierdeLaConfirmacionDelUltimoCupo() {
+        CompraResponseDTO creada = crearCompraPendiente();
+        when(reservaClient.confirmar(ID_RESERVA))
+                .thenThrow(new IllegalStateException("Se perdió la respuesta de inventario"))
+                .thenReturn(reserva(ID_RESERVA, "1500.00", "CONFIRMADA", List.of(11L, 12L)));
+
+        assertThatThrownBy(() -> compraService.procesarPago(creada.id(), true))
+                .hasMessageContaining("Se perdió la respuesta");
+        assertThat(compraRepository.findById(creada.id()).orElseThrow().getEstadoCompra())
+                .isEqualTo(EstadoCompra.PENDIENTE);
+        assertThat(entradaRepository.findAllByCompra_Id(creada.id())).isEmpty();
+
+        var evento = eventoFuturo(ID_EVENTO);
+        when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(
+                new org.msvcompraentradasol.dtos.EventoFechaResponseDTO(evento.id(), evento.nombre(),
+                        evento.fechaHora(), "AGOTADO", evento.estadoPublicacion(), evento.lugar()));
+        assertThat(compraService.procesarPago(creada.id(), true).estadoCompra()).isEqualTo("APROBADA");
+        compraService.procesarPago(creada.id(), true);
+        assertThat(entradaRepository.findAllByCompra_Id(creada.id())).hasSize(2);
+        verify(reservaClient, times(2)).confirmar(ID_RESERVA);
+    }
+
+    @Test
     void pagoRechazadoLiberaReservaYNoCreaEntradas() {
         CompraResponseDTO creada = crearCompraPendiente();
         when(reservaClient.liberar(ID_RESERVA))
@@ -335,6 +358,18 @@ class CompraServiceTests {
         verify(reservaClient).cancelarInventario(ID_EVENTO);
         assertThat(compraRepository.compradoresParaAviso(ID_EVENTO, true)).containsExactly(ID_CLIENTE);
         assertThat(compraRepository.compradoresParaAviso(ID_EVENTO, false)).isEmpty();
+    }
+
+    @Test
+    void cancelarEventoRecuperaTrasUnFalloDeInventario() {
+        var compra = crearCompraPagada();
+        doThrow(feignError(503, "cancelarInventario")).doNothing().when(reservaClient).cancelarInventario(ID_EVENTO);
+
+        assertThatThrownBy(() -> compraService.cancelarEvento(ID_EVENTO)).isInstanceOf(FeignException.class);
+        assertThat(compraRepository.findById(compra.id()).orElseThrow().getEstadoCompra())
+                .isEqualTo(EstadoCompra.APROBADA);
+        assertThat(compraService.cancelarEvento(ID_EVENTO).entradasReintegradas()).isEqualTo(2);
+        assertThat(compraService.cancelarEvento(ID_EVENTO).entradasReintegradas()).isZero();
     }
 
     @Test

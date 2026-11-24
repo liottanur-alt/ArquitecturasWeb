@@ -31,7 +31,7 @@ spring:
             - id: msvc-eventos
               uri: ${msvc.eventos.url}
               predicates:
-                - Path=/api/eventos,/api/eventos/**,/api/lugares,/api/lugares/**,/api/artistas,/api/artistas/**
+                - Path=/api/eventos,/api/eventos/**,/api/lugares,/api/lugares/**,/api/artistas,/api/artistas/**,/api/reportes/eventos/**
             - id: msvc-sectores-asientos
               uri: ${msvc.sectores.url}
               predicates:

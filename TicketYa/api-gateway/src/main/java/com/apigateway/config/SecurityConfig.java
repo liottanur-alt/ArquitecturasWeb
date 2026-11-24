@@ -22,6 +22,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
@@ -70,6 +71,8 @@ public class SecurityConfig {
         };
 
         return http.csrf(csrf -> csrf.disable())
+                .addFilterAfter(new RegistroHttpFilter(),
+                        SecurityContextHolderFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/auth/registro", "/auth/login").permitAll()
@@ -81,6 +84,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/usuarios").hasRole("ADMINISTRADOR")
                         .requestMatchers("/usuarios/{id}", "/usuarios/{id}/**").access(this::mismoUsuarioOAdmin)
                         .requestMatchers(HttpMethod.POST, "/api/eventos").hasAnyRole("ORGANIZADOR", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/eventos/{id}/suspender").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/eventos/{id}/cancelar").denyAll()
+                        .requestMatchers("/api/reportes/eventos/**").hasAnyRole("ORGANIZADOR", "ADMINISTRADOR")
+                        .requestMatchers("/api/eventos/{id}/fila", "/api/eventos/{id}/fila/**").hasRole("CLIENTE")
                         .requestMatchers(HttpMethod.PATCH, "/api/eventos/{id}/publicar")
                         .hasAnyRole("ORGANIZADOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/eventos/mis-eventos")

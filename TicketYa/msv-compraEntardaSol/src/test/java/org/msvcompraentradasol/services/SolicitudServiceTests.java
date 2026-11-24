@@ -207,6 +207,26 @@ class SolicitudServiceTests {
     }
 
     @Test
+    void recuperaDevolucionSiSePierdeLaRespuestaDeInventario() {
+        when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
+        var creada = crearSolicitud(solicitud(entrada.getId(), ID_CLIENTE));
+        when(reservaClient.devolver(eq(ID_RESERVA), any()))
+                .thenThrow(new IllegalStateException("Se perdió la respuesta de inventario"))
+                .thenReturn(reserva(ID_RESERVA, "1500.00", "DEVUELTA", List.of(11L)));
+
+        assertThatThrownBy(() -> solicitudService.resolverSolicitud(creada.id(), 9L, EstadoSolicitud.ACEPTADA))
+                .hasMessageContaining("Se perdió la respuesta");
+        assertThat(solicitudRepository.findById(creada.id()).orElseThrow().getEstadoSolicitud())
+                .isEqualTo(EstadoSolicitud.PENDIENTE);
+        assertThat(solicitudService.resolverSolicitud(creada.id(), 9L, EstadoSolicitud.ACEPTADA).estadoReintegro())
+                .isEqualTo("COMPLETADO");
+        var captor = ArgumentCaptor.forClass(DevolucionRequestDTO.class);
+        verify(reservaClient, org.mockito.Mockito.times(2)).devolver(eq(ID_RESERVA), captor.capture());
+        assertThat(captor.getAllValues()).extracting(DevolucionRequestDTO::claveIdempotencia)
+                .containsExactly("devolucion-solicitud-" + creada.id(), "devolucion-solicitud-" + creada.id());
+    }
+
+    @Test
     void resolverAceptadaUsaLaFechaDeLaSolicitudNoLaActual() {
         when(eventoClient.obtenerEvento(ID_EVENTO)).thenReturn(eventoFuturo(ID_EVENTO));
         SolicitudResponseDTO creada = crearSolicitud(

@@ -194,7 +194,7 @@ public class SolicitudService {
             );
         } catch (FeignException.Conflict exception) {
             throw new IllegalStateException(
-                    "SectorAsiento rechazó la devolución: " + exception.contentUTF8(),
+                    "No se pudo liberar el lugar de la entrada. Revisá el estado de la reserva antes de reintentar.",
                     exception
             );
         }

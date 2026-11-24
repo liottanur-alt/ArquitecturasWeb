@@ -11,6 +11,11 @@ public interface NotificacionCompraClient {
     @PostMapping("/api/sucesos")
     void registrar(@RequestBody Suceso suceso);
 
+    @PostMapping("/api/logs")
+    void registrarLog(@RequestBody Log log);
+
     record Suceso(String claveIdempotencia, String tipo, Long idEvento, Long idCompra, Long idCliente,
                   String destinatario, Long cantidadEntradas, BigDecimal importe, String detalle) {}
+
+    record Log(String servicio, String nivel, String mensaje, String idCorrelacion) {}
 }

@@ -18,6 +18,9 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
+import org.springframework.beans.factory.ObjectProvider;
+import msvevento.client.NotificacionEventoClient;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import javax.crypto.SecretKey;
@@ -63,7 +66,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectProvider<NotificacionEventoClient> auditoria) throws Exception {
         JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
         authorities.setAuthoritiesClaimName("roles");
         authorities.setAuthorityPrefix("ROLE_");
@@ -71,6 +74,8 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter(authorities);
 
         return http.csrf(csrf -> csrf.disable())
+                .addFilterAfter(new RegistroHttpFilter(auditoria),
+                        SecurityContextHolderFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/error").permitAll()
@@ -81,7 +86,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/eventos/{id}/publicar", "/api/eventos/{id}/programacion")
                         .hasAnyRole("ORGANIZADOR", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/eventos/{id}/cancelar")
-                        .hasAnyRole("ADMINISTRADOR", "SERVICIO_INTERNO")
+                        .hasRole("SERVICIO_INTERNO")
+                        .requestMatchers(HttpMethod.PATCH, "/api/eventos/{id}/suspender").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/reportes/eventos/**").hasAnyRole("ORGANIZADOR", "ADMINISTRADOR")
+                        .requestMatchers("/api/eventos/{id}/fila", "/api/eventos/{id}/fila/**").hasRole("CLIENTE")
                         .requestMatchers(HttpMethod.GET, "/api/eventos/mis-eventos")
                         .hasAnyRole("ORGANIZADOR", "ADMINISTRADOR")
                         .anyRequest().authenticated())

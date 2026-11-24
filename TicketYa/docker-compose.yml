@@ -1,14 +1,22 @@
 name: ticketya-db
 
+x-mysql-environment: &mysql-environment
+  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_ticketya_dev}
+  MYSQL_USUARIO_PASSWORD: ${USUARIO_DB_PASSWORD:-${DB_PASSWORD:-usuario_dev}}
+  MYSQL_EVENTO_PASSWORD: ${EVENTO_DB_PASSWORD:-${DB_PASSWORD:-evento_dev}}
+  MYSQL_COMPRA_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
+  MYSQL_SECTOR_PASSWORD: ${SECTOR_DB_PASSWORD:-${DB_PASSWORD:-sector_dev}}
+  MYSQL_NOTIFICACIONES_PASSWORD: ${NOTIFICACIONES_DB_PASSWORD:-${DB_PASSWORD:-notificaciones_dev}}
+
 services:
   notificaciones:
     build: ./msv-notificaciones
     restart: unless-stopped
     environment:
       SERVER_ADDRESS: 0.0.0.0
-      DB_URL: jdbc:mysql://mysql-notificaciones:3306/notificaciones
+      DB_URL: jdbc:mysql://mysql:3306/notificaciones
       DB_USERNAME: notificaciones_app
-      DB_PASSWORD: ${DB_PASSWORD:-notificaciones_dev}
+      DB_PASSWORD: ${NOTIFICACIONES_DB_PASSWORD:-${DB_PASSWORD:-notificaciones_dev}}
       SMTP_HOST: ${SMTP_HOST:-localhost}
       SMTP_PORT: ${SMTP_PORT:-1025}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
@@ -17,27 +25,8 @@ services:
       SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
       SMTP_FROM: ${SMTP_FROM:-${SMTP_USERNAME:-no-reply@ticketya.local}}
     depends_on:
-      mysql-notificaciones:
-        condition: service_healthy
-
-  mysql-notificaciones:
-    image: mysql:8.4
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: notificaciones
-      MYSQL_USER: notificaciones_app
-      MYSQL_PASSWORD: ${DB_PASSWORD:-notificaciones_dev}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_notificaciones_dev}
-    ports:
-      - "127.0.0.1:3309:3306"
-    volumes:
-      - mysql_notificaciones_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql --protocol=TCP -h 127.0.0.1 -u\"$$MYSQL_USER\" -D\"$$MYSQL_DATABASE\" -e 'SELECT 1' > /dev/null 2>&1"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 30s
+      mysql-esquemas:
+        condition: service_completed_successfully
 
   usuarios:
     build: ./msv-usuario
@@ -49,8 +38,6 @@ services:
       MSV_SECTORES_URL: http://sectores:8002
       JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
       ADMIN_SEED_PASSWORD: "${ADMIN_SEED_PASSWORD:?Definir ADMIN_SEED_PASSWORD en .env o en el entorno}"
-    ports:
-      - "127.0.0.1:8004:8004"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -79,11 +66,9 @@ services:
       FILA_MAX_COMPRADORES_SIMULTANEOS: ${FILA_MAX_COMPRADORES_SIMULTANEOS:-10}
       FILA_DURACION_TURNO_SEGUNDOS: 900
       JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
-    ports:
-      - "127.0.0.1:8005:8005"
     depends_on:
-      mysql:
-        condition: service_healthy
+      mysql-esquemas:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     healthcheck:
@@ -103,11 +88,9 @@ services:
       MSVC_EVENTOS_URL: http://eventos:8005
       MSVC_COMPRAS_URL: http://compras:8003
       JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
-    ports:
-      - "127.0.0.1:8002:8002"
     depends_on:
-      mysql:
-        condition: service_healthy
+      mysql-esquemas:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-fsS", "--max-time", "5", "http://localhost:8002/actuator/health"]
       interval: 10s
@@ -127,11 +110,9 @@ services:
       MSVC_USUARIOS_URL: http://usuarios:8004
       MSVC_NOTIFICACIONES_URL: http://notificaciones:8006
       JWT_SECRET: "${JWT_SECRET:?Definir JWT_SECRET en .env o en el entorno (minimo 32 bytes)}"
-    ports:
-      - "127.0.0.1:8003:8003"
     depends_on:
-      mysql:
-        condition: service_healthy
+      mysql-esquemas:
+        condition: service_completed_successfully
       eventos:
         condition: service_healthy
       sectores:
@@ -186,24 +167,30 @@ services:
   mysql:
     image: mysql:8.4
     restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_ticketya_dev}
-      MYSQL_USUARIO_PASSWORD: ${USUARIO_DB_PASSWORD:-${DB_PASSWORD:-usuario_dev}}
-      MYSQL_EVENTO_PASSWORD: ${EVENTO_DB_PASSWORD:-${DB_PASSWORD:-evento_dev}}
-      MYSQL_COMPRA_PASSWORD: ${COMPRA_DB_PASSWORD:-${DB_PASSWORD:-compra_dev}}
-      MYSQL_SECTOR_PASSWORD: ${SECTOR_DB_PASSWORD:-${DB_PASSWORD:-sector_dev}}
+    environment: *mysql-environment
     ports:
       - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
       - ./docker/mysql/check-health.sh:/opt/ticketya/check-health.sh:ro
     healthcheck:
-      test: ["CMD", "bash", "/opt/ticketya/check-health.sh"]
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysql --protocol=TCP -h127.0.0.1 -uroot -Nse 'SELECT 1' >/dev/null"]
       interval: 5s
       timeout: 5s
       retries: 30
       start_period: 30s
+
+  mysql-esquemas:
+    image: mysql:8.4
+    network_mode: service:mysql
+    environment: *mysql-environment
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./docker/mysql/crear-esquemas.sh:/opt/ticketya/crear-esquemas.sh:ro
+      - ./docker/mysql/check-health.sh:/opt/ticketya/check-health.sh:ro
+    entrypoint: ["bash", "/opt/ticketya/crear-esquemas.sh"]
 
   redis:
     image: redis:7-alpine
@@ -218,7 +205,6 @@ services:
       retries: 20
 
 volumes:
-  mysql_notificaciones_data:
   usuarios_mongo:
     # Mismo volumen del entorno aislado: conserva los usuarios existentes.
     name: ticketya-usuarios-local_usuarios_mongo

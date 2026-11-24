@@ -97,7 +97,7 @@ public class CompraService {
             return CompraResponseDTO.from(existente);
         }
 
-        validarEventoVendible(dto.getIdEvento());
+        validarEventoVendible(dto.getIdEvento(), false);
         String autorizacionFila = validarAutorizacionFila(dto, idCliente);
 
         ReservaResponseDTO reserva = reservaClient.reservar(new ReservaRequestDTO(
@@ -175,7 +175,7 @@ public class CompraService {
             throw new IllegalStateException("La compra ya fue procesada con otro resultado");
         }
 
-        EventoFechaResponseDTO evento = validarEventoVendible(compra.getIdEvento());
+        EventoFechaResponseDTO evento = validarEventoVendible(compra.getIdEvento(), true);
 
         PagoSimuladoService.ResultadoPago resultadoPago = pagoSimuladoService.procesar(
                 compra.getImporteTotal(),
@@ -394,7 +394,7 @@ public class CompraService {
         }
     }
 
-    private EventoFechaResponseDTO validarEventoVendible(Long idEvento) {
+    private EventoFechaResponseDTO validarEventoVendible(Long idEvento, boolean tieneReserva) {
         EventoFechaResponseDTO evento;
         try {
             evento = eventoClient.obtenerEvento(idEvento);
@@ -407,7 +407,8 @@ public class CompraService {
         if (!"PUBLICADO".equals(evento.estadoPublicacion())) {
             throw new IllegalStateException("El evento no está publicado");
         }
-        if (evento.estado() != null && ESTADOS_EVENTO_NO_VENDIBLES.contains(evento.estado())) {
+        if (evento.estado() != null && ESTADOS_EVENTO_NO_VENDIBLES.contains(evento.estado())
+                && !(tieneReserva && "AGOTADO".equals(evento.estado()))) {
             throw new IllegalStateException("El evento no admite nuevas compras");
         }
         if (evento.fechaHora() == null
